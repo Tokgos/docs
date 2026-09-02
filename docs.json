@@ -58,7 +58,7 @@
           "href": "https://mintlify.com/docs"
         },
         {
-          "anchor": "Blog1",
+          "anchor": "Blog",
           "icon": "newspaper",
           "href": "https://mintlify.com/blog"
         }
@@ -99,7 +99,7 @@
                 "group": "请求协议",
                 "pages": [
                   {
-                    "group": "OpenAI 协议1",
+                    "group": "OpenAI 协议",
                     "pages": [
                       {
                         "group": "Chat Completions",
@@ -128,10 +128,6 @@
                 ]
               }
             ]
-          },
-          {
-            "tab": "API 指南",
-            "openapi": "openapi.json"
           }
         ]
       },
