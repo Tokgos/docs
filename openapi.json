@@ -1,18 +1,36 @@
 {
-  "openapi": "3.0.1",
+  "openapi": "3.1.0",
   "info": {
     "title": "默认模块",
     "description": "",
     "version": "1.0.0"
   },
-  "tags": [],
+  "tags": [
+    {
+      "name": "Mintlify API"
+    },
+    {
+      "name": "Mintlify API/对话补全"
+    },
+    {
+      "name": "Mintlify API/对话补全/OpenAI 协议"
+    },
+    {
+      "name": "Mintlify API/图片生成"
+    },
+    {
+      "name": "Mintlify API/视频生成"
+    }
+  ],
   "paths": {
     "/v1/chat/completions": {
       "post": {
         "summary": "Chat Completions",
         "deprecated": false,
         "description": "",
-        "tags": [],
+        "tags": [
+          "Mintlify API/对话补全/OpenAI 协议"
+        ],
         "parameters": [
           {
             "name": "Authorization",
@@ -70,6 +88,9 @@
                           "oneOf": [
                             {
                               "type": "string"
+                            },
+                            {
+                              "type": "null"
                             },
                             {
                               "type": "array",
@@ -640,21 +661,23 @@
                     }
                   }
                 },
-                "example": {
-                  "model": "gpt-5.6-sol",
-                  "messages": [
-                    {
-                      "role": "developer",
-                      "content": "你是一个有帮助的助手。"
-                    },
-                    {
-                      "role": "user",
-                      "content": "你好！"
-                    }
-                  ],
-                  "temperature": 1,
-                  "stream": false
-                }
+                "examples": [
+                  {
+                    "model": "gpt-5.6-sol",
+                    "messages": [
+                      {
+                        "role": "developer",
+                        "content": "你是一个有帮助的助手。"
+                      },
+                      {
+                        "role": "user",
+                        "content": "你好！"
+                      }
+                    ],
+                    "temperature": 1,
+                    "stream": false
+                  }
+                ]
               },
               "examples": {
                 "1": {
@@ -812,7 +835,10 @@
                             "description": "候选回复的序号，从 0 开始。"
                           },
                           "finish_reason": {
-                            "type": "string",
+                            "type": [
+                              "string",
+                              "null"
+                            ],
                             "enum": [
                               "stop",
                               "length",
@@ -821,8 +847,7 @@
                               "function_call",
                               null
                             ],
-                            "description": "生成结束原因：stop 为自然结束，length 为达到长度限制，tool_calls 为工具调用，content_filter 为内容过滤。",
-                            "nullable": true
+                            "description": "生成结束原因：stop 为自然结束，length 为达到长度限制，tool_calls 为工具调用，content_filter 为内容过滤。"
                           },
                           "message": {
                             "type": "object",
@@ -838,14 +863,18 @@
                                 "description": "消息作者角色，固定为 assistant。"
                               },
                               "content": {
-                                "type": "string",
-                                "description": "模型生成的文本内容；工具调用时可能为 null。",
-                                "nullable": true
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "description": "模型生成的文本内容；工具调用时可能为 null。"
                               },
                               "refusal": {
-                                "type": "string",
-                                "description": "模型拒绝请求时生成的说明。",
-                                "nullable": true
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "description": "模型拒绝请求时生成的说明。"
                               },
                               "annotations": {
                                 "type": "array",
@@ -882,7 +911,10 @@
                                 }
                               },
                               "audio": {
-                                "type": "object",
+                                "type": [
+                                  "object",
+                                  "null"
+                                ],
                                 "description": "音频输出相关数据。",
                                 "properties": {
                                   "id": {
@@ -901,11 +933,13 @@
                                     "type": "string",
                                     "description": "音频内容的文字转录。"
                                   }
-                                },
-                                "nullable": true
+                                }
                               },
                               "function_call": {
-                                "type": "object",
+                                "type": [
+                                  "object",
+                                  "null"
+                                ],
                                 "description": "旧版函数调用信息，已弃用。",
                                 "properties": {
                                   "name": {
@@ -916,8 +950,7 @@
                                     "type": "string",
                                     "description": "JSON 字符串形式的函数参数。"
                                   }
-                                },
-                                "nullable": true
+                                }
                               },
                               "tool_calls": {
                                 "type": "array",
@@ -955,11 +988,17 @@
                             }
                           },
                           "logprobs": {
-                            "type": "object",
+                            "type": [
+                              "object",
+                              "null"
+                            ],
                             "description": "输出词元的对数概率信息；仅在请求启用 logprobs 时返回。",
                             "properties": {
                               "content": {
-                                "type": "array",
+                                "type": [
+                                  "array",
+                                  "null"
+                                ],
                                 "description": "输出内容中每个词元的概率信息。",
                                 "items": {
                                   "type": "object",
@@ -969,12 +1008,14 @@
                                       "description": "词元文本。"
                                     },
                                     "bytes": {
-                                      "type": "array",
+                                      "type": [
+                                        "array",
+                                        "null"
+                                      ],
                                       "description": "词元对应的 UTF-8 字节序列。",
                                       "items": {
                                         "type": "integer"
-                                      },
-                                      "nullable": true
+                                      }
                                     },
                                     "logprob": {
                                       "type": "number",
@@ -990,11 +1031,13 @@
                                             "type": "string"
                                           },
                                           "bytes": {
-                                            "type": "array",
+                                            "type": [
+                                              "array",
+                                              "null"
+                                            ],
                                             "items": {
                                               "type": "integer"
-                                            },
-                                            "nullable": true
+                                            }
                                           },
                                           "logprob": {
                                             "type": "number"
@@ -1003,11 +1046,9 @@
                                       }
                                     }
                                   }
-                                },
-                                "nullable": true
+                                }
                               }
-                            },
-                            "nullable": true
+                            }
                           }
                         }
                       }
@@ -1083,14 +1124,18 @@
                       }
                     },
                     "service_tier": {
-                      "type": "string",
-                      "description": "实际用于处理该请求的服务层级。",
-                      "nullable": true
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "实际用于处理该请求的服务层级。"
                     },
                     "system_fingerprint": {
-                      "type": "string",
-                      "description": "模型运行的后端配置指纹。",
-                      "nullable": true
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "模型运行的后端配置指纹。"
                     },
                     "metadata": {
                       "type": "object",
@@ -1101,31 +1146,33 @@
                       "properties": {}
                     }
                   },
-                  "example": {
-                    "id": "chatcmpl-abc123",
-                    "object": "chat.completion",
-                    "created": 1741569952,
-                    "model": "gpt-5.6-sol",
-                    "choices": [
-                      {
-                        "index": 0,
-                        "message": {
-                          "role": "assistant",
-                          "content": "你好！有什么可以帮你的吗？",
-                          "refusal": null,
-                          "annotations": []
-                        },
-                        "logprobs": null,
-                        "finish_reason": "stop"
-                      }
-                    ],
-                    "usage": {
-                      "prompt_tokens": 19,
-                      "completion_tokens": 10,
-                      "total_tokens": 29
-                    },
-                    "service_tier": "default"
-                  }
+                  "examples": [
+                    {
+                      "id": "chatcmpl-abc123",
+                      "object": "chat.completion",
+                      "created": 1741569952,
+                      "model": "gpt-5.6-sol",
+                      "choices": [
+                        {
+                          "index": 0,
+                          "message": {
+                            "role": "assistant",
+                            "content": "你好！有什么可以帮你的吗？",
+                            "refusal": null,
+                            "annotations": []
+                          },
+                          "logprobs": null,
+                          "finish_reason": "stop"
+                        }
+                      ],
+                      "usage": {
+                        "prompt_tokens": 19,
+                        "completion_tokens": 10,
+                        "total_tokens": 29
+                      },
+                      "service_tier": "default"
+                    }
+                  ]
                 },
                 "example": {
                   "id": "chatcmpl-B9MBs8CjcvOU2jLn4n570S5qMJKcT",
@@ -1175,7 +1222,9 @@
         "summary": "Responses",
         "deprecated": false,
         "description": "",
-        "tags": [],
+        "tags": [
+          "Mintlify API/对话补全/OpenAI 协议"
+        ],
         "parameters": [
           {
             "name": "Authorization",
@@ -1749,22 +1798,24 @@
                     }
                   }
                 },
-                "example": {
-                  "model": "gpt-5.6-sol",
-                  "instructions": "你是一个有帮助的助手。",
-                  "input": [
-                    {
-                      "role": "user",
-                      "content": [
-                        {
-                          "type": "input_text",
-                          "text": "你好！"
-                        }
-                      ]
-                    }
-                  ],
-                  "stream": false
-                }
+                "examples": [
+                  {
+                    "model": "gpt-5.6-sol",
+                    "instructions": "你是一个有帮助的助手。",
+                    "input": [
+                      {
+                        "role": "user",
+                        "content": [
+                          {
+                            "type": "input_text",
+                            "text": "你好！"
+                          }
+                        ]
+                      }
+                    ],
+                    "stream": false
+                  }
+                ]
               },
               "examples": {
                 "1": {
@@ -2241,34 +2292,36 @@
                       "description": "请求使用的安全标识符。"
                     }
                   },
-                  "example": {
-                    "id": "resp_123",
-                    "object": "response",
-                    "created_at": 1741569952,
-                    "status": "completed",
-                    "model": "gpt-5.6-sol",
-                    "output": [
-                      {
-                        "id": "msg_123",
-                        "type": "message",
-                        "status": "completed",
-                        "role": "assistant",
-                        "content": [
-                          {
-                            "type": "output_text",
-                            "text": "你好！有什么可以帮你的吗？",
-                            "annotations": []
-                          }
-                        ]
+                  "examples": [
+                    {
+                      "id": "resp_123",
+                      "object": "response",
+                      "created_at": 1741569952,
+                      "status": "completed",
+                      "model": "gpt-5.6-sol",
+                      "output": [
+                        {
+                          "id": "msg_123",
+                          "type": "message",
+                          "status": "completed",
+                          "role": "assistant",
+                          "content": [
+                            {
+                              "type": "output_text",
+                              "text": "你好！有什么可以帮你的吗？",
+                              "annotations": []
+                            }
+                          ]
+                        }
+                      ],
+                      "output_text": "你好！有什么可以帮你的吗？",
+                      "usage": {
+                        "input_tokens": 12,
+                        "output_tokens": 10,
+                        "total_tokens": 22
                       }
-                    ],
-                    "output_text": "你好！有什么可以帮你的吗？",
-                    "usage": {
-                      "input_tokens": 12,
-                      "output_tokens": 10,
-                      "total_tokens": 22
                     }
-                  }
+                  ]
                 },
                 "example": {
                   "id": "resp_67ccd2bed1ec8190b14f964abc0542670bb6a6b452d3795b",
@@ -2335,645 +2388,13 @@
         },
         "security": []
       }
-    },
-    "/v1/messages": {
-      "post": {
-        "summary": "Anthropic - Messages",
-        "deprecated": false,
-        "description": "",
-        "tags": [],
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "",
-            "required": false,
-            "example": "{{api-key}}",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {}
-              },
-              "example": {
-                "model": "claude-sonnet-4.5",
-                "max_tokens": 1024,
-                "stream": true,
-                "messages": [
-                  {
-                    "role": "user",
-                    "content": "Hello"
-                  }
-                ]
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {}
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": []
-      }
-    },
-    "/v1beta/models/google/gemini-3.7-flash:generateContent": {
-      "post": {
-        "summary": "Gemini - Vertex",
-        "deprecated": false,
-        "description": "",
-        "tags": [],
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "",
-            "required": false,
-            "example": "{{api-key}}",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {}
-              },
-              "example": {
-                "contents": [
-                  {
-                    "parts": [
-                      {
-                        "text": "生命的意义是什么"
-                      }
-                    ],
-                    "role": "user"
-                  }
-                ],
-                "generationConfig": {
-                  "candidateCount": 100,
-                  "maxOutputTokens": 100,
-                  "topK": 2,
-                  "topP": 2
-                },
-                "safetySettings": [
-                  {
-                    "category": "HARM_CATEGORY_HATE_SPEECH",
-                    "threshold": "BLOCK_LOW_AND_ABOVE"
-                  }
-                ]
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {}
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": []
-      }
-    },
-    "/v1/images/generations": {
-      "post": {
-        "summary": "Novel AI - 图生图",
-        "deprecated": false,
-        "description": "",
-        "tags": [],
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "",
-            "required": false,
-            "example": "{{api-key}}",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {}
-              },
-              "example": {
-                "prompt": "cat dog girl",
-                "model": "diffusion-4-5-curated",
-                "n": 1,
-                "width": 1024,
-                "height": 1024,
-                "seed": "1231236",
-                "steps": 23,
-                "scale": 5,
-                "negative_prompt": "dog",
-                "quality_toggle": true,
-                "sampler": "Euler Ancestral",
-                "noise_schedule": "karras",
-                "character_reference": [
-                  {
-                    "image": "https://ts4.tc.mm.bing.net/th/id/OIP-C.faDCwEN2jt2utW9_bKOquQAAAA",
-                    "type": "character&style",
-                    "strength": 1,
-                    "fidelity": 0
-                  }
-                ]
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {}
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": []
-      }
-    },
-    "/v1/images/edits": {
-      "post": {
-        "summary": "编辑图片",
-        "deprecated": false,
-        "description": "",
-        "tags": [],
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "",
-            "required": false,
-            "example": "{{api-key}}",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {}
-              },
-              "example": {
-                "model": "gpt-image-2",
-                "prompt": "换成蓝色的苹果",
-                "size": "1024x1024",
-                "quality": "medium",
-                "n": 1,
-                "images": [
-                  {
-                    "image_url": "https://tse4.mm.bing.net/th/id/OIP.BUyCY__2XCH8Z1pYX5IPvQHaE7?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
-                  }
-                ]
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {}
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": []
-      }
-    },
-    "/v1/embeddings": {
-      "post": {
-        "summary": "向量",
-        "deprecated": false,
-        "description": "",
-        "tags": [],
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "",
-            "required": false,
-            "example": "{{api-key}}",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {}
-              },
-              "example": {
-                "model": "text-embedding-v4",
-                "input": "OfoxAI 是一个 LLM Gateway",
-                "encoding_format": "base64"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {}
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": []
-      }
-    },
-    "/convert/responses/gemini": {
-      "post": {
-        "summary": "转换预览",
-        "deprecated": false,
-        "description": "",
-        "tags": [],
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {}
-              },
-              "example": {
-                "model": "gpt-5.6-terra",
-                "stream": true,
-                "input": [
-                  {
-                    "role": "user",
-                    "content": [
-                      {
-                        "type": "input_text",
-                        "text": "生命的意义是什么"
-                      }
-                    ]
-                  }
-                ],
-                "extraBody": {
-                  "safetySettings": [
-                    {
-                      "category": "HARM_CATEGORY_HATE_SPEECH",
-                      "threshold": "BLOCK_LOW_AND_ABOVE"
-                    }
-                  ]
-                },
-                "topP": 2,
-                "topK": 2,
-                "maxOutputTokens": 100,
-                "candidateCount": 100
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {}
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": []
-      }
-    },
-    "/v1/videos": {
-      "post": {
-        "summary": "视频",
-        "deprecated": false,
-        "description": "",
-        "tags": [],
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "",
-            "required": true,
-            "example": "{{api-key}}",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Content-Type",
-            "in": "header",
-            "description": "",
-            "required": true,
-            "example": "application/json",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "model": {
-                    "type": "string"
-                  },
-                  "prompt": {
-                    "type": "string"
-                  },
-                  "duration": {
-                    "type": "integer"
-                  },
-                  "resolution": {
-                    "type": "string"
-                  },
-                  "generate_audio": {
-                    "type": "boolean"
-                  },
-                  "provider": {
-                    "type": "object",
-                    "properties": {
-                      "type": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "type"
-                    ]
-                  }
-                },
-                "required": [
-                  "model",
-                  "prompt",
-                  "duration",
-                  "resolution",
-                  "generate_audio",
-                  "provider"
-                ]
-              },
-              "example": {
-                "model": "seedance-2.0-mini",
-                "prompt": "一只打篮球的鸡, 然后说我系统唱跳Rap",
-                "duration": 4,
-                "resolution": "480p",
-                "frame_images": [
-                  {
-                    "type": "image_url",
-                    "image_url": {
-                      "url": "https://ts3.tc.mm.bing.net/th/id/OIP-C.bZhQ5U4jV4-Iy433LoP15gHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
-                    },
-                    "frame_type": "first_frame"
-                  }
-                ]
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "string"
-                        },
-                        "message": {
-                          "type": "string"
-                        },
-                        "status": {
-                          "type": "integer"
-                        }
-                      },
-                      "required": [
-                        "code",
-                        "message",
-                        "status"
-                      ]
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                },
-                "example": {
-                  "error": {
-                    "code": "authentication_error",
-                    "message": "Missing or invalid API key.",
-                    "status": 401
-                  }
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": []
-      }
-    },
-    "/v1/videos/video_538e31307031461381fa309c99531290": {
-      "get": {
-        "summary": "查询视频",
-        "deprecated": false,
-        "description": "",
-        "tags": [],
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "",
-            "required": true,
-            "example": "{{api-key}}",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Content-Type",
-            "in": "header",
-            "description": "",
-            "required": true,
-            "example": "application/json",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "model": {
-                    "type": "string"
-                  },
-                  "prompt": {
-                    "type": "string"
-                  },
-                  "duration": {
-                    "type": "integer"
-                  },
-                  "resolution": {
-                    "type": "string"
-                  },
-                  "generate_audio": {
-                    "type": "boolean"
-                  },
-                  "provider": {
-                    "type": "object",
-                    "properties": {
-                      "type": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "type"
-                    ]
-                  }
-                },
-                "required": [
-                  "model",
-                  "prompt",
-                  "duration",
-                  "resolution",
-                  "generate_audio",
-                  "provider"
-                ]
-              },
-              "example": {
-                "model": "bytedance/seedance-2.0-mini",
-                "prompt": "一只打篮球的鸡, 然后说我系统唱跳Rap",
-                "duration": 4,
-                "resolution": "480p",
-                "generate_audio": true,
-                "provider": {
-                  "type": "byteplus"
-                }
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "object",
-                      "properties": {
-                        "code": {
-                          "type": "string"
-                        },
-                        "message": {
-                          "type": "string"
-                        },
-                        "status": {
-                          "type": "integer"
-                        }
-                      },
-                      "required": [
-                        "code",
-                        "message",
-                        "status"
-                      ]
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                },
-                "example": {
-                  "error": {
-                    "code": "authentication_error",
-                    "message": "Missing or invalid API key.",
-                    "status": 401
-                  }
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": []
-      }
     }
   },
+  "webhooks": {},
   "components": {
     "schemas": {},
     "responses": {
-      "ChatCompletionStreamChunk": {
+      "流式响应": {
         "description": "",
         "content": {
           "application/json": {
@@ -3008,14 +2429,18 @@
                   "description": "实际用于生成回复的模型 ID。"
                 },
                 "system_fingerprint": {
-                  "type": "string",
-                  "description": "模型运行的后端配置指纹。",
-                  "nullable": true
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "模型运行的后端配置指纹。"
                 },
                 "service_tier": {
-                  "type": "string",
-                  "description": "实际用于处理该请求的服务层级。",
-                  "nullable": true
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "实际用于处理该请求的服务层级。"
                 },
                 "choices": {
                   "type": "array",
@@ -3044,14 +2469,18 @@
                             "description": "消息作者角色，通常只在第一个数据块中出现。"
                           },
                           "content": {
-                            "type": "string",
-                            "description": "本数据块新增的文本内容；可能为空字符串或 null。客户端应按到达顺序拼接。",
-                            "nullable": true
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "description": "本数据块新增的文本内容；可能为空字符串或 null。客户端应按到达顺序拼接。"
                           },
                           "refusal": {
-                            "type": "string",
-                            "description": "本数据块新增的拒绝说明。客户端应按到达顺序拼接。",
-                            "nullable": true
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "description": "本数据块新增的拒绝说明。客户端应按到达顺序拼接。"
                           },
                           "function_call": {
                             "type": "object",
@@ -3108,11 +2537,17 @@
                         }
                       },
                       "logprobs": {
-                        "type": "object",
+                        "type": [
+                          "object",
+                          "null"
+                        ],
                         "description": "本增量数据块的词元对数概率信息；仅在请求启用 logprobs 时返回。",
                         "properties": {
                           "content": {
-                            "type": "array",
+                            "type": [
+                              "array",
+                              "null"
+                            ],
                             "description": "本数据块输出内容中每个词元的概率信息。",
                             "items": {
                               "type": "object",
@@ -3122,12 +2557,14 @@
                                   "description": "词元文本。"
                                 },
                                 "bytes": {
-                                  "type": "array",
+                                  "type": [
+                                    "array",
+                                    "null"
+                                  ],
                                   "description": "词元对应的 UTF-8 字节序列。",
                                   "items": {
                                     "type": "integer"
-                                  },
-                                  "nullable": true
+                                  }
                                 },
                                 "logprob": {
                                   "type": "number",
@@ -3143,11 +2580,13 @@
                                         "type": "string"
                                       },
                                       "bytes": {
-                                        "type": "array",
+                                        "type": [
+                                          "array",
+                                          "null"
+                                        ],
                                         "items": {
                                           "type": "integer"
-                                        },
-                                        "nullable": true
+                                        }
                                       },
                                       "logprob": {
                                         "type": "number"
@@ -3156,19 +2595,22 @@
                                   }
                                 }
                               }
-                            },
-                            "nullable": true
+                            }
                           },
                           "refusal": {
-                            "type": "array",
-                            "description": "本数据块拒绝内容的词元概率信息。",
-                            "nullable": true
+                            "type": [
+                              "array",
+                              "null"
+                            ],
+                            "description": "本数据块拒绝内容的词元概率信息。"
                           }
-                        },
-                        "nullable": true
+                        }
                       },
                       "finish_reason": {
-                        "type": "string",
+                        "type": [
+                          "string",
+                          "null"
+                        ],
                         "enum": [
                           "stop",
                           "length",
@@ -3177,8 +2619,7 @@
                           "function_call",
                           null
                         ],
-                        "description": "生成结束原因。中间数据块为 null；最后一个有效数据块为 stop、length、tool_calls、content_filter 或旧版 function_call。",
-                        "nullable": true
+                        "description": "生成结束原因。中间数据块为 null；最后一个有效数据块为 stop、length、tool_calls、content_filter 或旧版 function_call。"
                       }
                     }
                   }
@@ -3242,23 +2683,55 @@
                   }
                 }
               },
-              "example": {
-                "id": "chatcmpl-123",
-                "object": "chat.completion.chunk",
-                "created": 1694268190,
-                "model": "gpt-5.6-sol",
-                "choices": [
-                  {
-                    "index": 0,
-                    "delta": {
-                      "role": "assistant",
-                      "content": ""
-                    },
-                    "logprobs": null,
-                    "finish_reason": null
-                  }
-                ]
-              }
+              "examples": [
+                {
+                  "id": "chatcmpl-123",
+                  "object": "chat.completion.chunk",
+                  "created": 1694268190,
+                  "model": "gpt-5.6-sol",
+                  "choices": [
+                    {
+                      "index": 0,
+                      "delta": {
+                        "role": "assistant",
+                        "content": ""
+                      },
+                      "logprobs": null,
+                      "finish_reason": null
+                    }
+                  ]
+                },
+                {
+                  "id": "chatcmpl-123",
+                  "object": "chat.completion.chunk",
+                  "created": 1694268190,
+                  "model": "gpt-5.6-sol",
+                  "choices": [
+                    {
+                      "index": 0,
+                      "delta": {
+                        "content": "你好"
+                      },
+                      "logprobs": null,
+                      "finish_reason": null
+                    }
+                  ]
+                },
+                {
+                  "id": "chatcmpl-123",
+                  "object": "chat.completion.chunk",
+                  "created": 1694268190,
+                  "model": "gpt-5.6-sol",
+                  "choices": [
+                    {
+                      "index": 0,
+                      "delta": {},
+                      "logprobs": null,
+                      "finish_reason": "stop"
+                    }
+                  ]
+                }
+              ]
             },
             "examples": {
               "示例 1": {
@@ -3272,5 +2745,6 @@
     },
     "securitySchemes": {}
   },
+  "servers": [],
   "security": []
 }
