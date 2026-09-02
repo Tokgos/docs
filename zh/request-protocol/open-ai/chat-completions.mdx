@@ -1,0 +1,328 @@
+---
+title: "Chat Completions"
+description: "使用 Tikway 的 OpenAI 原生协议创建对话补全。"
+sidebarTitle: "Chat Completions"
+---
+
+通过 OpenAI Chat Completions 原生协议创建对话补全。接口接收一组按时间顺序排列的消息，并返回模型的下一条回复。
+
+它适合构建聊天助手、问答、摘要、内容生成，以及需要在应用中调用业务工具的 Agent 工作流。
+
+## 端点与鉴权
+
+```http
+POST https://api.tikway.ai/v1/chat/completions
+X-API-Key: YOUR_API_KEY
+Content-Type: application/json
+```
+
+<Note>
+  本页面描述的是 OpenAI 原生协议：请求和响应使用 OpenAI Chat Completions 的字段结构。若需以 Anthropic、Gemini 或其他格式提交请求，请查看对应的协议适配文档。
+</Note>
+
+## 最小请求
+
+`model` 和 `messages` 为必填字段。模型名称请使用 Tikway 模型列表中显示的标识。
+
+```bash
+curl https://api.tikway.ai/v1/chat/completions \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/gpt-5.6-terra",
+    "messages": [
+      {
+        "role": "user",
+        "content": "给一家深夜书店写一句不超过 20 个字的标语。"
+      }
+    ]
+  }'
+```
+
+成功时，响应中的主要内容位于 `choices[0].message.content`：
+
+```json
+{
+  "id": "chatcmpl_01J...",
+  "object": "chat.completion",
+  "created": 1760000000,
+  "model": "openai/gpt-5.6-terra",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "在城市入睡后，替你翻开下一页。"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 30,
+    "completion_tokens": 18,
+    "total_tokens": 48
+  }
+}
+```
+
+## 完整请求参数
+
+以下参数遵循 OpenAI Chat Completions 原生协议。参数能否被实际执行取决于所选模型与 Tikway 的模型接入配置。为了便于查阅，复杂参数单独展开；简单标量参数集中在后文说明。
+
+### `model`
+
+必填。指定本次请求使用的模型，名称以 Tikway 模型列表为准。例如：
+
+```json
+{ "model": "openai/gpt-5.6-terra" }
+```
+
+模型决定可用的输入模态、推理、结构化输出、工具调用与采样参数。切换模型前，请确认模型页列出的能力。
+
+### `messages`
+
+必填。传入截至当前轮的完整对话历史，且顺序不能改变。Tikway 不会自动保存聊天上下文；下一轮请求时，应用必须自行回传前几轮的用户消息、assistant 消息和工具结果。
+
+```json
+{
+  "messages": [
+    {
+      "role": "developer",
+      "content": "你是一个严谨的旅行助手。"
+    },
+    {
+      "role": "user",
+      "content": "为我安排一天的杭州旅行。"
+    }
+  ]
+}
+```
+
+`developer` 用于应用级规则；较新的 OpenAI 模型应优先使用它。
+
+`system` 主要用于兼容已有实现。`user` 表示用户输入，`assistant` 表示模型前一轮回复。
+
+函数调用后，应用还必须追加 `role: "tool"` 消息，并将其 `tool_call_id` 对应到模型返回的调用 ID。旧版 `function` 角色仍可见于历史项目，但新接入应使用 `tool`。
+
+用户消息可以把 `content` 写成内容块数组。例如图像输入：
+
+```json
+{
+  "role": "user",
+  "content": [
+    { "type": "text", "text": "这张图里有哪些建筑风格？" },
+    {
+      "type": "image_url",
+      "image_url": {
+        "url": "https://example.com/city.jpg",
+        "detail": "high"
+      }
+    }
+  ]
+}
+```
+
+常用内容块还包括：
+
+- `input_audio`：`data` 为 Base64 内容，`format` 为音频格式。
+- `file`：使用 `file_id` 或 `file_data` 引用文件。
+
+是否支持这些块取决于模型；`developer` 和 `system` 消息只应使用文本内容。
+
+### `stream` 与 `stream_options`
+
+`stream: true` 时，接口通过 SSE 连续推送 `chat.completion.chunk`。
+
+客户端应拼接 `choices[].delta.content`，直至收到 `data: [DONE]`。`stream_options.include_usage` 可要求网关在流尾额外返回用量统计。
+
+```json
+{
+  "stream": true,
+  "stream_options": {
+    "include_usage": true
+  }
+}
+```
+
+不要在普通 JSON 请求客户端中开启 `stream`；它需要按 SSE 事件读取响应。详见 [流式响应](./streaming)。
+
+### `tools`、`tool_choice` 与 `parallel_tool_calls`
+
+`tools` 声明模型可以选择的函数。模型只会生成调用意图，绝不会执行函数；应用服务负责校验 `function.arguments`、调用业务系统，并以 `tool` 消息将结果写回下一轮请求。
+
+```json
+{
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_weather",
+        "description": "查询城市天气。",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "city": { "type": "string" }
+          },
+          "required": ["city"],
+          "additionalProperties": false
+        },
+        "strict": true
+      }
+    }
+  ],
+  "tool_choice": "auto",
+  "parallel_tool_calls": false
+}
+```
+
+`tool_choice` 可取以下值：
+
+- `auto`：模型自行决定是否调用工具。
+- `none`：禁止调用工具。
+- `required`：要求模型至少调用一个工具。
+- 指定函数对象：强制调用某个函数。
+
+`parallel_tool_calls: false` 用于要求每轮最多一个调用。完整报文流转见 [函数调用](./function-calling)。
+
+旧版 `functions` 与 `function_call` 已弃用。
+
+### `response_format`
+
+控制输出形态。默认是文本；`json_object` 是旧版 JSON Mode；支持 Structured Outputs 的模型优先使用 `json_schema`，以约束输出符合 JSON Schema。
+
+```json
+{
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "travel_plan",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "stops": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["title", "stops"],
+        "additionalProperties": false
+      }
+    }
+  }
+}
+```
+
+若使用 `{ "type": "json_object" }`，请在 `developer` 或 `user` 指令中明确要求模型输出 JSON，否则模型可能持续输出空白内容直到达到上限。
+
+### `max_completion_tokens`
+
+限制单次完成可使用的最大 token 数，包含可见输出与推理 token。对新的推理模型，使用此字段而非已弃用的 `max_tokens`。
+
+```json
+{ "max_completion_tokens": 800 }
+```
+
+若响应的 `finish_reason` 为 `length`，说明本次达到该上限；可适当增大上限或压缩输入历史。
+
+### `temperature` 与 `top_p`
+
+二者都是采样控制参数。`temperature` 通常在 `0` 至 `2`：低值使输出更稳定，高值使结果更多样。`top_p` 通常在 `0` 至 `1`，用概率质量限制候选 token。一般只调节其中一个。
+
+```json
+{
+  "temperature": 0.7,
+  "top_p": 1
+}
+```
+
+### `reasoning_effort`
+
+只适用于支持推理控制的模型。它约束模型投入的推理量；可用值会随模型不同而变化，包括 `none`、`minimal`、`low`、`medium`、`high`、`xhigh` 与 `max`。
+
+```json
+{ "reasoning_effort": "medium" }
+```
+
+降低推理强度通常可减少延迟和 token 使用，但也可能影响复杂任务的质量。
+
+### `audio` 与 `modalities`
+
+当目标模型支持音频输出时，使用 `modalities` 声明输出模态，并通过 `audio` 指定格式和音色：
+
+```json
+{
+  "modalities": ["text", "audio"],
+  "audio": {
+    "format": "mp3",
+    "voice": "alloy"
+  }
+}
+```
+
+`format` 可为 `wav`、`mp3`、`flac`、`opus` 或 `pcm16`。音色和音频响应字段是否可用，以目标模型支持范围为准。
+
+### `logprobs`、`top_logprobs` 与 `logit_bias`
+
+`logprobs: true` 会请求响应返回各输出 token 的对数概率；`top_logprobs` 可设置每个位置附带的候选数量（通常为 `0` 至 `20`）。这类数据适合研究、评分或调试，不适合一般聊天界面。
+
+```json
+{
+  "logprobs": true,
+  "top_logprobs": 2,
+  "logit_bias": {
+    "123": -1
+  }
+}
+```
+
+`logit_bias` 以模型 tokenizer 的 token ID 为 key、偏置值为 value；通常 `-100` 接近禁止，`100` 强烈偏向。不同模型的 tokenizer 不同，不能跨模型复用 token ID。
+
+### `prediction`
+
+当应用已经知道大部分期望输出、只需让模型改写少量内容时，可传入预测内容以降低延迟。它只适用于支持该能力的模型。
+
+```json
+{
+  "prediction": {
+    "type": "content",
+    "content": "路线标题："
+  }
+}
+```
+
+### Prompt Caching：`prompt_cache_key` 与 `prompt_cache_options`
+
+长且稳定的指令或上下文可从缓存中获益。`prompt_cache_key` 是稳定的路由键；`prompt_cache_options` 指定缓存模式和生命周期。
+
+```json
+{
+  "prompt_cache_key": "travel-assistant-v1",
+  "prompt_cache_options": {
+    "mode": "implicit",
+    "ttl": "30m"
+  }
+}
+```
+
+`mode` 可为 `implicit` 或 `explicit`。`prompt_cache_retention` 是已弃用字段，请不要在新项目中使用。
+
+### 其他控制参数
+
+- `frequency_penalty` 与 `presence_penalty` 通常为 `-2` 至 `2`，分别用于降低重复与鼓励新话题。
+- `stop` 指定停止序列，但部分新模型不支持。
+- `n` 指定候选数量，默认为 `1`；增加候选会增加消耗。
+- `seed` 尝试提高相同请求的可复现性，但不保证绝对一致。
+- `service_tier` 请求指定的服务等级。
+- `verbosity` 控制支持该能力的模型的输出详略。
+- `web_search_options` 只对支持 Web Search 的模型有效。
+
+`metadata` 可附加非敏感管理标签。`store` 控制是否保存完成记录。
+
+`safety_identifier` 应传入稳定的终端用户标识，切勿使用邮箱或手机号。旧版 `user` 字段已弃用，应使用 `safety_identifier`。
+
+## 深入阅读
+
+- [完整响应参数](./response-parameters)
+- [全参数 JSON 示例](./full-request-example)
+- [多轮对话](./multi-turn)
+- [流式响应](./streaming)
+- [函数调用](./function-calling)

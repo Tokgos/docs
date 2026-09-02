@@ -1,0 +1,51 @@
+---
+title: "快速开始"
+sidebarTitle: "快速开始"
+---
+
+> 在几分钟内，发起你的第一次 Tikway API 请求。
+
+## 1. 创建 API Key
+
+访问 [Tikway AI](https://tikway.ai)，点击右上角的 **登录 / 注册**。
+
+完成登录后，进入控制台创建 API Key。请妥善保管你的密钥，不要将其暴露在前端代码、公开仓库或截图中。
+
+## 2. 发起第一个请求
+
+Tikway 使用标准 HTTP 接口。将下方的 `YOUR_API_KEY` 替换为你在控制台创建的密钥，即可调用聊天补全接口。
+
+```bash
+curl https://api.tikway.ai/v1/chat/completions \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/gpt-5.6-terra",
+    "messages": [
+      {
+        "role": "user",
+        "content": "如果人类能和一种动物进行真正的对话，你认为最值得先问哪一种动物？为什么？"
+      }
+    ]
+  }'
+```
+
+## 3. 查看响应
+
+请求成功后，接口将返回模型生成的内容。你可以更换 `model` 字段以调用其他模型，并通过 `messages` 传入多轮对话上下文。
+
+<Note>
+  请始终在服务端保存和调用 API Key，避免在浏览器、移动端应用或任何公开环境中直接暴露密钥。
+</Note>
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card title="模型列表" icon="grid-2" href="/models">
+    浏览 Tikway 支持的语言、图像、视频与音乐模型。
+  </Card>
+
+  <Card title="API Reference" icon="code" href="/api">
+    查看完整的请求参数、响应格式与接口说明。
+  </Card>
+</CardGroup>

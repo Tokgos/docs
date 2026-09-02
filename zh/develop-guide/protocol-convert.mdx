@@ -1,0 +1,81 @@
+---
+title: "协议转换"
+sidebarTitle: "协议转换"
+---
+
+> 以统一的调用方式，连接不同厂商与不同类型的 AI 模型。
+
+## 概述
+
+不同模型提供商通常拥有不同的接口格式、字段命名、鉴权机制与响应结构。Tikway 在网关层处理这些差异，将多样化的底层能力整合为一致的调用体验。
+
+你无需为每一个模型重复适配不同的 API 规范。只需使用 Tikway 支持的统一协议，并在请求中指定模型，即可完成调用。
+
+## 统一调用体验
+
+以对话模型为例，无论底层模型来自 OpenAI、Gemini、Claude、DeepSeek、Qwen、GLM、Grok 或豆包，都可以通过统一的 Chat Completions 形式发起请求：
+
+```bash
+curl https://api.tikway.ai/v1/chat/completions \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/gpt-5.6-terra",
+    "messages": [
+      {
+        "role": "user",
+        "content": "为一家独立咖啡馆写一句简洁的品牌标语。"
+      }
+    ]
+  }'
+```
+
+切换模型时，通常只需调整 `model` 字段，其余请求结构保持不变：
+
+```json
+{
+  "model": "provider/model-name",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Your prompt"
+    }
+  ]
+}
+```
+
+## Tikway 负责处理什么
+
+Tikway 在统一接口与底层模型之间完成必要的协议适配，包括：
+
+- 根据模型标识路由至对应的模型服务。
+- 转换不同供应商的请求字段与参数规范。
+- 统一身份认证与访问控制方式。
+- 规范化接口响应，降低应用层的适配成本。
+- 将新模型接入纳入既有开发流程，减少迁移工作。
+
+## 适合的使用场景
+
+<CardGroup cols={2}>
+  <Card title="快速切换模型" icon="arrow-right-arrow-left">
+    在不重写业务调用逻辑的前提下，尝试不同模型的能力、速度与成本表现。
+  </Card>
+
+  <Card title="构建多模型应用" icon="layers">
+    在同一产品内，为不同功能选择最合适的语言、图像、视频或音乐模型。
+  </Card>
+
+  <Card title="降低维护成本" icon="wrench">
+    减少对多家供应商 SDK、鉴权方式和接口差异的长期维护。
+  </Card>
+
+  <Card title="平滑产品演进" icon="sparkles">
+    在模型能力持续更新时，以更低成本扩展产品边界。
+  </Card>
+</CardGroup>
+
+## 选择模型，而非重写集成
+
+协议转换的价值不只是让接口“能调用”，而是让模型替换与能力扩展成为产品决策，而不是工程负担。
+
+在接入前，请查阅对应模型的接口文档，确认其支持的参数、输入类型与输出形式。

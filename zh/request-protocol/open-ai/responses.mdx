@@ -1,0 +1,217 @@
+---
+title: "Responses"
+description: "使用 Tikway 的 OpenAI Responses 原生协议，创建多模态、可持续对话并支持工具调用的模型响应。"
+---
+
+Responses 是 OpenAI 新一代响应协议。它将输入、模型输出、工具调用和会话状态建模为独立的 item，适合多轮对话、多模态输入、推理模型和 Agent 工作流。
+
+与 Chat Completions 相比，Responses 使用 `input` 代替 `messages`，将系统指令放在 `instructions`，并通过 `previous_response_id` 延续前一次响应的上下文。
+
+## 端点与鉴权
+
+```http
+POST https://api.tikway.ai/v1/responses
+X-API-Key: YOUR_API_KEY
+Content-Type: application/json
+```
+
+<Note>
+  本页面描述 OpenAI Responses 原生协议。Tikway 以模型接入配置决定参数和工具的实际支持范围；调用前请确认目标模型的能力说明。
+</Note>
+
+## 最小请求
+
+`model` 与 `input` 是最常用的两个字段。`input` 可以直接是字符串，等价于一条 user 文本消息。
+
+```bash
+curl https://api.tikway.ai/v1/responses \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/gpt-5.6-terra",
+    "input": "给一家深夜书店写一句不超过 20 个字的标语。"
+  }'
+```
+
+模型文本通常位于 `output` 数组中 `type: "message"` 项的 `content[].text`。不要假设 `output[0]` 一定是文本消息：模型可能先返回 reasoning 或 function call 等其他 item。
+
+## 请求参数
+
+### `model`
+
+模型标识，使用 Tikway 模型列表中的名称。
+
+```json
+{ "model": "openai/gpt-5.6-terra" }
+```
+
+### `input`
+
+模型输入。简单文本可直接传字符串；复杂输入使用 item 数组，支持不同角色、文本、图片、音频、文件以及上一轮的函数调用结果。
+
+```json
+{
+  "input": [
+    {
+      "role": "user",
+      "content": [
+        { "type": "input_text", "text": "这张图里有哪些建筑风格？" },
+        {
+          "type": "input_image",
+          "image_url": "https://example.com/city.jpg",
+          "detail": "high"
+        }
+      ]
+    }
+  ]
+}
+```
+
+消息角色包括 `developer`、`system`、`user` 与 `assistant`。`developer` 和 `system` 的指令优先于用户输入；较新的 OpenAI 模型优先使用 `developer`。
+
+常见内容块如下：
+
+- `input_text`：文本，使用 `text` 字段。
+- `input_image`：图片，使用 `image_url` 或 `file_id`；可选 `detail`。
+- `input_file`：文件，使用 `file_id`、`file_url` 或 `file_data`；可选 `filename` 与 `detail`。
+- `input_audio`：音频，使用 Base64 `data` 与 `format`。
+- `function_call_output`：应用执行函数后的回填结果，见 [函数调用](./function-calling)。
+
+### `instructions`
+
+应用级指令。它会作为系统 / 开发者消息插入到模型上下文中，适合定义行为边界、写作风格与业务规则。
+
+```json
+{
+  "instructions": "你是严谨的旅行规划助手。回答用中文，给出可执行的时间安排。"
+}
+```
+
+当使用 `previous_response_id` 发起下一轮时，前一次请求的 `instructions` 不会自动继承；需要继续生效时，请在新请求中再次传入。
+
+### `previous_response_id` 与 `conversation`
+
+这两个字段都可以管理多轮状态，但不能在同一请求中同时使用。
+
+`previous_response_id` 引用上一条 Responses 响应的 `id`，适合按响应链继续对话：
+
+```json
+{
+  "previous_response_id": "resp_01J...",
+  "input": "把下午安排得轻松一些。"
+}
+```
+
+`conversation` 引用已创建的 Conversation 资源。该会话会自动累积输入与输出 item，适合长期状态管理。
+
+### `tools`、`tool_choice` 与 `parallel_tool_calls`
+
+`tools` 用来声明模型可调用的函数或平台工具。自定义函数的结构与 Chat Completions 不同：函数的 `name`、`description` 和 `parameters` 直接位于工具对象上。
+
+```json
+{
+  "tools": [
+    {
+      "type": "function",
+      "name": "get_weather",
+      "description": "查询城市天气。",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": { "type": "string" }
+        },
+        "required": ["city"],
+        "additionalProperties": false
+      },
+      "strict": true
+    }
+  ],
+  "tool_choice": "auto",
+  "parallel_tool_calls": false
+}
+```
+
+`tool_choice` 可取 `auto`、`none`、`required`，也可指定某个工具。模型只会返回函数调用 item，不会实际执行业务函数。完整的请求 Body 回填流程见 [函数调用](./function-calling)。
+
+### `text`
+
+控制文本输出格式和详细程度。`text.format` 可使用普通文本、JSON Object 或 JSON Schema。
+
+```json
+{
+  "text": {
+    "format": {
+      "type": "json_schema",
+      "name": "travel_plan",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "stops": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["title", "stops"],
+        "additionalProperties": false
+      }
+    },
+    "verbosity": "medium"
+  }
+}
+```
+
+`verbosity` 的可用值取决于模型。需要结构化输出时，优先使用支持 `json_schema` 的模型。
+
+### `reasoning`
+
+推理模型的配置。`effort` 控制模型的推理投入，`summary` 请求返回推理摘要。可用值取决于模型。
+
+```json
+{
+  "reasoning": {
+    "effort": "medium",
+    "summary": "auto"
+  }
+}
+```
+
+### 流式与输出限制
+
+`stream: true` 时，接口使用 SSE 输出 Responses 事件；`max_output_tokens` 限制可见输出与 reasoning token 的总上限。
+
+```json
+{
+  "stream": true,
+  "stream_options": {
+    "include_obfuscation": true
+  },
+  "max_output_tokens": 800
+}
+```
+
+详见 [流式响应](./streaming)。
+
+### 其他参数
+
+- `background`：在后台运行长时间响应任务。
+- `context_management`：配置上下文压缩阈值。
+- `include`：请求附加输出，例如 Web Search 来源、文件检索结果或 reasoning 加密内容。
+- `metadata`：附加不敏感的键值标签。
+- `moderation`：输入和输出审核配置；仅在支持时使用。
+- `prompt`：引用已保存的 Prompt 模板及其变量。
+- `prompt_cache_key` 与 `prompt_cache_options`：为相似请求提升缓存命中。
+- `safety_identifier`：稳定的终端用户标识；不要使用邮箱或手机号。
+- `service_tier`：服务等级选择，实际生效情况取决于模型与账户。
+- `store`：是否存储响应；使用 `previous_response_id` 时通常需要保留状态。
+- `temperature` 与 `top_p`：采样控制参数，通常只调整其中一个。
+- `top_logprobs`：返回每个位置最可能的 token 数；需结合 `include: ["message.output_text.logprobs"]`。
+- `truncation`：`auto` 会在超出上下文时从对话开头丢弃 item；`disabled` 则直接返回错误。
+- `max_tool_calls`：限制一次响应中内置工具可执行的最大调用总数。
+- `user` 与 `prompt_cache_retention`：兼容字段；新接入优先使用 `safety_identifier` 与 `prompt_cache_options`。
+
+## 深入阅读
+
+- [完整请求 JSON 示例](./full-request-example)
+- [响应参数](./response-parameters)
+- [多轮对话](./multi-turn)
+- [流式响应](./streaming)
+- [函数调用](./function-calling)

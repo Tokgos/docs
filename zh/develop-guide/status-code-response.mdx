@@ -1,0 +1,159 @@
+---
+title: "状态码与响应"
+sidebarTitle: "状态码与响应"
+---
+
+> 了解 Tikway API 的 HTTP 状态码、错误响应与常见返回结构。
+
+## 概述
+
+Tikway 使用标准 HTTP 状态码表示请求结果。
+
+对于兼容 OpenAI 协议的接口，例如 `/v1/chat/completions`，Tikway 使用与 OpenAI 兼容的响应结构；不同模型或异步生成接口的业务字段可能有所差异，请以对应接口文档为准。
+
+## HTTP 状态码
+
+| 状态码 | 含义 | 常见原因与处理建议 |
+| --- | --- | --- |
+| `200` | 请求成功 | 请求已被成功处理。 |
+| `400` | 请求错误 | 参数缺失、参数格式错误，或参数不受当前模型支持。 |
+| `401` | 身份认证失败 | 未携带 `X-API-Key`，或 API Key 无效。 |
+| `403` | 无权访问 | 当前 API Key 没有访问该资源或模型的权限。 |
+| `404` | 资源不存在 | 接口路径或模型标识不存在。 |
+| `408` | 请求超时 | 请求处理超时；建议重试或改用异步工作流。 |
+| `429` | 请求过于频繁 | 超出请求频率或并发限制；请降低请求速率后重试。 |
+| `500` | 服务端错误 | 网关或上游服务发生异常；建议稍后重试。 |
+| `502` | 上游服务异常 | 目标模型服务暂时不可用；建议重试或切换模型。 |
+| `503` | 服务暂不可用 | 服务维护、拥塞或临时不可用；请稍后重试。 |
+| `504` | 网关超时 | 上游模型响应时间过长；建议使用异步接口或稍后重试。 |
+
+<Info>
+  `2xx` 表示请求成功接收或处理；`4xx` 通常需要检查请求、密钥或配额；`5xx` 通常为临时服务异常，建议采用指数退避策略重试。
+</Info>
+
+## 成功响应
+
+以下是调用 Chat Completions 接口的响应示例。
+
+```json
+{
+  "id": "chatcmpl_01H...",
+  "object": "chat.completion",
+  "created": 1760000000,
+  "model": "openai/gpt-5.6-terra",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "我会先问章鱼：它们拥有高度独特的感知与行为方式，或许能提供一种完全不同于人类的世界视角。"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 28,
+    "completion_tokens": 42,
+    "total_tokens": 70
+  }
+}
+```
+
+### 关键字段
+
+| 字段 | 说明 |
+| --- | --- |
+| `id` | 本次请求的唯一标识，可用于问题排查。 |
+| `model` | 实际处理请求的模型标识。 |
+| `choices` | 模型生成结果的集合。 |
+| `choices[].message.content` | 模型返回的文本内容。 |
+| `choices[].finish_reason` | 本次生成结束的原因，例如 `stop` 或 `length`。 |
+| `usage` | 本次调用的 Token 用量统计。 |
+
+## 错误响应
+
+请求失败时，兼容 OpenAI 协议的接口会返回 `error` 对象：
+
+```json
+{
+  "error": {
+    "message": "Invalid API key.",
+    "type": "authentication_error",
+    "param": null,
+    "code": "invalid_api_key"
+  }
+}
+```
+
+### 错误字段
+
+| 字段 | 说明 |
+| --- | --- |
+| `error.message` | 可读的错误说明，适合记录到日志。 |
+| `error.type` | 错误类型，例如 `authentication_error`、`invalid_request_error` 或 `rate_limit_error`。 |
+| `error.param` | 与错误相关的请求参数；如无特定参数则为 `null`。 |
+| `error.code` | 机器可读的错误代码；部分错误可能为 `null`。 |
+
+## 常见错误
+
+### API Key 无效
+
+```json
+{
+  "error": {
+    "message": "Invalid API key.",
+    "type": "authentication_error",
+    "param": null,
+    "code": "invalid_api_key"
+  }
+}
+```
+
+请确认请求头已正确携带 API Key：
+
+```http
+X-API-Key: YOUR_API_KEY
+```
+
+### 模型不存在或不可用
+
+```json
+{
+  "error": {
+    "message": "The requested model does not exist or is not available for this API key.",
+    "type": "invalid_request_error",
+    "param": "model",
+    "code": "model_not_found"
+  }
+}
+```
+
+请检查模型标识是否正确，并确认该模型已对当前 API Key 开放。
+
+### 请求频率受限
+
+```json
+{
+  "error": {
+    "message": "Rate limit exceeded. Please retry later.",
+    "type": "rate_limit_error",
+    "param": null,
+    "code": "rate_limit_exceeded"
+  }
+}
+```
+
+请降低并发或请求频率，并在客户端使用指数退避策略进行重试。
+
+## 重试建议
+
+仅对临时性错误进行重试，例如 `408`、`429`、`500`、`502`、`503` 与 `504`。
+
+- 首次重试前等待约 1 秒。
+- 后续每次重试逐步延长等待时间。
+- 建议最多重试 2–3 次。
+- 对 `400`、`401`、`403` 与 `404`，请先修正请求，不建议自动重试。
+
+<Note>
+  图像、视频与音乐等异步任务接口的响应结构可能包含任务 ID、任务状态与结果地址。请在对应接口文档中查看其完整字段定义。
+</Note>

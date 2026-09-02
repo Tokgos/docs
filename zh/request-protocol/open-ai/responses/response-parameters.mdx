@@ -1,0 +1,142 @@
+---
+title: "响应参数"
+sidebarTitle: "响应参数"
+description: "Responses API 的响应对象、输出 item 与流式事件说明。"
+---
+
+非流式请求返回 `object: "response"` 的响应对象。Responses 的 `output` 是异构 item 数组，可能包含 assistant 消息、reasoning、函数调用或平台工具调用；不要假设首个 item 就是最终文本。
+
+## 顶层字段
+
+### `id`、`object` 与时间字段
+
+`id` 是当前响应的唯一标识，可用于 `previous_response_id` 延续对话。`object` 固定为 `response`。`created_at` 和 `completed_at` 分别是创建与完成时的 Unix 秒级时间戳。
+
+### `status`、`error` 与 `incomplete_details`
+
+`status` 表示响应生命周期，可能为 `queued`、`in_progress`、`completed`、`failed`、`cancelled` 或 `incomplete`。
+
+失败时查看 `error.code` 与 `error.message`。若 `status` 为 `incomplete`，请检查 `incomplete_details.reason`，常见原因是触发输出上限或内容过滤。
+
+### `output`
+
+模型生成的 item 数组。常见 item 包括：
+
+- `message`：assistant 文本、拒绝内容或引用。
+- `reasoning`：模型的推理 item；字段是否返回取决于模型和配置。
+- `function_call`：模型请求应用调用一个自定义函数。
+- `web_search_call`、`file_search_call`、`code_interpreter_call` 等：平台工具调用；仅在相应工具可用时出现。
+
+### 其他回显字段
+
+响应还可能回显或携带以下请求配置：
+
+- `model`、`instructions`、`tools`、`tool_choice` 与 `parallel_tool_calls`
+- `temperature`、`top_p`、`text` 与 `reasoning`
+- `metadata`、`store`、`truncation` 与 `service_tier`
+- `previous_response_id`、`conversation`、`max_output_tokens` 与 `max_tool_calls`
+
+### `usage`
+
+`usage.input_tokens`、`usage.output_tokens` 与 `usage.total_tokens` 分别表示输入、输出和总 token 数。
+
+`usage.input_tokens_details` 可能包含 `cached_tokens` 和 `cache_write_tokens`；`usage.output_tokens_details` 可能包含 `reasoning_tokens`。
+
+## `message` 输出 item
+
+文本消息的典型结构如下：
+
+```json
+{
+  "type": "message",
+  "id": "msg_01J...",
+  "status": "completed",
+  "role": "assistant",
+  "content": [
+    {
+      "type": "output_text",
+      "text": "在城市入睡后，替你翻开下一页。",
+      "annotations": []
+    }
+  ]
+}
+```
+
+`content` 可能包含：
+
+- `output_text`：最终文本，读取 `text`。
+- `refusal`：拒绝说明，读取 `refusal`。
+- 音频、引用或模型特定内容块：是否存在取决于模型和请求。
+
+`output_text.annotations` 可包含 URL 引用、文件引用、容器文件引用或文件路径。请求 `include: ["message.output_text.logprobs"]` 后，`output_text` 还可能包含 `logprobs`。
+
+## `function_call` 输出 item
+
+函数调用 item 代表模型的调用意图，不代表函数已经被执行。
+
+```json
+{
+  "type": "function_call",
+  "id": "fc_01J...",
+  "call_id": "call_weather_shanghai_01",
+  "name": "get_weather",
+  "arguments": "{\"city\":\"上海\"}",
+  "status": "completed"
+}
+```
+
+`arguments` 是 JSON 字符串，应用必须解析并校验。执行后，使用 `call_id` 构造下一轮的 `function_call_output` 输入 item。详见 [函数调用](./function-calling)。
+
+## 完整响应示例
+
+```json
+{
+  "id": "resp_01J...",
+  "object": "response",
+  "created_at": 1760000000,
+  "completed_at": 1760000001,
+  "status": "completed",
+  "error": null,
+  "incomplete_details": null,
+  "model": "openai/gpt-5.6-terra",
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_01J...",
+      "status": "completed",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "在城市入睡后，替你翻开下一页。",
+          "annotations": []
+        }
+      ]
+    }
+  ],
+  "parallel_tool_calls": true,
+  "previous_response_id": null,
+  "store": true,
+  "temperature": 1,
+  "text": {
+    "format": { "type": "text" }
+  },
+  "tool_choice": "auto",
+  "tools": [],
+  "top_p": 1,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 30,
+    "output_tokens": 18,
+    "total_tokens": 48,
+    "input_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0
+    },
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "metadata": {}
+}
+```

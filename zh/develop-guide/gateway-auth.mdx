@@ -1,0 +1,70 @@
+---
+title: "网关与鉴权"
+sidebarTitle: "网关与鉴权"
+---
+
+> 了解 Tikway API 的统一入口、身份认证与请求规范。
+
+## 概述
+
+Tikway AI 网关是所有 API 请求的统一入口，负责完成模型路由、身份认证与请求转发。
+
+无论调用语言模型、图像、视频还是音乐能力，你都只需面向同一个网关进行集成。选择合适的模型标识，即可由 Tikway 将请求路由至对应的模型能力。
+
+## 身份认证
+
+所有请求均需在 HTTP 请求头中携带 API Key。你可以登录 [Tikway AI](https://tikway.ai)，在控制台创建和管理密钥。
+
+```http
+X-API-Key: YOUR_API_KEY
+```
+
+以下是一个完整请求示例：
+
+```bash
+curl https://api.tikway.ai/v1/chat/completions \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/gpt-5.6-terra",
+    "messages": [
+      {
+        "role": "user",
+        "content": "请用一句话解释什么是人工智能。"
+      }
+    ]
+  }'
+```
+
+<Warning>
+  API Key 具有账户权限。请仅在服务端环境中使用，不要提交至 Git 仓库、嵌入前端代码或分享给他人。
+</Warning>
+
+## 请求规范
+
+| 项目 | 说明 |
+| --- | --- |
+| 网关地址 | `https://api.tikway.ai` |
+| 请求协议 | HTTPS |
+| 字符编码 | UTF-8 |
+| 内容类型 | `application/json` |
+| 身份认证 | `X-API-Key` 请求头 |
+| 请求方法 | 以具体接口文档为准，通常为 `POST` 或 `GET` |
+
+## 鉴权失败
+
+当 API Key 缺失、无效或无权访问请求资源时，网关会返回 `401 Unauthorized`。
+
+遇到鉴权错误时，请依次确认：
+
+1. 请求头中是否包含 `X-API-Key`。
+2. API Key 是否填写完整且未包含多余空格。
+3. 使用的密钥是否仍处于有效状态。
+4. 请求是否发往 `https://api.tikway.ai`。
+
+## 最佳实践
+
+- 为开发、测试与生产环境分别创建独立的 API Key。
+- 通过环境变量保存密钥，例如 `TIKWAY_API_KEY`。
+- 不要在日志、错误信息或客户端响应中输出完整密钥。
+- 上线前，为密钥配置最小必要的访问范围与使用策略。

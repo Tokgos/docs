@@ -1,0 +1,153 @@
+---
+title: "响应参数"
+sidebarTitle: "响应参数"
+description: "OpenAI Chat Completions 非流式响应与流式事件的完整字段说明。"
+---
+
+当 `stream` 未设置或为 `false` 时，接口返回一个 `chat.completion` 对象。当 `stream: true` 时，接口返回一系列 `chat.completion.chunk` SSE 事件。
+
+## 非流式响应对象
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | string | 本次 Chat Completion 的唯一标识。 |
+| `object` | string | 对象类型，固定为 `chat.completion`。 |
+| `created` | integer | 创建时间的 Unix 时间戳，单位为秒。 |
+| `model` | string | 实际用于处理该请求的模型标识。 |
+| `choices` | array | 模型生成的候选结果；`n > 1` 时包含多个元素。 |
+| `usage` | object / null | Token 用量统计。 |
+| `service_tier` | string / null | 实际使用的服务等级；仅在平台返回时存在。 |
+| `system_fingerprint` | string / null | 后端配置指纹；已弃用，可配合 `seed` 观察确定性变化。 |
+| `metadata` | object / null | 与已存储完成记录关联的元数据；仅在平台返回时存在。 |
+| `moderation` | object / null | 输入或输出的审核结果；仅在支持该能力时存在。 |
+
+### `choices[]`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `index` | integer | 候选结果的下标。 |
+| `message` | object | 该候选对应的 assistant 消息。 |
+| `finish_reason` | string | 生成结束原因：`stop`、`length`、`tool_calls`、`content_filter` 或已弃用的 `function_call`。 |
+| `logprobs` | object / null | 当请求设置 `logprobs: true` 时，返回 token 的对数概率信息。 |
+
+### `choices[].message`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `role` | string | 固定为 `assistant`。 |
+| `content` | string / array / null | 模型生成的文本或内容块。模型调用工具时通常为 `null`。 |
+| `refusal` | string / null | 模型拒绝生成时的拒绝内容。 |
+| `annotations` | array | 内容标注，例如 URL 引用；未提供时为空数组或省略。 |
+| `audio` | object / null | 音频输出信息；仅音频输出模型可能返回。 |
+| `tool_calls` | array | 现代工具调用数组。每个元素包含 `id`、`type: "function"` 与 `function`。 |
+| `function_call` | object / null | 旧版单函数调用对象，已弃用。 |
+
+#### `tool_calls[]`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | string | 工具调用 ID。回填 `tool` 消息时必须作为 `tool_call_id` 原样传回。 |
+| `type` | string | 工具类型；函数调用时为 `function`。 |
+| `function.name` | string | 模型选择调用的函数名称。 |
+| `function.arguments` | string | JSON 编码的函数参数字符串。必须先解析并校验，不能直接执行。 |
+
+### `choices[].logprobs`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `content` | array / null | 生成内容中各 token 的对数概率。 |
+| `refusal` | array / null | 拒绝内容中各 token 的对数概率。 |
+
+每个 token 项包含：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `token` | string | token 文本。 |
+| `bytes` | array / null | token 的 UTF-8 字节表示。 |
+| `logprob` | number | token 的对数概率。 |
+| `top_logprobs` | array | 该位置最可能的备选 token 及其对数概率。 |
+
+### `usage`
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `prompt_tokens` | integer | 输入消息使用的 Token 数。 |
+| `completion_tokens` | integer | 生成使用的 Token 数。 |
+| `total_tokens` | integer | 输入与生成 Token 之和。 |
+| `prompt_tokens_details` | object / null | 输入 Token 的细分统计。 |
+| `completion_tokens_details` | object / null | 生成 Token 的细分统计。 |
+
+`prompt_tokens_details` 可包含 `cached_tokens`、`cache_write_tokens`、`audio_tokens`、`image_tokens` 与 `text_tokens`。
+
+`completion_tokens_details` 可包含以下字段：
+
+- `reasoning_tokens`
+- `audio_tokens`
+- `text_tokens`
+- `accepted_prediction_tokens`
+- `rejected_prediction_tokens`
+
+## 响应示例
+
+```json
+{
+  "id": "chatcmpl_01J...",
+  "object": "chat.completion",
+  "created": 1760000000,
+  "model": "openai/gpt-5.6-terra",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "在城市入睡后，替你翻开下一页。",
+        "refusal": null,
+        "annotations": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 30,
+    "completion_tokens": 18,
+    "total_tokens": 48,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "audio_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "audio_tokens": 0,
+      "accepted_prediction_tokens": 0,
+      "rejected_prediction_tokens": 0
+    }
+  }
+}
+```
+
+## 流式事件对象
+
+每个 SSE 数据行都是一个 `chat.completion.chunk` 对象：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | string | 与本次流对应的 Completion ID。 |
+| `object` | string | 固定为 `chat.completion.chunk`。 |
+| `created` | integer | 创建时间的 Unix 时间戳。部分后续事件可能省略。 |
+| `model` | string | 当前请求使用的模型。 |
+| `choices` | array | 增量候选结果。 |
+| `usage` | object / null | 仅当 `stream_options.include_usage: true` 时，通常在最后一个数据块中提供。 |
+
+### `choices[].delta`
+
+`delta` 只包含相对于前一事件新增的字段。
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `role` | string | 通常仅在首个事件中为 `assistant`。 |
+| `content` | string / null | 新增的文本片段。客户端应按顺序拼接。 |
+| `refusal` | string / null | 新增的拒绝内容片段。 |
+| `tool_calls` | array | 工具调用的增量片段。函数参数可能跨多个事件分段传输，必须按 `index` 拼接。 |
+
+流会以 `data: [DONE]` 结束。结束前的最后一个业务事件通常在 `choices[].finish_reason` 中提供 `stop`、`length` 或 `tool_calls`。

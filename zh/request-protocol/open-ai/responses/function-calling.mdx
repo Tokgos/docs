@@ -1,0 +1,115 @@
+---
+title: "函数调用"
+sidebarTitle: "函数调用"
+description: "使用 Responses 的 function_call 与 function_call_output 完成工具调用。"
+---
+
+Responses API 中，模型以 `output` 内的 `function_call` item 表示调用意图。应用服务执行函数后，需要在下一次请求的 `input` 中提交 `function_call_output` item。
+
+模型和网关不会替应用访问数据库、天气服务或订单系统。函数参数及其执行权限必须由应用服务验证和控制。
+
+## 第一轮：声明函数
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "input": "今天上海适合带伞吗？",
+  "tools": [
+    {
+      "type": "function",
+      "name": "get_weather",
+      "description": "查询指定城市的实时天气和降水概率。",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "城市名称，例如 上海"
+          }
+        },
+        "required": ["city"],
+        "additionalProperties": false
+      },
+      "strict": true
+    }
+  ],
+  "tool_choice": "auto",
+  "store": true
+}
+```
+
+## 模型响应：请求调用函数
+
+```json
+{
+  "id": "resp_01Jweather",
+  "status": "completed",
+  "output": [
+    {
+      "type": "function_call",
+      "id": "fc_01Jweather",
+      "call_id": "call_weather_shanghai_01",
+      "name": "get_weather",
+      "arguments": "{\"city\":\"上海\"}",
+      "status": "completed"
+    }
+  ]
+}
+```
+
+应用应解析并校验 `arguments`，执行受控的 `get_weather` 函数。假设函数结果为：
+
+```json
+{
+  "city": "上海",
+  "condition": "小雨",
+  "temperature_c": 21,
+  "precipitation_probability": 70,
+  "advice": "建议携带雨伞"
+}
+```
+
+## 第二轮：回填函数结果
+
+使用上一轮响应 ID，并将结果包装为 `function_call_output`。`call_id` 必须与模型响应中的值完全一致。
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "previous_response_id": "resp_01Jweather",
+  "input": [
+    {
+      "type": "function_call_output",
+      "call_id": "call_weather_shanghai_01",
+      "output": "{\"city\":\"上海\",\"condition\":\"小雨\",\"temperature_c\":21,\"precipitation_probability\":70,\"advice\":\"建议携带雨伞\"}"
+    }
+  ]
+}
+```
+
+模型将根据工具结果生成最终消息：
+
+```json
+{
+  "output": [
+    {
+      "type": "message",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "建议带伞。上海今天有小雨，降水概率约为 70%，气温约 21°C。"
+        }
+      ]
+    }
+  ]
+}
+```
+
+## 安全要求
+
+- 仅执行服务端白名单中的函数。
+- `arguments` 是模型生成的 JSON 字符串，必须解析并校验后才可使用。
+- 不要让模型直接拼接 SQL、Shell 命令、文件路径或任意 URL 后执行。
+- 工具结果会进入模型上下文；不要回传密钥、密码或完整个人信息。
+- 设置工具调用轮数、超时和并发限制，避免异常循环或资源耗尽。

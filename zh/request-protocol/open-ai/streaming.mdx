@@ -1,0 +1,49 @@
+---
+title: "流式响应"
+sidebarTitle: "流式响应"
+description: "通过 Server-Sent Events 接收 Chat Completions 的增量输出。"
+---
+
+设置 `stream: true` 后，接口以 Server-Sent Events（SSE）返回多个 `chat.completion.chunk` 事件。每个事件中的增量文本位于 `choices[0].delta.content`。
+
+```bash
+curl --no-buffer https://api.tikway.ai/v1/chat/completions \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/gpt-5.6-terra",
+    "stream": true,
+    "messages": [
+      {
+        "role": "user",
+        "content": "用三句话描绘雨后的城市。"
+      }
+    ]
+  }'
+```
+
+## 事件示例
+
+```text
+data: {"id":"chatcmpl_01J...","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"role":"assistant","content":"雨停"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl_01J...","object":"chat.completion.chunk","choices":[{"index":0,"delta":{"content":"之后，霓虹"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl_01J...","object":"chat.completion.chunk","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}
+
+data: [DONE]
+```
+
+客户端应持续拼接非空的 `delta.content`，直到收到 `[DONE]`。不要假设每个事件都包含文本：首个事件可能只包含 `role`，结束事件则只包含 `finish_reason`。
+
+## 返回用量
+
+如需在流结束时获取用量，可在请求中加入：
+
+```json
+{
+  "stream_options": {
+    "include_usage": true
+  }
+}
+```

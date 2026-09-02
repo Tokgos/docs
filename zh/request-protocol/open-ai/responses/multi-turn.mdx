@@ -1,0 +1,39 @@
+---
+title: "多轮对话"
+sidebarTitle: "多轮对话"
+description: "使用 previous_response_id 或 conversation 维护 Responses 上下文。"
+---
+
+Responses API 推荐使用 `previous_response_id` 续接上一轮响应。Tikway 会将该 ID 对应的上一轮上下文带入新请求；新请求只需要提供新增输入。
+
+## 第一轮
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "instructions": "你是旅行规划助手，回答简洁且务实。",
+  "input": "我只有两天时间游览杭州，第一天应该怎么安排？",
+  "store": true
+}
+```
+
+假设响应 ID 为 `resp_01Jfirst`。
+
+## 第二轮
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "previous_response_id": "resp_01Jfirst",
+  "instructions": "你是旅行规划助手，回答简洁且务实。",
+  "input": "我喜欢安静一点的路线，帮我把下午改一下。"
+}
+```
+
+`previous_response_id` 与 `conversation` 不能同时使用。
+
+<Note>
+  `previous_response_id` 会延续前一次的对话状态，但不会自动继承之前的 `instructions`。需要长期生效的规则，应在每一轮重复传入。
+</Note>
+
+对于长期或多参与者会话，可使用 `conversation` 资源 ID。该模式会自动将输入与输出 item 追加到指定会话中。

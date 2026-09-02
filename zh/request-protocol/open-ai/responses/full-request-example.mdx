@@ -1,0 +1,91 @@
+---
+title: "全参数 JSON 示例"
+sidebarTitle: "全参数示例"
+description: "Responses API 请求 Body 的字段结构参考。"
+---
+
+下方示例涵盖当前主要顶层字段，用于展示结构，**不能直接作为单个请求提交**。后台任务、会话、结构化输出、工具、Web Search、推理、采样等能力会随模型或平台配置而互斥或不可用。
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "instructions": "你是严谨的旅行助手。",
+  "input": [
+    {
+      "role": "user",
+      "content": [
+        { "type": "input_text", "text": "根据这张图规划半日路线。" },
+        {
+          "type": "input_image",
+          "image_url": "https://example.com/city.jpg",
+          "detail": "high"
+        }
+      ]
+    }
+  ],
+  "background": false,
+  "context_management": [
+    { "type": "compaction", "compact_threshold": 120000 }
+  ],
+  "include": [
+    "message.output_text.logprobs",
+    "reasoning.encrypted_content"
+  ],
+  "max_output_tokens": 800,
+  "max_tool_calls": 3,
+  "metadata": {
+    "request_source": "documentation_example"
+  },
+  "parallel_tool_calls": false,
+  "prompt_cache_key": "travel-assistant-v1",
+  "prompt_cache_options": {
+    "mode": "implicit",
+    "ttl": "30m"
+  },
+  "reasoning": {
+    "effort": "medium",
+    "summary": "auto"
+  },
+  "safety_identifier": "user_123456",
+  "service_tier": "auto",
+  "store": true,
+  "stream": true,
+  "stream_options": {
+    "include_obfuscation": true
+  },
+  "temperature": 0.7,
+  "text": {
+    "format": { "type": "text" },
+    "verbosity": "medium"
+  },
+  "tool_choice": "auto",
+  "tools": [
+    {
+      "type": "function",
+      "name": "get_opening_hours",
+      "description": "查询一个地点的营业时间。",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "place": { "type": "string" }
+        },
+        "required": ["place"],
+        "additionalProperties": false
+      },
+      "strict": true
+    }
+  ],
+  "top_logprobs": 2,
+  "top_p": 1,
+  "truncation": "disabled"
+}
+```
+
+使用 `previous_response_id` 继续会话时，添加该字段并提供新的 `input`，不要同时设置 `conversation`：
+
+```json
+{
+  "previous_response_id": "resp_01J...",
+  "input": "把下午安排得轻松一些。"
+}
+```

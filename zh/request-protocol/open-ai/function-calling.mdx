@@ -1,0 +1,197 @@
+---
+title: "函数调用"
+sidebarTitle: "函数调用"
+description: "让模型选择工具，由应用安全地执行函数并将结果回填。"
+---
+
+函数调用让模型决定何时需要外部数据或业务操作。模型不会执行你的函数，也不会访问你的数据库、天气服务或订单系统；它只会返回结构化的调用意图。**你的服务端负责验证参数、执行函数，并将结果发回模型。**
+
+## 调用流程
+
+```text
+1. 应用携带 tools 与用户问题请求模型
+2. 模型返回 tool_calls（函数名 + JSON 字符串参数）
+3. 应用验证参数并执行自己的函数
+4. 应用将 assistant 的 tool_calls 和 tool 结果写回 messages，再请求模型生成最终回答
+```
+
+## 1. 声明工具并请求模型
+
+下面的例子声明了一个由你的服务实现的 `get_weather` 函数：
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "messages": [
+    {
+      "role": "developer",
+      "content": "你是天气助手。需要实时天气时调用工具；拿到工具结果后，用中文简洁回答。"
+    },
+    {
+      "role": "user",
+      "content": "今天上海适合带伞吗？"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_weather",
+        "description": "查询指定城市的实时天气和降水概率。",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "city": {
+              "type": "string",
+              "description": "城市名称，例如 上海"
+            }
+          },
+          "required": ["city"],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "tool_choice": "auto"
+}
+```
+
+| 值 | 行为 |
+| --- | --- |
+| `"auto"` | 由模型决定回答还是调用工具；声明 `tools` 时的常用选择。 |
+| `"none"` | 禁止调用工具，只生成文本。 |
+| `"required"` | 要求模型至少调用一个工具。 |
+| 指定函数对象 | 强制调用某个函数。 |
+
+强制调用 `get_weather`：
+
+```json
+{
+  "tool_choice": {
+    "type": "function",
+    "function": { "name": "get_weather" }
+  }
+}
+```
+
+## 2. 接收模型的工具调用
+
+当模型决定调用工具时，通常会返回 `finish_reason: "tool_calls"`。函数参数位于 `function.arguments`，其类型是 JSON **字符串**，需要先解析再校验。
+
+```json
+{
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": null,
+        "tool_calls": [
+          {
+            "id": "call_weather_shanghai_01",
+            "type": "function",
+            "function": {
+              "name": "get_weather",
+              "arguments": "{\"city\":\"上海\"}"
+            }
+          }
+        ]
+      },
+      "finish_reason": "tool_calls"
+    }
+  ]
+}
+```
+
+## 3. 执行函数后，构造下一轮请求 Body
+
+假设你的服务已执行 `get_weather`，得到如下业务结果：
+
+```json
+{
+  "city": "上海",
+  "condition": "小雨",
+  "temperature_c": 21,
+  "precipitation_probability": 70,
+  "advice": "建议携带雨伞"
+}
+```
+
+下一次请求需要保留第一轮的 `developer`、`user`、以及模型返回的完整 `assistant` 消息；随后追加一个 `role: "tool"` 消息。`tool_call_id` 必须与第一轮响应里的 `id` 完全一致。
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "messages": [
+    {
+      "role": "developer",
+      "content": "你是天气助手。需要实时天气时调用工具；拿到工具结果后，用中文简洁回答。"
+    },
+    {
+      "role": "user",
+      "content": "今天上海适合带伞吗？"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_weather_shanghai_01",
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "arguments": "{\"city\":\"上海\"}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "call_weather_shanghai_01",
+      "content": "{\"city\":\"上海\",\"condition\":\"小雨\",\"temperature_c\":21,\"precipitation_probability\":70,\"advice\":\"建议携带雨伞\"}"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_weather",
+        "description": "查询指定城市的实时天气和降水概率。",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "city": { "type": "string" }
+          },
+          "required": ["city"],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "tool_choice": "auto"
+}
+```
+
+模型随后基于工具结果生成最终回答：
+
+```json
+{
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "建议带伞。上海今天有小雨，降水概率约为 70%，气温约 21°C。"
+      },
+      "finish_reason": "stop"
+    }
+  ]
+}
+```
+
+## 安全要求
+
+- 函数名称和参数都来自模型输出，必须在服务端维护允许调用的工具白名单。
+- 将 `function.arguments` 视为不可信输入：先 `JSON.parse`，再按 JSON Schema 或业务规则校验。
+- 不要让模型直接拼接 SQL、Shell 命令、文件路径或任意 URL 后执行。
+- 工具结果同样会进入模型上下文；不要回传密码、密钥、完整个人信息或内部系统凭据。
+- 设定工具调用轮数、超时与并发上限，避免异常循环和资源耗尽。

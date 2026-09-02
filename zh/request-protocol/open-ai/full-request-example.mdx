@@ -1,0 +1,140 @@
+---
+title: "全参数 JSON 示例"
+sidebarTitle: "全参数示例"
+description: "Chat Completions 请求 Body 的字段结构参考。"
+---
+
+下面展示当前非弃用顶层参数的 JSON 结构。
+
+它是字段参考，**不是可直接提交的单个请求**。音频、Web Search、Structured Outputs、预测输出、采样参数和工具调用等能力会因模型而互斥或不受支持。
+
+实际调用时，请只保留目标模型支持的字段。
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "messages": [
+    {
+      "role": "developer",
+      "content": "你是一个严谨的旅行助手。"
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "根据图片安排一天的城市漫步路线。"
+        },
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": "https://example.com/city.jpg",
+            "detail": "high"
+          }
+        }
+      ]
+    }
+  ],
+  "audio": {
+    "format": "mp3",
+    "voice": "alloy"
+  },
+  "frequency_penalty": 0,
+  "logit_bias": {
+    "123": -1
+  },
+  "logprobs": true,
+  "max_completion_tokens": 800,
+  "metadata": {
+    "request_source": "documentation_example"
+  },
+  "modalities": ["text", "audio"],
+  "n": 1,
+  "parallel_tool_calls": false,
+  "prediction": {
+    "type": "content",
+    "content": "路线标题："
+  },
+  "presence_penalty": 0,
+  "prompt_cache_key": "travel-assistant-v1",
+  "prompt_cache_options": {
+    "mode": "implicit",
+    "ttl": "30m"
+  },
+  "reasoning_effort": "medium",
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "walking_plan",
+      "description": "城市漫步路线",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "stops": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["title", "stops"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "safety_identifier": "user_123456",
+  "seed": 42,
+  "service_tier": "auto",
+  "stop": ["<END>"],
+  "store": false,
+  "stream": true,
+  "stream_options": {
+    "include_usage": true
+  },
+  "temperature": 0.7,
+  "tool_choice": "auto",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_opening_hours",
+        "description": "查询一个地点的营业时间。",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "place": {
+              "type": "string",
+              "description": "地点名称"
+            }
+          },
+          "required": ["place"],
+          "additionalProperties": false
+        },
+        "strict": true
+      }
+    }
+  ],
+  "top_logprobs": 2,
+  "top_p": 1,
+  "verbosity": "medium",
+  "web_search_options": {
+    "search_context_size": "medium"
+  }
+}
+```
+
+## 已弃用参数
+
+以下官方字段仍可能出现在旧项目中，但新接入不建议使用：
+
+```json
+{
+  "max_tokens": 800,
+  "functions": [],
+  "function_call": "auto",
+  "prompt_cache_retention": "24h",
+  "user": "user_123456"
+}
+```
+
+请分别替换为 `max_completion_tokens`、`tools`、`tool_choice`、`prompt_cache_options` 与 `safety_identifier`。

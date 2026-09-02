@@ -1,0 +1,46 @@
+---
+title: "流式响应"
+sidebarTitle: "流式响应"
+description: "通过 Server-Sent Events 接收 Responses API 的增量事件。"
+---
+
+设置 `stream: true` 后，接口使用 SSE 推送带名称的 Responses 事件。
+
+与 Chat Completions 不同，Responses 不依赖 `[DONE]` 标记。客户端应以 `response.completed`、`response.failed` 或其他终态事件结束处理。
+
+```bash
+curl --no-buffer https://api.tikway.ai/v1/responses \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/gpt-5.6-terra",
+    "input": "用三句话描绘雨后的城市。",
+    "stream": true
+  }'
+```
+
+## 常见事件
+
+- `response.created`：响应对象已创建。
+- `response.in_progress`：模型正在处理。
+- `response.output_item.added`：新增一个输出 item。
+- `response.content_part.added`：输出 item 新增一个内容块。
+- `response.output_text.delta`：新增文本片段；拼接 `delta`。
+- `response.output_text.done`：一个文本块完成。
+- `response.function_call_arguments.delta`：函数参数增量；需要按顺序拼接。
+- `response.function_call_arguments.done`：函数参数完整可用。
+- `response.completed`：响应成功完成。
+- `response.failed`、`response.incomplete`：响应未成功完成。
+
+```text
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":0,"content_index":0,"delta":"雨停"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":0,"content_index":0,"delta":"之后，霓虹在水面上轻轻摇晃。"}
+
+event: response.completed
+data: {"type":"response.completed","response":{"id":"resp_01J...","status":"completed"}}
+```
+
+不要假设一个响应只产生文本事件。启用 reasoning、函数调用或平台工具时，流中还会出现相应 item 与事件。
