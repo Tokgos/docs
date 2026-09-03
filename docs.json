@@ -130,14 +130,47 @@
             "tab": "API Reference",
             "groups": [
               {
-                "group": "对话协议",
-                "openapi": "openapi.json"
+                "group": "对话补全",
+                "openapi": "openapi.json",
+                "pages": [
+                  {
+                    "group": "OpenAI协议",
+                    "pages": ["POST /v1/chat/completions", "POST /v1/responses"]
+                  },
+                  {
+                    "group": "Anthropic协议",
+                    "pages": ["POST /v1/messages"]
+                  },
+                  {
+                    "group": "Gemini协议",
+                    "pages": [
+                      "POST /v1beta/models/{model}:generateContent",
+                      "POST /v1beta/models/{model}:streamGenerateContent"
+                    ]
+                  }
+                ]
               },
               {
                 "group": "图片生成",
-                "openapi": [
-                  "image-gpt.openapi.json",
-                  "image-banana.openapi.json"
+                "pages": [
+                  {
+                    "group": "GPT Image",
+                    "openapi": "image-gpt.openapi.json",
+                    "pages": [
+                      "POST /v1/images/generations",
+                      "POST /v1/images/edits"
+                    ]
+                  },
+                  {
+                    "group": "Nano Banana",
+                    "openapi": "image-banana.openapi.json",
+                    "pages": [
+                      "POST /v1/images/generations",
+                      "POST /v1/images/edits",
+                      "POST /v1beta/models/{model}:generateContent",
+                      "POST /v1beta/models/{edit-model}:generateContent"
+                    ]
+                  }
                 ]
               }
             ]
