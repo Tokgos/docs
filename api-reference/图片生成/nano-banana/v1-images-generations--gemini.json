@@ -1,0 +1,324 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mintlify",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "",
+      "description": "开发环境"
+    }
+  ],
+  "security": [],
+  "tags": [
+    {
+      "name": "图片生成"
+    },
+    {
+      "name": "图片生成/Nano Banana"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "GPT - 图片生成",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "图片生成/Nano Banana",
+          "图片生成"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "必填。Gemini 图像模型，例如 gemini-3.1-flash-image、gemini-3-pro-image 或 gemini-2.5-flash-image。"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32000,
+                    "description": "必填。生成图片的提示词。"
+                  },
+                  "input_images": {
+                    "type": "array",
+                    "maxItems": 14,
+                    "description": "可选参考图。传入后可实现图生图、风格迁移或多图合成；每项可为 HTTP(S)/gs:// URI、Gemini Files URI，或 Base64 data URL。",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
+                    "description": "OpenAI 兼容尺寸。网关自动化简并映射到 Gemini aspectRatio，例如 1920x1080 映射为 16:9。"
+                  },
+                  "quality": {
+                    "type": "string",
+                    "enum": [
+                      "standard",
+                      "hd",
+                      "low",
+                      "medium",
+                      "high",
+                      "auto"
+                    ],
+                    "description": "兼容质量字段。网关映射：standard/low→1K，medium→2K，high/hd→4K，auto 或省略时不指定。"
+                  },
+                  "aspect_ratio": {
+                    "type": "string",
+                    "enum": [
+                      "1:1",
+                      "1:4",
+                      "1:8",
+                      "2:3",
+                      "3:2",
+                      "3:4",
+                      "4:1",
+                      "4:3",
+                      "4:5",
+                      "5:4",
+                      "8:1",
+                      "9:16",
+                      "16:9",
+                      "21:9"
+                    ],
+                    "description": "Gemini 原生扩展。优先于 size，直接映射到 generationConfig.responseFormat.image.aspectRatio。"
+                  },
+                  "image_size": {
+                    "type": "string",
+                    "enum": [
+                      "512px",
+                      "1K",
+                      "2K",
+                      "4K"
+                    ],
+                    "description": "Gemini 原生扩展。优先于 quality，直接映射到 generationConfig.responseFormat.image.imageSize。模型可用档位不同。"
+                  },
+                  "google_search": {
+                    "type": "boolean",
+                    "description": "Gemini 原生扩展，是否启用 Google Search grounding；仅支持此能力的模型可用。"
+                  },
+                  "image_search": {
+                    "type": "boolean",
+                    "description": "Gemini 原生扩展，是否启用图片搜索 grounding；仅支持此能力的模型可用。"
+                  },
+                  "thinking_level": {
+                    "type": "string",
+                    "enum": [
+                      "Minimal",
+                      "High"
+                    ],
+                    "description": "Gemini 原生扩展，模型思考强度；仅支持此能力的模型可用。"
+                  },
+                  "generationConfig": {
+                    "type": "object",
+                    "description": "Gemini 原生 generationConfig。网关强制补充 responseModalities=[IMAGE]；可在此传受 Gemini 支持的额外生成配置。",
+                    "properties": {}
+                  }
+                },
+                "examples": [
+                  {
+                    "model": "gemini-3.1-flash-image",
+                    "prompt": "电影感的上海雨夜街景，霓虹灯倒影，写实摄影",
+                    "size": "1920x1080",
+                    "image_size": "2K",
+                    "generationConfig": {
+                      "temperature": 0.7
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "model": "gemini-3-pro-image-preview",
+                "prompt": "A cute baby sea otter",
+                "n": 1,
+                "size": "1024x1024"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "图像创建时的 Unix 时间戳（秒）。"
+                    },
+                    "background": {
+                      "type": "string",
+                      "enum": [
+                        "transparent",
+                        "opaque"
+                      ],
+                      "description": "实际采用的背景设置。"
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "生成结果列表。",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "description": "Base64 编码的图像数据。GPT Image 默认返回；DALL·E 在 response_format=b64_json 时返回。"
+                          },
+                          "revised_prompt": {
+                            "type": "string",
+                            "description": "DALL·E 3 实际使用的修订提示词。"
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "生成图像 URL。仅 DALL·E 且 response_format=url 时返回；有效期为 60 分钟。"
+                          }
+                        }
+                      }
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "webp",
+                        "jpeg"
+                      ],
+                      "description": "实际输出图像格式。"
+                    },
+                    "quality": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "description": "实际生成质量。"
+                    },
+                    "size": {
+                      "type": "string",
+                      "description": "实际生成的图像尺寸。"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "description": "GPT Image 模型的 token 用量。",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "description": "输入（文本和图像）的 token 数。"
+                        },
+                        "input_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "输入图像 token 数。"
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "输入文本 token 数。"
+                            }
+                          }
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "description": "输出 token 数。"
+                        },
+                        "output_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "输出图像 token 数。"
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "输出文本 token 数。"
+                            }
+                          }
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "description": "输入和输出 token 总数。"
+                        }
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "created": 1713833628,
+                      "data": [
+                        {
+                          "b64_json": "..."
+                        }
+                      ],
+                      "usage": {
+                        "total_tokens": 100,
+                        "input_tokens": 50,
+                        "output_tokens": 50,
+                        "input_tokens_details": {
+                          "text_tokens": 10,
+                          "image_tokens": 40
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "created": 1713833628,
+                  "data": [
+                    {
+                      "b64_json": "..."
+                    }
+                  ],
+                  "usage": {
+                    "total_tokens": 100,
+                    "input_tokens": 50,
+                    "output_tokens": 50,
+                    "input_tokens_details": {
+                      "text_tokens": 10,
+                      "image_tokens": 40
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [],
+        "x-group": "Nano Banana"
+      }
+    }
+  },
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

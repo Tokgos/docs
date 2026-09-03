@@ -1,0 +1,41 @@
+{
+  "source": "openapi.json",
+  "entries": [
+    {
+      "group": "图片生成",
+      "subgroup": "Nano Banana",
+      "summary": "GPT - 图片生成",
+      "method": "POST",
+      "path": "/v1/images/generations",
+      "sourcePath": "/v1/images/generations{gemini}",
+      "openapi": "api-reference/图片生成/nano-banana/v1-images-generations--gemini.json"
+    },
+    {
+      "group": "图片生成",
+      "subgroup": "Nano Banana",
+      "summary": "GPT - 图片编辑",
+      "method": "POST",
+      "path": "/v1/images/edtis",
+      "sourcePath": "/v1/images/edtis{gemini}",
+      "openapi": "api-reference/图片生成/nano-banana/v1-images-edtis--gemini.json"
+    },
+    {
+      "group": "图片生成",
+      "subgroup": "Nano Banana",
+      "summary": "Gemini - 图片生成",
+      "method": "POST",
+      "path": "/v1beta/models/{model}:generateContent",
+      "sourcePath": "/v1beta/models/{model}:generateContent{gemini}",
+      "openapi": "api-reference/图片生成/nano-banana/v1beta-models-model-generatecontent--gemini.json"
+    },
+    {
+      "group": "图片生成",
+      "subgroup": "Nano Banana",
+      "summary": "Gemini - 图片编辑",
+      "method": "POST",
+      "path": "/v1beta/models/{model}:generateContent",
+      "sourcePath": "/v1beta/models/{model}:generateContent{gemini-edit}",
+      "openapi": "api-reference/图片生成/nano-banana/v1beta-models-model-generatecontent--gemini-edit.json"
+    }
+  ]
+}

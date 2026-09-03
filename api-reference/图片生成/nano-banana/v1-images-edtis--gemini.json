@@ -1,0 +1,358 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mintlify",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "",
+      "description": "开发环境"
+    }
+  ],
+  "security": [],
+  "tags": [
+    {
+      "name": "图片生成"
+    },
+    {
+      "name": "图片生成/Nano Banana"
+    }
+  ],
+  "paths": {
+    "/v1/images/edtis": {
+      "post": {
+        "summary": "GPT - 图片编辑",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "图片生成/Nano Banana",
+          "图片生成"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "必填。Gemini 图像模型，例如 gemini-3.1-flash-image 或 gemini-3-pro-image。"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "必填。对参考图的编辑指令。"
+                  },
+                  "images": {
+                    "type": "array",
+                    "maxItems": 14,
+                    "description": "编辑参考图。必须至少提供 images、input_images、image 或 refer_images 其中之一；每项是 URL/data URL 字符串，或含 image_url 的对象。Gemini 不支持 file_id。",
+                    "items": {
+                      "type": [
+                        "string",
+                        "object"
+                      ]
+                    }
+                  },
+                  "input_images": {
+                    "type": "array",
+                    "maxItems": 14,
+                    "description": "编辑参考图的推荐统一字段。允许 HTTP(S)/gs:// URI、Gemini Files URI 或 Base64 data URL。",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "image": {
+                    "type": [
+                      "string",
+                      "object",
+                      "array"
+                    ],
+                    "description": "兼容别名。可传一张或多张参考图，网关会并入 input_images。"
+                  },
+                  "refer_images": {
+                    "type": [
+                      "string",
+                      "object",
+                      "array"
+                    ],
+                    "description": "兼容别名。可传一张或多张参考图，网关会并入 input_images。"
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
+                    "description": "兼容尺寸，自动映射为 Gemini aspectRatio。"
+                  },
+                  "quality": {
+                    "type": "string",
+                    "enum": [
+                      "standard",
+                      "hd",
+                      "low",
+                      "medium",
+                      "high",
+                      "auto"
+                    ],
+                    "description": "兼容质量，自动映射为 Gemini imageSize。"
+                  },
+                  "aspect_ratio": {
+                    "type": "string",
+                    "enum": [
+                      "1:1",
+                      "1:4",
+                      "1:8",
+                      "2:3",
+                      "3:2",
+                      "3:4",
+                      "4:1",
+                      "4:3",
+                      "4:5",
+                      "5:4",
+                      "8:1",
+                      "9:16",
+                      "16:9",
+                      "21:9"
+                    ],
+                    "description": "Gemini 原生扩展，优先于 size。"
+                  },
+                  "image_size": {
+                    "type": "string",
+                    "enum": [
+                      "512px",
+                      "1K",
+                      "2K",
+                      "4K"
+                    ],
+                    "description": "Gemini 原生扩展，优先于 quality。"
+                  },
+                  "google_search": {
+                    "type": "boolean",
+                    "description": "Gemini 原生 Search grounding 开关。"
+                  },
+                  "image_search": {
+                    "type": "boolean",
+                    "description": "Gemini 原生图片搜索 grounding 开关。"
+                  },
+                  "thinking_level": {
+                    "type": "string",
+                    "enum": [
+                      "Minimal",
+                      "High"
+                    ],
+                    "description": "Gemini 原生思考强度。"
+                  },
+                  "generationConfig": {
+                    "type": "object",
+                    "description": "Gemini 原生 generationConfig；网关会保证 IMAGE 输出模态。",
+                    "properties": {}
+                  }
+                },
+                "examples": [
+                  {
+                    "model": "gemini-3.1-flash-image",
+                    "images": [
+                      {
+                        "image_url": "https://example.com/cat.png"
+                      }
+                    ],
+                    "prompt": "保持猫的外观不变，把背景改为星空下的餐厅",
+                    "aspect_ratio": "16:9",
+                    "image_size": "2K"
+                  }
+                ]
+              },
+              "example": {
+                "model": "gemini-3-pro-image-preview",
+                "prompt": "换成蓝色的苹果",
+                "size": "1024x1024",
+                "quality": "medium",
+                "n": 1,
+                "images": [
+                  {
+                    "image_url": "https://tse4.mm.bing.net/th/id/OIP.BUyCY__2XCH8Z1pYX5IPvQHaE7?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "编辑结果创建时的 Unix 时间戳（秒）。"
+                    },
+                    "background": {
+                      "type": "string",
+                      "enum": [
+                        "transparent",
+                        "opaque"
+                      ],
+                      "description": "实际采用的输出背景。"
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "编辑后的图像列表。",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "description": "Base64 编码的图片内容。GPT Image 模型默认返回。"
+                          },
+                          "revised_prompt": {
+                            "type": "string",
+                            "description": "DALL·E 3 的实际修订提示词；本编辑接口通常不返回该字段。"
+                          },
+                          "url": {
+                            "type": "string",
+                            "description": "生成图片 URL。DALL·E 使用 URL 返回格式时提供，通常有效 60 分钟。"
+                          }
+                        }
+                      }
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "webp",
+                        "jpeg"
+                      ],
+                      "description": "实际输出格式。"
+                    },
+                    "quality": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "auto"
+                      ],
+                      "description": "实际使用的输出质量。"
+                    },
+                    "size": {
+                      "type": "string",
+                      "description": "实际生成的图片尺寸。"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "description": "GPT Image 模型的 token 用量。",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "description": "输入文本和图像的 token 数。"
+                        },
+                        "input_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "输入图像 token 数。"
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "输入文本 token 数。"
+                            }
+                          }
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "description": "输出 token 数。"
+                        },
+                        "output_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "输出图像 token 数。"
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "输出文本 token 数。"
+                            }
+                          }
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "description": "输入和输出 token 总数。"
+                        }
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "created": 1713833628,
+                      "data": [
+                        {
+                          "b64_json": "..."
+                        }
+                      ],
+                      "usage": {
+                        "total_tokens": 100,
+                        "input_tokens": 50,
+                        "output_tokens": 50,
+                        "input_tokens_details": {
+                          "text_tokens": 10,
+                          "image_tokens": 40
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "created": 1713833628,
+                  "data": [
+                    {
+                      "b64_json": "..."
+                    }
+                  ],
+                  "usage": {
+                    "total_tokens": 100,
+                    "input_tokens": 50,
+                    "output_tokens": 50,
+                    "input_tokens_details": {
+                      "text_tokens": 10,
+                      "image_tokens": 40
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [],
+        "x-group": "Nano Banana"
+      }
+    }
+  },
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

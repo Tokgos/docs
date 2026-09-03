@@ -1,0 +1,390 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mintlify",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "",
+      "description": "开发环境"
+    }
+  ],
+  "security": [],
+  "tags": [
+    {
+      "name": "图片生成"
+    },
+    {
+      "name": "图片生成/Nano Banana"
+    }
+  ],
+  "paths": {
+    "/v1beta/models/{model}:generateContent": {
+      "post": {
+        "summary": "Gemini - 图片编辑",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "图片生成/Nano Banana",
+          "图片生成"
+        ],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "contents"
+                ],
+                "properties": {
+                  "contents": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "必填。纯文本为文生图；文本加 inlineData 为图像编辑。",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "parts"
+                      ],
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "model"
+                          ],
+                          "description": "通常为 user 或省略。"
+                        },
+                        "parts": {
+                          "type": "array",
+                          "minItems": 1,
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "description": "生成或编辑图片的提示词。"
+                              },
+                              "inlineData": {
+                                "type": "object",
+                                "description": "编辑时使用的 Base64 参考图。",
+                                "required": [
+                                  "mimeType",
+                                  "data"
+                                ],
+                                "properties": {
+                                  "mimeType": {
+                                    "type": "string",
+                                    "description": "图片 MIME 类型，例如 image/png。"
+                                  },
+                                  "data": {
+                                    "type": "string",
+                                    "description": "不带 data URL 前缀的 Base64 图片内容。"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "generationConfig": {
+                    "type": "object",
+                    "description": "Nano Banana 图像输出配置。",
+                    "properties": {
+                      "responseModalities": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "TEXT",
+                            "IMAGE"
+                          ]
+                        },
+                        "description": "仅返回图片时设为 [\"IMAGE\"]。"
+                      },
+                      "responseFormat": {
+                        "type": "object",
+                        "properties": {
+                          "image": {
+                            "type": "object",
+                            "properties": {
+                              "aspectRatio": {
+                                "type": "string",
+                                "enum": [
+                                  "1:1",
+                                  "1:4",
+                                  "1:8",
+                                  "2:3",
+                                  "3:2",
+                                  "3:4",
+                                  "4:1",
+                                  "4:3",
+                                  "4:5",
+                                  "5:4",
+                                  "8:1",
+                                  "9:16",
+                                  "16:9",
+                                  "21:9"
+                                ],
+                                "description": "目标宽高比；可用范围依模型不同。"
+                              },
+                              "imageSize": {
+                                "type": "string",
+                                "enum": [
+                                  "0.5K",
+                                  "1K",
+                                  "2K",
+                                  "4K"
+                                ],
+                                "description": "目标分辨率；可用范围依模型不同。"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": [
+                  {
+                    "contents": [
+                      {
+                        "parts": [
+                          {
+                            "text": "把这只猫放到星空下的餐厅，保持原有外观。"
+                          },
+                          {
+                            "inlineData": {
+                              "mimeType": "image/png",
+                              "data": "<base64-image-data>"
+                            }
+                          }
+                        ]
+                      }
+                    ],
+                    "generationConfig": {
+                      "responseModalities": [
+                        "IMAGE"
+                      ],
+                      "responseFormat": {
+                        "image": {
+                          "aspectRatio": "16:9",
+                          "imageSize": "2K"
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "model": "gemini-3-pro-image-preview",
+                "prompt": "换成蓝色的苹果",
+                "size": "1024x1024",
+                "quality": "medium",
+                "n": 1,
+                "images": [
+                  {
+                    "image_url": "https://tse4.mm.bing.net/th/id/OIP.BUyCY__2XCH8Z1pYX5IPvQHaE7?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "candidates": {
+                      "type": "array",
+                      "description": "模型候选结果。",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "content": {
+                            "type": "object",
+                            "properties": {
+                              "role": {
+                                "type": "string",
+                                "enum": [
+                                  "model"
+                                ],
+                                "description": "固定为 model。"
+                              },
+                              "parts": {
+                                "type": "array",
+                                "description": "文本说明和生成图片。",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "text": {
+                                      "type": "string",
+                                      "description": "模型返回的文本说明（若有）。"
+                                    },
+                                    "inlineData": {
+                                      "type": "object",
+                                      "description": "生成图片的 Base64 数据。",
+                                      "properties": {
+                                        "mimeType": {
+                                          "type": "string",
+                                          "description": "生成图片 MIME 类型，例如 image/png。"
+                                        },
+                                        "data": {
+                                          "type": "string",
+                                          "description": "生成图片的 Base64 编码内容。"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "finishReason": {
+                            "type": "string",
+                            "description": "候选结果结束原因。"
+                          },
+                          "index": {
+                            "type": "integer",
+                            "description": "候选结果索引。"
+                          },
+                          "safetyRatings": {
+                            "type": "array",
+                            "description": "安全评级。",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "category": {
+                                  "type": "string"
+                                },
+                                "probability": {
+                                  "type": "string"
+                                },
+                                "blocked": {
+                                  "type": "boolean"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "promptFeedback": {
+                      "type": "object",
+                      "description": "提示词安全检查信息。",
+                      "properties": {
+                        "blockReason": {
+                          "type": "string",
+                          "description": "提示词被拦截的原因。"
+                        }
+                      }
+                    },
+                    "usageMetadata": {
+                      "type": "object",
+                      "description": "请求用量。",
+                      "properties": {
+                        "promptTokenCount": {
+                          "type": "integer"
+                        },
+                        "candidatesTokenCount": {
+                          "type": "integer"
+                        },
+                        "totalTokenCount": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "modelVersion": {
+                      "type": "string",
+                      "description": "实际服务的模型版本。"
+                    },
+                    "responseId": {
+                      "type": "string",
+                      "description": "本次响应唯一标识。"
+                    }
+                  },
+                  "examples": [
+                    {
+                      "candidates": [
+                        {
+                          "content": {
+                            "role": "model",
+                            "parts": [
+                              {
+                                "inlineData": {
+                                  "mimeType": "image/png",
+                                  "data": "<base64-image-data>"
+                                }
+                              }
+                            ]
+                          },
+                          "finishReason": "STOP",
+                          "index": 0
+                        }
+                      ],
+                      "usageMetadata": {
+                        "promptTokenCount": 20,
+                        "candidatesTokenCount": 1024,
+                        "totalTokenCount": 1044
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "created": 1713833628,
+                  "data": [
+                    {
+                      "b64_json": "..."
+                    }
+                  ],
+                  "usage": {
+                    "total_tokens": 100,
+                    "input_tokens": 50,
+                    "output_tokens": 50,
+                    "input_tokens_details": {
+                      "text_tokens": 10,
+                      "image_tokens": 40
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [],
+        "x-group": "Nano Banana"
+      }
+    }
+  },
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

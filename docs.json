@@ -2,9 +2,9 @@
   "theme": "mint",
   "name": "Tikway",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#407FED",
+    "light": "#75A7F3",
+    "dark": "#2867D6"
   },
   "logo": {
     "light": "/logo/light.svg",
@@ -73,10 +73,7 @@
             "groups": [
               {
                 "group": "开始使用",
-                "pages": [
-                  "zh/introduction",
-                  "zh/untitled-page"
-                ]
+                "pages": ["zh/introduction", "zh/untitled-page"]
               },
               {
                 "group": "协议适配",
@@ -131,7 +128,19 @@
           },
           {
             "tab": "API Reference",
-            "openapi": "openapi.json"
+            "groups": [
+              {
+                "group": "对话协议",
+                "openapi": "openapi.json"
+              },
+              {
+                "group": "图片生成",
+                "openapi": [
+                  "image-gpt.openapi.json",
+                  "image-banana.openapi.json"
+                ]
+              }
+            ]
           }
         ]
       },
@@ -140,10 +149,7 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": [
-              "en/introduction",
-              "en/quick-starter"
-            ]
+            "pages": ["en/introduction", "en/quick-starter"]
           }
         ]
       }
