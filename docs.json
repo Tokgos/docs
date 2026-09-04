@@ -131,18 +131,20 @@
             "groups": [
               {
                 "group": "对话补全",
-                "openapi": "openapi.json",
                 "pages": [
                   {
-                    "group": "OpenAI协议",
+                    "group": "OpenAI 协议",
+                    "openapi": "zh/apis/chat-completions/openai-openapi.json",
                     "pages": ["POST /v1/chat/completions", "POST /v1/responses"]
                   },
                   {
-                    "group": "Anthropic协议",
+                    "group": "Anthropic 协议",
+                    "openapi": "zh/apis/chat-completions/anthropic-openapi.json",
                     "pages": ["POST /v1/messages"]
                   },
                   {
-                    "group": "Gemini协议",
+                    "group": "Gemini 协议",
+                    "openapi": "zh/apis/chat-completions/gemini-openapi.json",
                     "pages": [
                       "POST /v1beta/models/{model}:generateContent",
                       "POST /v1beta/models/{model}:streamGenerateContent"
@@ -155,7 +157,7 @@
                 "pages": [
                   {
                     "group": "GPT Image",
-                    "openapi": "image-gpt.openapi.json",
+                    "openapi": "zh/apis/images/gpt-openapi.json",
                     "pages": [
                       "POST /v1/images/generations",
                       "POST /v1/images/edits"
@@ -163,15 +165,35 @@
                   },
                   {
                     "group": "Nano Banana",
-                    "openapi": "image-banana.openapi.json",
+                    "openapi": "zh/apis/images/nano-banana-openapi.json",
                     "pages": [
                       "POST /v1/images/generations",
                       "POST /v1/images/edits",
                       "POST /v1beta/models/{model}:generateContent",
                       "POST /v1beta/models/{edit-model}:generateContent"
                     ]
+                  },
+                  {
+                    "group": "Qwen Image",
+                    "openapi": "zh/apis/images/qwen-openapi.json",
+                    "pages": [
+                      "POST /v1/images/generations",
+                      "POST /v1/images/edits"
+                    ]
                   }
                 ]
+              },
+              {
+                "group": "视频生成",
+                "pages": []
+              },
+              {
+                "group": "语音转写",
+                "pages": []
+              },
+              {
+                "group": "向量嵌入",
+                "pages": []
               }
             ]
           }

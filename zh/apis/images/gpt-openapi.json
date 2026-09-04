@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Mintlify",
-    "description": "",
+    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
     "version": "1.0.0"
   },
   "tags": [
@@ -16,7 +16,7 @@
   "paths": {
     "/v1/images/generations": {
       "post": {
-        "summary": "GPT - 图片生成",
+        "summary": "图片生成",
         "deprecated": false,
         "description": "",
         "tags": [
@@ -371,7 +371,7 @@
     },
     "/v1/images/edits": {
       "post": {
-        "summary": "GPT - 图片编辑",
+        "summary": "图片编辑",
         "deprecated": false,
         "description": "",
         "tags": [
@@ -755,6 +755,11 @@
     "responses": {},
     "securitySchemes": {}
   },
-  "servers": [],
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
   "security": []
 }

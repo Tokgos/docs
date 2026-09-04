@@ -1,0 +1,485 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mintlify",
+    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "图片生成"
+    },
+    {
+      "name": "图片生成/Qwen"
+    },
+    {
+      "name": "图片生成/Qwen Image"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "图片生成",
+        "deprecated": false,
+        "tags": [
+          "图片生成/Qwen",
+          "图片生成/Qwen Image"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "Qwen-Image 3.0 Pro 请求体",
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "enum": [
+                      "bailian/qwen-image-3.0-pro",
+                      "qwen-image-3.0-pro"
+                    ],
+                    "description": "必填。推荐使用公开模型 ID bailian/qwen-image-3.0-pro；未使用供应商前缀的短模型名仅在账户别名已配置时可用。"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "必填。图片生成或编辑指令，支持中文和英文。官方建议不超过约 4,500 tokens。"
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
+                    "default": "1024x1024",
+                    "examples": [
+                      "1024x1024",
+                      "2048x2048",
+                      "1536x1024"
+                    ],
+                    "description": "可选。输出尺寸，格式为 WIDTHxHEIGHT。省略或传 auto 时，当前网关统一向上游发送 1024x1024；具体像素面积和宽高比限制由上游模型校验。"
+                  },
+                  "input_images": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 3,
+                    "description": "可选。1–3 张参考图；传入后执行图生图或图片编辑。元素可为公网 HTTP(S) URL 或 data:{MIME};base64,...。顺序会原样保留。字段名必须是 input_images。",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "examples": [
+                        "https://example.com/reference.png",
+                        "data:image/png;base64,iVBORw0KGgo..."
+                      ]
+                    }
+                  },
+                  "prompt_extend": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "可选。是否启用智能提示词改写。"
+                  },
+                  "prompt_extend_mode": {
+                    "type": "string",
+                    "enum": [
+                      "direct",
+                      "agent"
+                    ],
+                    "default": "direct",
+                    "description": "可选。提示词改写模式。direct 支持文生图和图生图；agent 仅支持文生图。"
+                  },
+                  "enable_thinking": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "可选。是否启用思考模式。设为 true 时不能显式关闭 prompt_extend。"
+                  },
+                  "negative_prompt": {
+                    "type": "string",
+                    "description": "可选。描述不希望出现在结果中的内容。"
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647,
+                    "description": "可选。随机种子。固定种子可提高结果复现性，但不保证像素级一致。"
+                  },
+                  "watermark": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "可选。是否在生成图片右下角添加 Qwen-Image 水印。"
+                  }
+                },
+                "allOf": [
+                  {
+                    "not": {
+                      "required": [
+                        "prompt_extend_mode"
+                      ],
+                      "properties": {
+                        "prompt_extend_mode": {
+                          "const": "agent"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "not": {
+                      "required": [
+                        "enable_thinking",
+                        "prompt_extend"
+                      ],
+                      "properties": {
+                        "enable_thinking": {
+                          "const": true
+                        },
+                        "prompt_extend": {
+                          "const": false
+                        }
+                      }
+                    }
+                  }
+                ],
+                "additionalProperties": false
+              },
+              "examples": {
+                "textToImage": {
+                  "value": {
+                    "model": "bailian/qwen-image-3.0-pro",
+                    "prompt": "一张电影感的上海雨夜街景，霓虹灯倒映在湿润路面上，写实摄影",
+                    "size": "1024x1024",
+                    "prompt_extend": true,
+                    "watermark": false
+                  },
+                  "summary": "文生图"
+                },
+                "imageToImage": {
+                  "value": {
+                    "model": "bailian/qwen-image-3.0-pro",
+                    "prompt": "把苹果改成蓝色，其余保持不变",
+                    "size": "1024x1024",
+                    "input_images": [
+                      "https://example.com/ref-apple.png"
+                    ],
+                    "prompt_extend": true,
+                    "watermark": false
+                  },
+                  "summary": "参考图编辑"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "图片生成成功。网关已下载上游临时图片并转换为不带 data URL 前缀的 Base64。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Qwen 图片生成响应",
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "background",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "format": "int64",
+                      "minimum": 0,
+                      "description": "网关完成响应转换时的 Unix 时间戳（秒）。"
+                    },
+                    "background": {
+                      "type": "string",
+                      "const": "opaque",
+                      "description": "当前 Qwen 路径固定返回 opaque。"
+                    },
+                    "data": {
+                      "type": "array",
+                      "minItems": 1,
+                      "description": "生成结果列表。",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "b64_json",
+                          "index"
+                        ],
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "minLength": 1,
+                            "contentEncoding": "base64",
+                            "description": "纯 Base64 图片数据，不包含 data:image/...;base64, 前缀。"
+                          },
+                          "index": {
+                            "type": "integer",
+                            "format": "int64",
+                            "minimum": 0,
+                            "description": "结果索引；优先保留上游 index，否则按数组位置生成。"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "jpeg",
+                        "webp"
+                      ],
+                      "description": "网关根据下载图片的 Content-Type 推断出的格式。上游未提供可识别类型时省略。"
+                    },
+                    "size": {
+                      "type": "string",
+                      "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
+                      "description": "实际或请求的输出尺寸。请求与上游响应均未提供尺寸时省略。"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "example": {
+                  "created": 1788451200,
+                  "background": "opaque",
+                  "data": [
+                    {
+                      "b64_json": "iVBORw0KGgoAAAANSUhEUgAA...",
+                      "index": 0
+                    }
+                  ],
+                  "output_format": "png",
+                  "size": "1024x1024"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1/images/edits": {
+      "post": {
+        "summary": "图片编辑",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "图片生成/Qwen"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "Qwen-Image 3.0 Pro 图片编辑请求",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "model",
+                  "prompt",
+                  "input_images"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "bailian/qwen-image-3.0-pro",
+                    "default": "bailian/qwen-image-3.0-pro",
+                    "description": "模型 ID。"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "图片编辑指令。多图输入时，可在提示词中使用“图 1”“图 2”等编号引用图片；编号与 input_images 的排列顺序一致。"
+                  },
+                  "input_images": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 3,
+                    "description": "必填。1–3 张参考图，顺序会原样传递。支持公网 HTTP(S) URL或 data:<mime_type>;base64,<base64_data>。单张图片最大 10 MB；支持 JPG、JPEG、PNG、BMP、TIFF、WEBP 和 GIF。",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "参考图片的公网 URL 或 Base64 data URL。",
+                      "examples": [
+                        "https://example.com/reference.png",
+                        "data:image/png;base64,iVBORw0KGgo..."
+                      ]
+                    }
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
+                    "default": "1024x1024",
+                    "description": "输出尺寸，使用 WIDTHxHEIGHT 格式，例如 1024x1536。注意：网关使用字母 x，不使用阿里云原生格式中的星号 *。省略或传 auto 时，当前网关按 1024x1024 请求上游。",
+                    "examples": [
+                      "1024x1024",
+                      "1024x1536",
+                      "1536x1024",
+                      "2048x2048"
+                    ]
+                  },
+                  "negative_prompt": {
+                    "type": "string",
+                    "description": "描述不希望出现在输出图片中的内容，例如“模糊、多余的手指”。"
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647,
+                    "description": "随机种子。使用相同种子有助于保持生成结果的一致性，但不保证完全相同。"
+                  },
+                  "watermark": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "是否在图片右下角添加 Qwen-Image 水印。"
+                  },
+                  "prompt_extend": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "是否启用智能提示词改写。"
+                  },
+                  "prompt_extend_mode": {
+                    "type": "string",
+                    "const": "direct",
+                    "default": "direct",
+                    "description": "提示词改写模式。图片编辑仅支持 direct；agent 模式会被上游拒绝。"
+                  },
+                  "enable_thinking": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "是否启用思考模式。启用时 prompt_extend 应为 true；可能提升生成质量，但会增加耗时。"
+                  }
+                },
+                "examples": [
+                  {
+                    "model": "bailian/qwen-image-3.0-pro",
+                    "prompt": "让图 1 中的女孩穿上图 2 中的黑色连衣裙，并采用图 3 中的坐姿。",
+                    "input_images": [
+                      "https://example.com/person.png",
+                      "https://example.com/dress.png",
+                      "https://example.com/pose.png"
+                    ],
+                    "size": "1024x1536",
+                    "negative_prompt": "模糊，多余的手指",
+                    "prompt_extend": true,
+                    "prompt_extend_mode": "direct",
+                    "enable_thinking": true,
+                    "watermark": false,
+                    "seed": 123456
+                  }
+                ]
+              },
+              "example": {
+                "model": "bailian/qwen-image-3.0-pro",
+                "prompt": "让图 1 中的女孩穿上图 2 中的黑色连衣裙，并采用图 3 中的坐姿。",
+                "input_images": [
+                  "https://example.com/person.png",
+                  "https://example.com/dress.png",
+                  "https://example.com/pose.png"
+                ],
+                "size": "1024x1536",
+                "negative_prompt": "模糊，多余的手指",
+                "prompt_extend": true,
+                "prompt_extend_mode": "direct",
+                "enable_thinking": true,
+                "watermark": false,
+                "seed": 123456
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Qwen 图片生成响应",
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "background",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "format": "int64",
+                      "minimum": 0,
+                      "description": "网关完成响应转换时的 Unix 时间戳（秒）。"
+                    },
+                    "background": {
+                      "type": "string",
+                      "const": "opaque",
+                      "description": "当前 Qwen 路径固定返回 opaque。"
+                    },
+                    "data": {
+                      "type": "array",
+                      "minItems": 1,
+                      "description": "生成结果列表。",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "b64_json",
+                          "index"
+                        ],
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "minLength": 1,
+                            "contentEncoding": "base64",
+                            "description": "纯 Base64 图片数据，不包含 data:image/...;base64, 前缀。"
+                          },
+                          "index": {
+                            "type": "integer",
+                            "format": "int64",
+                            "minimum": 0,
+                            "description": "结果索引；优先保留上游 index，否则按数组位置生成。"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "jpeg",
+                        "webp"
+                      ],
+                      "description": "网关根据下载图片的 Content-Type 推断出的格式。上游未提供可识别类型时省略。"
+                    },
+                    "size": {
+                      "type": "string",
+                      "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
+                      "description": "实际或请求的输出尺寸。请求与上游响应均未提供尺寸时省略。"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {}
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": []
+}

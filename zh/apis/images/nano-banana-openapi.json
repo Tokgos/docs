@@ -2,10 +2,13 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Mintlify",
-    "description": "",
+    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
     "version": "1.0.0"
   },
   "tags": [
+    {
+      "name": "图片生成"
+    },
     {
       "name": "图片生成/Nano Banana"
     }
@@ -13,27 +16,22 @@
   "paths": {
     "/v1/images/generations": {
       "post": {
-        "summary": "GPT - 图片生成",
+        "summary": "图片生成",
         "deprecated": false,
         "description": "",
-        "tags": ["图片生成/Nano Banana"],
-        "parameters": [
-          {
-            "name": "gemini",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+        "tags": [
+          "图片生成/Nano Banana"
         ],
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["model", "prompt"],
+                "required": [
+                  "model",
+                  "prompt"
+                ],
                 "properties": {
                   "model": {
                     "type": "string",
@@ -62,7 +60,14 @@
                   },
                   "quality": {
                     "type": "string",
-                    "enum": ["standard", "hd", "low", "medium", "high", "auto"],
+                    "enum": [
+                      "standard",
+                      "hd",
+                      "low",
+                      "medium",
+                      "high",
+                      "auto"
+                    ],
                     "description": "兼容质量字段。网关映射：standard/low→1K，medium→2K，high/hd→4K，auto 或省略时不指定。"
                   },
                   "aspect_ratio": {
@@ -87,7 +92,12 @@
                   },
                   "image_size": {
                     "type": "string",
-                    "enum": ["512px", "1K", "2K", "4K"],
+                    "enum": [
+                      "512px",
+                      "1K",
+                      "2K",
+                      "4K"
+                    ],
                     "description": "Gemini 原生扩展。优先于 quality，直接映射到 generationConfig.responseFormat.image.imageSize。模型可用档位不同。"
                   },
                   "google_search": {
@@ -100,7 +110,10 @@
                   },
                   "thinking_level": {
                     "type": "string",
-                    "enum": ["Minimal", "High"],
+                    "enum": [
+                      "Minimal",
+                      "High"
+                    ],
                     "description": "Gemini 原生扩展，模型思考强度；仅支持此能力的模型可用。"
                   },
                   "generationConfig": {
@@ -138,7 +151,10 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["created", "data"],
+                  "required": [
+                    "created",
+                    "data"
+                  ],
                   "properties": {
                     "created": {
                       "type": "integer",
@@ -146,7 +162,10 @@
                     },
                     "background": {
                       "type": "string",
-                      "enum": ["transparent", "opaque"],
+                      "enum": [
+                        "transparent",
+                        "opaque"
+                      ],
                       "description": "实际采用的背景设置。"
                     },
                     "data": {
@@ -173,12 +192,20 @@
                     },
                     "output_format": {
                       "type": "string",
-                      "enum": ["png", "webp", "jpeg"],
+                      "enum": [
+                        "png",
+                        "webp",
+                        "jpeg"
+                      ],
                       "description": "实际输出图像格式。"
                     },
                     "quality": {
                       "type": "string",
-                      "enum": ["low", "medium", "high"],
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
                       "description": "实际生成质量。"
                     },
                     "size": {
@@ -277,27 +304,22 @@
     },
     "/v1/images/edits": {
       "post": {
-        "summary": "GPT - 图片编辑",
+        "summary": "图片编辑",
         "deprecated": false,
         "description": "",
-        "tags": ["图片生成/Nano Banana"],
-        "parameters": [
-          {
-            "name": "gemini",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+        "tags": [
+          "图片生成/Nano Banana"
         ],
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["model", "prompt"],
+                "required": [
+                  "model",
+                  "prompt"
+                ],
                 "properties": {
                   "model": {
                     "type": "string",
@@ -314,7 +336,10 @@
                     "maxItems": 14,
                     "description": "编辑参考图。必须至少提供 images、input_images、image 或 refer_images 其中之一；每项是 URL/data URL 字符串，或含 image_url 的对象。Gemini 不支持 file_id。",
                     "items": {
-                      "type": ["string", "object"]
+                      "type": [
+                        "string",
+                        "object"
+                      ]
                     }
                   },
                   "input_images": {
@@ -327,11 +352,19 @@
                     }
                   },
                   "image": {
-                    "type": ["string", "object", "array"],
+                    "type": [
+                      "string",
+                      "object",
+                      "array"
+                    ],
                     "description": "兼容别名。可传一张或多张参考图，网关会并入 input_images。"
                   },
                   "refer_images": {
-                    "type": ["string", "object", "array"],
+                    "type": [
+                      "string",
+                      "object",
+                      "array"
+                    ],
                     "description": "兼容别名。可传一张或多张参考图，网关会并入 input_images。"
                   },
                   "size": {
@@ -341,7 +374,14 @@
                   },
                   "quality": {
                     "type": "string",
-                    "enum": ["standard", "hd", "low", "medium", "high", "auto"],
+                    "enum": [
+                      "standard",
+                      "hd",
+                      "low",
+                      "medium",
+                      "high",
+                      "auto"
+                    ],
                     "description": "兼容质量，自动映射为 Gemini imageSize。"
                   },
                   "aspect_ratio": {
@@ -366,7 +406,12 @@
                   },
                   "image_size": {
                     "type": "string",
-                    "enum": ["512px", "1K", "2K", "4K"],
+                    "enum": [
+                      "512px",
+                      "1K",
+                      "2K",
+                      "4K"
+                    ],
                     "description": "Gemini 原生扩展，优先于 quality。"
                   },
                   "google_search": {
@@ -379,7 +424,10 @@
                   },
                   "thinking_level": {
                     "type": "string",
-                    "enum": ["Minimal", "High"],
+                    "enum": [
+                      "Minimal",
+                      "High"
+                    ],
                     "description": "Gemini 原生思考强度。"
                   },
                   "generationConfig": {
@@ -425,7 +473,10 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["created", "data"],
+                  "required": [
+                    "created",
+                    "data"
+                  ],
                   "properties": {
                     "created": {
                       "type": "integer",
@@ -433,7 +484,10 @@
                     },
                     "background": {
                       "type": "string",
-                      "enum": ["transparent", "opaque"],
+                      "enum": [
+                        "transparent",
+                        "opaque"
+                      ],
                       "description": "实际采用的输出背景。"
                     },
                     "data": {
@@ -459,12 +513,21 @@
                     },
                     "output_format": {
                       "type": "string",
-                      "enum": ["png", "webp", "jpeg"],
+                      "enum": [
+                        "png",
+                        "webp",
+                        "jpeg"
+                      ],
                       "description": "实际输出格式。"
                     },
                     "quality": {
                       "type": "string",
-                      "enum": ["low", "medium", "high", "auto"],
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "auto"
+                      ],
                       "description": "实际使用的输出质量。"
                     },
                     "size": {
@@ -563,22 +626,15 @@
     },
     "/v1beta/models/{model}:generateContent": {
       "post": {
-        "summary": "Gemini - 图片生成",
+        "summary": "Gemini协议 - 图片生成",
         "deprecated": false,
         "description": "",
-        "tags": ["图片生成/Nano Banana"],
+        "tags": [
+          "图片生成/Nano Banana"
+        ],
         "parameters": [
           {
             "name": "model",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "gemini",
             "in": "path",
             "description": "",
             "required": true,
@@ -592,7 +648,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["contents"],
+                "required": [
+                  "contents"
+                ],
                 "properties": {
                   "contents": {
                     "type": "array",
@@ -600,11 +658,16 @@
                     "description": "必填。纯文本为文生图；文本加 inlineData 为图像编辑。",
                     "items": {
                       "type": "object",
-                      "required": ["parts"],
+                      "required": [
+                        "parts"
+                      ],
                       "properties": {
                         "role": {
                           "type": "string",
-                          "enum": ["user", "model"],
+                          "enum": [
+                            "user",
+                            "model"
+                          ],
                           "description": "通常为 user 或省略。"
                         },
                         "parts": {
@@ -620,7 +683,10 @@
                               "inlineData": {
                                 "type": "object",
                                 "description": "编辑时使用的 Base64 参考图。",
-                                "required": ["mimeType", "data"],
+                                "required": [
+                                  "mimeType",
+                                  "data"
+                                ],
                                 "properties": {
                                   "mimeType": {
                                     "type": "string",
@@ -646,7 +712,10 @@
                         "type": "array",
                         "items": {
                           "type": "string",
-                          "enum": ["TEXT", "IMAGE"]
+                          "enum": [
+                            "TEXT",
+                            "IMAGE"
+                          ]
                         },
                         "description": "仅返回图片时设为 [\"IMAGE\"]。"
                       },
@@ -678,7 +747,12 @@
                               },
                               "imageSize": {
                                 "type": "string",
-                                "enum": ["0.5K", "1K", "2K", "4K"],
+                                "enum": [
+                                  "0.5K",
+                                  "1K",
+                                  "2K",
+                                  "4K"
+                                ],
                                 "description": "目标分辨率；可用范围依模型不同。"
                               }
                             }
@@ -706,7 +780,9 @@
                       }
                     ],
                     "generationConfig": {
-                      "responseModalities": ["IMAGE"],
+                      "responseModalities": [
+                        "IMAGE"
+                      ],
                       "responseFormat": {
                         "image": {
                           "aspectRatio": "16:9",
@@ -740,7 +816,10 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["created", "data"],
+                  "required": [
+                    "created",
+                    "data"
+                  ],
                   "properties": {
                     "created": {
                       "type": "integer",
@@ -748,7 +827,10 @@
                     },
                     "background": {
                       "type": "string",
-                      "enum": ["transparent", "opaque"],
+                      "enum": [
+                        "transparent",
+                        "opaque"
+                      ],
                       "description": "实际采用的输出背景。"
                     },
                     "data": {
@@ -774,12 +856,21 @@
                     },
                     "output_format": {
                       "type": "string",
-                      "enum": ["png", "webp", "jpeg"],
+                      "enum": [
+                        "png",
+                        "webp",
+                        "jpeg"
+                      ],
                       "description": "实际输出格式。"
                     },
                     "quality": {
                       "type": "string",
-                      "enum": ["low", "medium", "high", "auto"],
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "auto"
+                      ],
                       "description": "实际使用的输出质量。"
                     },
                     "size": {
@@ -878,22 +969,15 @@
     },
     "/v1beta/models/{edit-model}:generateContent": {
       "post": {
-        "summary": "Gemini - 图片编辑",
+        "summary": "Gemini协议 - 图片编辑",
         "deprecated": false,
         "description": "",
-        "tags": ["图片生成/Nano Banana"],
+        "tags": [
+          "图片生成/Nano Banana"
+        ],
         "parameters": [
           {
-            "name": "model",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "gemini-edit",
+            "name": "edit-model",
             "in": "path",
             "description": "",
             "required": true,
@@ -907,7 +991,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["contents"],
+                "required": [
+                  "contents"
+                ],
                 "properties": {
                   "contents": {
                     "type": "array",
@@ -915,11 +1001,16 @@
                     "description": "必填。纯文本为文生图；文本加 inlineData 为图像编辑。",
                     "items": {
                       "type": "object",
-                      "required": ["parts"],
+                      "required": [
+                        "parts"
+                      ],
                       "properties": {
                         "role": {
                           "type": "string",
-                          "enum": ["user", "model"],
+                          "enum": [
+                            "user",
+                            "model"
+                          ],
                           "description": "通常为 user 或省略。"
                         },
                         "parts": {
@@ -935,7 +1026,10 @@
                               "inlineData": {
                                 "type": "object",
                                 "description": "编辑时使用的 Base64 参考图。",
-                                "required": ["mimeType", "data"],
+                                "required": [
+                                  "mimeType",
+                                  "data"
+                                ],
                                 "properties": {
                                   "mimeType": {
                                     "type": "string",
@@ -961,7 +1055,10 @@
                         "type": "array",
                         "items": {
                           "type": "string",
-                          "enum": ["TEXT", "IMAGE"]
+                          "enum": [
+                            "TEXT",
+                            "IMAGE"
+                          ]
                         },
                         "description": "仅返回图片时设为 [\"IMAGE\"]。"
                       },
@@ -993,7 +1090,12 @@
                               },
                               "imageSize": {
                                 "type": "string",
-                                "enum": ["0.5K", "1K", "2K", "4K"],
+                                "enum": [
+                                  "0.5K",
+                                  "1K",
+                                  "2K",
+                                  "4K"
+                                ],
                                 "description": "目标分辨率；可用范围依模型不同。"
                               }
                             }
@@ -1021,7 +1123,9 @@
                       }
                     ],
                     "generationConfig": {
-                      "responseModalities": ["IMAGE"],
+                      "responseModalities": [
+                        "IMAGE"
+                      ],
                       "responseFormat": {
                         "image": {
                           "aspectRatio": "16:9",
@@ -1067,7 +1171,9 @@
                             "properties": {
                               "role": {
                                 "type": "string",
-                                "enum": ["model"],
+                                "enum": [
+                                  "model"
+                                ],
                                 "description": "固定为 model。"
                               },
                               "parts": {
@@ -1221,6 +1327,11 @@
     "responses": {},
     "securitySchemes": {}
   },
-  "servers": [],
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
   "security": []
 }

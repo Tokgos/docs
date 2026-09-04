@@ -1,0 +1,1030 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mintlify",
+    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "对话补全"
+    },
+    {
+      "name": "对话补全/Anthropic协议"
+    }
+  ],
+  "paths": {
+    "/v1/messages": {
+      "post": {
+        "summary": "Messages",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "对话补全/Anthropic协议"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "max_tokens",
+                  "messages"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "用于生成消息的 Claude 模型 ID，例如 claude-opus-5。"
+                  },
+                  "max_tokens": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "生成内容的最大词元数。模型可在达到上限前停止；设为 0 可仅预热提示词缓存而不生成回复。"
+                  },
+                  "messages": {
+                    "type": "array",
+                    "maxItems": 100000,
+                    "description": "输入对话消息。模型按 user 与 assistant 轮次工作；连续同角色消息会合并。没有 system 角色，系统提示词请使用顶层 system。",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "role",
+                        "content"
+                      ],
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "assistant"
+                          ],
+                          "description": "消息角色。最后一条为 assistant 时，模型会从其内容继续生成。"
+                        },
+                        "content": {
+                          "description": "消息内容。字符串等价于只含一个 text 内容块的数组。",
+                          "oneOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "type"
+                                ],
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "text",
+                                      "image",
+                                      "document",
+                                      "tool_use",
+                                      "tool_result",
+                                      "thinking",
+                                      "redacted_thinking",
+                                      "search_result"
+                                    ],
+                                    "description": "内容块类型。"
+                                  },
+                                  "text": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "description": "text 内容块的文本。"
+                                  },
+                                  "source": {
+                                    "type": "string",
+                                    "description": "search_result 来源标识。"
+                                  },
+                                  "cache_control": {
+                                    "type": "object",
+                                    "description": "提示词缓存断点配置。",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "enum": [
+                                          "ephemeral"
+                                        ]
+                                      },
+                                      "ttl": {
+                                        "type": "string",
+                                        "enum": [
+                                          "5m",
+                                          "1h"
+                                        ],
+                                        "description": "缓存有效期。"
+                                      }
+                                    }
+                                  },
+                                  "citations": {
+                                    "type": "object",
+                                    "description": "文档引用配置。",
+                                    "properties": {
+                                      "enabled": {
+                                        "type": "boolean",
+                                        "description": "是否启用引用。"
+                                      }
+                                    }
+                                  },
+                                  "title": {
+                                    "type": "string",
+                                    "description": "search_result 标题。"
+                                  },
+                                  "context": {
+                                    "type": "string",
+                                    "description": "文档补充上下文。"
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "description": "tool_use 内容块的唯一调用 ID。"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "description": "tool_use 调用的工具名称。"
+                                  },
+                                  "input": {
+                                    "type": "object",
+                                    "description": "tool_use 的 JSON 输入参数。",
+                                    "properties": {}
+                                  },
+                                  "tool_use_id": {
+                                    "type": "string",
+                                    "description": "tool_result 所响应的 tool_use ID。"
+                                  },
+                                  "content": {
+                                    "description": "tool_result 的结果内容，可为字符串或内容块数组。"
+                                  },
+                                  "is_error": {
+                                    "type": "boolean",
+                                    "description": "tool_result 是否表示工具执行错误。"
+                                  },
+                                  "thinking": {
+                                    "type": "string",
+                                    "description": "先前响应返回的 thinking 内容；回传时必须保持原样。"
+                                  },
+                                  "signature": {
+                                    "type": "string",
+                                    "description": "thinking 内容块的签名；回传时必须保持原样。"
+                                  },
+                                  "data": {
+                                    "type": "string",
+                                    "description": "redacted_thinking 的加密数据；回传时必须保持原样。"
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "system": {
+                    "description": "系统提示词。Messages API 不支持 system 角色消息，应使用此字段。",
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [
+                            "type",
+                            "text"
+                          ],
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "text"
+                              ]
+                            },
+                            "text": {
+                              "type": "string",
+                              "description": "系统提示词文本。"
+                            },
+                            "cache_control": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "ephemeral"
+                                  ]
+                                },
+                                "ttl": {
+                                  "type": "string",
+                                  "enum": [
+                                    "5m",
+                                    "1h"
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "stream": {
+                    "type": "boolean",
+                    "description": "是否以 Server-Sent Events 流式返回消息事件。"
+                  },
+                  "stop_sequences": {
+                    "type": "array",
+                    "description": "自定义停止序列；模型生成到任一序列时停止。",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "temperature": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "采样温度。较高值使输出更随机；通常与 top_p、top_k 二选一调整。"
+                  },
+                  "top_p": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "核采样阈值。"
+                  },
+                  "top_k": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "每步采样时保留的最高概率候选词元数。"
+                  },
+                  "thinking": {
+                    "type": "object",
+                    "description": "扩展思考配置。启用思考时，预算词元会计入 max_tokens。",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "enabled",
+                          "adaptive",
+                          "disabled"
+                        ],
+                        "description": "思考模式。"
+                      },
+                      "budget_tokens": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "enabled 模式下的思考词元预算。"
+                      }
+                    }
+                  },
+                  "tools": {
+                    "type": "array",
+                    "description": "可供 Claude 调用的工具定义。",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "工具名称。"
+                        },
+                        "description": {
+                          "type": "string",
+                          "description": "工具用途说明。"
+                        },
+                        "input_schema": {
+                          "type": "object",
+                          "description": "工具输入参数的 JSON Schema。",
+                          "properties": {}
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "工具类型；自定义工具通常为 custom 或省略。"
+                        },
+                        "cache_control": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "ephemeral"
+                              ]
+                            },
+                            "ttl": {
+                              "type": "string",
+                              "enum": [
+                                "5m",
+                                "1h"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "tool_choice": {
+                    "type": "object",
+                    "description": "控制 Claude 是否及如何选择工具。",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "any",
+                          "tool",
+                          "none"
+                        ],
+                        "description": "工具选择模式。"
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "type 为 tool 时强制调用的工具名称。"
+                      },
+                      "disable_parallel_tool_use": {
+                        "type": "boolean",
+                        "description": "是否禁止并行工具调用。"
+                      }
+                    }
+                  },
+                  "output_config": {
+                    "type": "object",
+                    "description": "输出配置。",
+                    "properties": {
+                      "effort": {
+                        "type": "string",
+                        "enum": [
+                          "low",
+                          "medium",
+                          "high"
+                        ],
+                        "description": "输出推理/质量投入级别。"
+                      },
+                      "format": {
+                        "type": "object",
+                        "description": "结构化输出格式。",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "json_schema"
+                            ]
+                          },
+                          "schema": {
+                            "type": "object",
+                            "description": "目标 JSON Schema。",
+                            "properties": {}
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "output_format": {
+                    "type": "object",
+                    "description": "JSON 输出格式配置。",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "json_schema"
+                        ]
+                      },
+                      "schema": {
+                        "type": "object",
+                        "description": "目标 JSON Schema。",
+                        "properties": {}
+                      }
+                    }
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "请求元数据。",
+                    "properties": {
+                      "user_id": {
+                        "type": "string",
+                        "description": "终端用户标识。"
+                      }
+                    }
+                  },
+                  "service_tier": {
+                    "type": "string",
+                    "enum": [
+                      "auto",
+                      "standard_only"
+                    ],
+                    "description": "服务层级选择。"
+                  },
+                  "speed": {
+                    "type": "string",
+                    "enum": [
+                      "standard",
+                      "fast"
+                    ],
+                    "description": "推理速度模式。"
+                  },
+                  "container": {
+                    "description": "代码执行容器配置或容器 ID。",
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "skills": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "context_management": {
+                    "type": "object",
+                    "description": "上下文管理配置。",
+                    "properties": {}
+                  },
+                  "mcp_servers": {
+                    "type": "array",
+                    "description": "MCP 服务器定义。",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "url": {
+                          "type": "string"
+                        },
+                        "authorization_token": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "cache_control": {
+                    "type": "object",
+                    "description": "请求级提示词缓存控制。",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "ephemeral"
+                        ]
+                      },
+                      "ttl": {
+                        "type": "string",
+                        "enum": [
+                          "5m",
+                          "1h"
+                        ]
+                      }
+                    }
+                  },
+                  "diagnostics": {
+                    "type": "object",
+                    "description": "诊断信息配置。",
+                    "properties": {}
+                  },
+                  "fallback_credit_token": {
+                    "description": "回退服务抵扣令牌。",
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    ]
+                  },
+                  "fallbacks": {
+                    "type": "object",
+                    "description": "模型回退配置。",
+                    "properties": {}
+                  },
+                  "inference_geo": {
+                    "type": "string",
+                    "description": "推理地域偏好。"
+                  }
+                },
+                "examples": [
+                  {
+                    "model": "claude-opus-5",
+                    "max_tokens": 1024,
+                    "messages": [
+                      {
+                        "role": "user",
+                        "content": "Hello, Claude"
+                      }
+                    ],
+                    "stream": false
+                  }
+                ]
+              },
+              "examples": {
+                "默认": {
+                  "value": {
+                    "max_tokens": 1024,
+                    "messages": [
+                      {
+                        "content": "Hello, world",
+                        "role": "user"
+                      }
+                    ],
+                    "model": "claude-opus-5",
+                    "stream": false,
+                    "temperature": 1,
+                    "thinking": {
+                      "type": "adaptive"
+                    },
+                    "tools": [
+                      {
+                        "input_schema": {
+                          "type": "object",
+                          "properties": {
+                            "location": "bar",
+                            "unit": "bar"
+                          },
+                          "required": [
+                            "location"
+                          ]
+                        },
+                        "name": "name"
+                      }
+                    ],
+                    "top_k": 5,
+                    "top_p": 0.7
+                  },
+                  "summary": "默认"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "type",
+                    "role",
+                    "model",
+                    "content",
+                    "stop_reason",
+                    "usage"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "消息唯一 ID。"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "message"
+                      ],
+                      "description": "对象类型，固定为 message。"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "assistant"
+                      ],
+                      "description": "消息角色，固定为 assistant。"
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "实际使用的 Claude 模型 ID。"
+                    },
+                    "content": {
+                      "type": "array",
+                      "description": "Claude 生成的内容块列表。",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "type"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "thinking",
+                              "redacted_thinking",
+                              "tool_use",
+                              "server_tool_use",
+                              "web_search_tool_result",
+                              "web_fetch_tool_result",
+                              "code_execution_tool_result"
+                            ],
+                            "description": "输出内容块类型。"
+                          },
+                          "text": {
+                            "type": "string",
+                            "description": "text 内容块的生成文本。"
+                          },
+                          "citations": {
+                            "type": "array",
+                            "description": "文本引用列表。",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "description": "引用类型。"
+                                },
+                                "cited_text": {
+                                  "type": "string",
+                                  "description": "被引用文本。"
+                                },
+                                "document_index": {
+                                  "type": "integer",
+                                  "description": "源文档索引。"
+                                },
+                                "document_title": {
+                                  "type": "string",
+                                  "description": "源文档标题。"
+                                },
+                                "start_char_index": {
+                                  "type": "integer"
+                                },
+                                "end_char_index": {
+                                  "type": "integer"
+                                },
+                                "url": {
+                                  "type": "string"
+                                },
+                                "title": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          },
+                          "thinking": {
+                            "type": "string",
+                            "description": "扩展思考文本。"
+                          },
+                          "signature": {
+                            "type": "string",
+                            "description": "思考内容签名；下轮回传时必须保持原样。"
+                          },
+                          "data": {
+                            "type": "string",
+                            "description": "redacted_thinking 的加密数据。"
+                          },
+                          "id": {
+                            "type": "string",
+                            "description": "工具调用 ID。"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "被调用工具名称。"
+                          },
+                          "input": {
+                            "type": "object",
+                            "description": "工具调用输入参数。",
+                            "properties": {}
+                          },
+                          "content": {
+                            "description": "服务器工具调用结果内容。"
+                          },
+                          "tool_use_id": {
+                            "type": "string",
+                            "description": "关联的工具调用 ID。"
+                          },
+                          "is_error": {
+                            "type": "boolean",
+                            "description": "服务器工具结果是否出错。"
+                          }
+                        }
+                      }
+                    },
+                    "stop_reason": {
+                      "type": "string",
+                      "enum": [
+                        "end_turn",
+                        "max_tokens",
+                        "stop_sequence",
+                        "tool_use",
+                        "pause_turn",
+                        "refusal",
+                        "model_context_window_exceeded"
+                      ],
+                      "description": "生成停止原因。"
+                    },
+                    "stop_sequence": {
+                      "type": "string",
+                      "description": "若因自定义停止序列结束，则为命中的序列。"
+                    },
+                    "stop_details": {
+                      "type": "object",
+                      "description": "拒绝等停止情况的结构化信息。",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "category": {
+                          "type": "string"
+                        },
+                        "explanation": {
+                          "type": "string"
+                        },
+                        "recommended_model": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "usage": {
+                      "type": "object",
+                      "description": "计费与限流词元使用统计。",
+                      "required": [
+                        "input_tokens",
+                        "output_tokens"
+                      ],
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "输入词元数。"
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "输出词元数。"
+                        },
+                        "cache_creation_input_tokens": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "创建缓存所用输入词元数。"
+                        },
+                        "cache_read_input_tokens": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "从缓存读取的输入词元数。"
+                        },
+                        "cache_creation": {
+                          "type": "object",
+                          "properties": {
+                            "ephemeral_5m_input_tokens": {
+                              "type": "integer"
+                            },
+                            "ephemeral_1h_input_tokens": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "output_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "thinking_tokens": {
+                              "type": "integer",
+                              "description": "思考词元数。"
+                            }
+                          }
+                        },
+                        "server_tool_use": {
+                          "type": "object",
+                          "properties": {
+                            "web_search_requests": {
+                              "type": "integer"
+                            },
+                            "web_fetch_requests": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "service_tier": {
+                          "type": "string",
+                          "enum": [
+                            "standard",
+                            "priority",
+                            "batch"
+                          ],
+                          "description": "实际服务层级。"
+                        },
+                        "speed": {
+                          "type": "string",
+                          "enum": [
+                            "standard",
+                            "fast"
+                          ],
+                          "description": "实际推理速度。"
+                        }
+                      }
+                    },
+                    "container": {
+                      "type": "object",
+                      "description": "代码执行容器信息。",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "expires_at": {
+                          "type": "string",
+                          "description": "容器过期时间。"
+                        },
+                        "skills": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "context_management": {
+                      "type": "object",
+                      "description": "服务端应用的上下文管理结果。",
+                      "properties": {}
+                    },
+                    "diagnostics": {
+                      "type": "object",
+                      "description": "诊断信息，例如缓存未命中原因。",
+                      "properties": {}
+                    },
+                    "input_transformations": {
+                      "type": "array",
+                      "description": "API 对输入应用的变换，例如被丢弃的思考块。",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "thinking_dropped"
+                            ]
+                          },
+                          "path": {
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string",
+                            "enum": [
+                              "model_binding_mismatch",
+                              "prefix_binding_mismatch",
+                              "organization_binding_mismatch",
+                              "end_user_binding_mismatch"
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "id": "msg_013Zva2CMHLNnXjNJJKqJ2EF",
+                      "type": "message",
+                      "role": "assistant",
+                      "model": "claude-opus-5",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "Hi! My name is Claude.",
+                          "citations": []
+                        }
+                      ],
+                      "stop_reason": "end_turn",
+                      "stop_sequence": null,
+                      "usage": {
+                        "input_tokens": 12,
+                        "output_tokens": 10
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "id": "msg_013Zva2CMHLNnXjNJJKqJ2EF",
+                  "container": {
+                    "id": "container_011CpZohnwH4vuy7gazohgSP",
+                    "expires_at": "2019-12-27T18:11:19.117Z",
+                    "skills": [
+                      {
+                        "skill_id": "pdf",
+                        "type": "anthropic",
+                        "version": "latest"
+                      }
+                    ]
+                  },
+                  "content": [
+                    {
+                      "citations": [
+                        {
+                          "cited_text": "The grass is green. The sky is blue.",
+                          "document_index": 0,
+                          "document_title": "My Document",
+                          "end_char_index": 0,
+                          "file_id": "file_011CNha8iCJcU1wXNR6q4V8w",
+                          "start_char_index": 0,
+                          "type": "char_location"
+                        }
+                      ],
+                      "text": "Hi! My name is Claude.",
+                      "type": "text"
+                    }
+                  ],
+                  "context_management": {
+                    "applied_edits": [
+                      {
+                        "cleared_input_tokens": 0,
+                        "cleared_tool_uses": 0,
+                        "type": "clear_tool_uses_20250919"
+                      }
+                    ]
+                  },
+                  "diagnostics": {
+                    "cache_miss_reason": {
+                      "cache_missed_input_tokens": 0,
+                      "type": "model_changed"
+                    }
+                  },
+                  "model": "claude-opus-5",
+                  "role": "assistant",
+                  "stop_details": {
+                    "category": "cyber",
+                    "explanation": "This request was declined because it conflicts with Anthropic's Usage Policy.",
+                    "fallback_credit_token": "QW50aHJvcGljL0NsYXVkZQ==",
+                    "fallback_has_prefill_claim": true,
+                    "recommended_model": "claude-opus-4-8",
+                    "type": "refusal"
+                  },
+                  "stop_reason": "end_turn",
+                  "stop_sequence": null,
+                  "type": "message",
+                  "usage": {
+                    "cache_creation": {
+                      "ephemeral_1h_input_tokens": 0,
+                      "ephemeral_5m_input_tokens": 0
+                    },
+                    "cache_creation_input_tokens": 2051,
+                    "cache_read_input_tokens": 2051,
+                    "fallback_credit": {
+                      "status": {
+                        "type": "redeemed"
+                      }
+                    },
+                    "inference_geo": "global",
+                    "input_tokens": 2095,
+                    "iterations": [
+                      {
+                        "cache_creation": {
+                          "ephemeral_1h_input_tokens": 0,
+                          "ephemeral_5m_input_tokens": 0
+                        },
+                        "cache_creation_input_tokens": 0,
+                        "cache_read_input_tokens": 0,
+                        "input_tokens": 0,
+                        "model": "claude-fable-5-1",
+                        "output_tokens": 0,
+                        "type": "message"
+                      }
+                    ],
+                    "output_tokens": 503,
+                    "output_tokens_details": {
+                      "thinking_tokens": 0
+                    },
+                    "server_tool_use": {
+                      "web_fetch_requests": 2,
+                      "web_search_requests": 0
+                    },
+                    "service_tier": "standard",
+                    "speed": "standard"
+                  },
+                  "input_transformations": [
+                    {
+                      "path": "path",
+                      "reason": "model_binding_mismatch",
+                      "type": "thinking_dropped"
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {}
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": []
+}

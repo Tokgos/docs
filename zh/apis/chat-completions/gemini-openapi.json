@@ -1,0 +1,1415 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mintlify",
+    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "对话补全"
+    },
+    {
+      "name": "对话补全/Gemini协议"
+    }
+  ],
+  "paths": {
+    "/v1beta/models/{model}:generateContent": {
+      "post": {
+        "summary": "Generate Content",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "对话补全/Gemini协议"
+        ],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "contents"
+                ],
+                "properties": {
+                  "contents": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "当前对话内容。单轮请求通常只有一个 Content；多轮对话按顺序包含历史与最新请求。",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "parts"
+                      ],
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "model"
+                          ],
+                          "description": "内容角色。省略时通常视为 user。"
+                        },
+                        "parts": {
+                          "type": "array",
+                          "minItems": 1,
+                          "description": "内容部分列表。",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "description": "文本输入。"
+                              },
+                              "inline_data": {
+                                "type": "object",
+                                "description": "内联 Base64 文件数据。",
+                                "properties": {
+                                  "mime_type": {
+                                    "type": "string",
+                                    "description": "MIME 类型，例如 image/jpeg。"
+                                  },
+                                  "data": {
+                                    "type": "string",
+                                    "description": "Base64 编码的数据。"
+                                  }
+                                }
+                              },
+                              "file_data": {
+                                "type": "object",
+                                "description": "File API 中已上传文件的引用。",
+                                "properties": {
+                                  "mime_type": {
+                                    "type": "string",
+                                    "description": "文件 MIME 类型。"
+                                  },
+                                  "file_uri": {
+                                    "type": "string",
+                                    "description": "文件 URI。"
+                                  }
+                                }
+                              },
+                              "function_call": {
+                                "type": "object",
+                                "description": "上一轮模型生成的函数调用。",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "description": "函数名称。"
+                                  },
+                                  "args": {
+                                    "type": "object",
+                                    "description": "函数参数。",
+                                    "properties": {}
+                                  }
+                                }
+                              },
+                              "function_response": {
+                                "type": "object",
+                                "description": "客户端对函数调用的执行结果。",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "description": "函数名称。"
+                                  },
+                                  "response": {
+                                    "type": "object",
+                                    "description": "函数执行返回值。",
+                                    "properties": {}
+                                  }
+                                }
+                              },
+                              "executable_code": {
+                                "type": "object",
+                                "description": "可执行代码。",
+                                "properties": {
+                                  "language": {
+                                    "type": "string",
+                                    "description": "编程语言。"
+                                  },
+                                  "code": {
+                                    "type": "string",
+                                    "description": "代码内容。"
+                                  }
+                                }
+                              },
+                              "code_execution_result": {
+                                "type": "object",
+                                "description": "代码执行结果。",
+                                "properties": {
+                                  "outcome": {
+                                    "type": "string",
+                                    "description": "执行结果状态。"
+                                  },
+                                  "output": {
+                                    "type": "string",
+                                    "description": "执行输出。"
+                                  }
+                                }
+                              },
+                              "thought": {
+                                "type": "boolean",
+                                "description": "该部分是否属于模型思考内容。"
+                              },
+                              "thought_signature": {
+                                "type": "string",
+                                "description": "思考内容签名；回传时保持原样。"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "systemInstruction": {
+                    "type": "object",
+                    "description": "开发者设定的系统指令，目前应使用纯文本部分。",
+                    "required": [
+                      "parts"
+                    ],
+                    "properties": {
+                      "parts": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "text": {
+                              "type": "string",
+                              "description": "系统指令文本。"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "tools": {
+                    "type": "array",
+                    "description": "模型可使用的工具列表，例如函数调用或代码执行。",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "function_declarations": {
+                          "type": "array",
+                          "description": "函数声明列表。",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "description": "函数名称。"
+                              },
+                              "description": {
+                                "type": "string",
+                                "description": "函数用途说明。"
+                              },
+                              "parameters": {
+                                "type": "object",
+                                "description": "函数参数 JSON Schema。",
+                                "properties": {}
+                              },
+                              "response": {
+                                "type": "object",
+                                "description": "函数响应 JSON Schema。",
+                                "properties": {}
+                              }
+                            }
+                          }
+                        },
+                        "code_execution": {
+                          "type": "object",
+                          "description": "启用代码执行工具。",
+                          "properties": {}
+                        },
+                        "google_search": {
+                          "type": "object",
+                          "description": "启用 Google 搜索工具。",
+                          "properties": {}
+                        },
+                        "url_context": {
+                          "type": "object",
+                          "description": "启用 URL 上下文工具。",
+                          "properties": {}
+                        }
+                      }
+                    }
+                  },
+                  "toolConfig": {
+                    "type": "object",
+                    "description": "工具调用配置。",
+                    "properties": {
+                      "functionCallingConfig": {
+                        "type": "object",
+                        "properties": {
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "AUTO",
+                              "ANY",
+                              "NONE",
+                              "VALIDATED"
+                            ],
+                            "description": "函数调用模式。"
+                          },
+                          "allowedFunctionNames": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "允许自动调用的函数名。"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "safetySettings": {
+                    "type": "array",
+                    "description": "安全过滤规则；同一类别最多配置一次，覆盖该类别的默认阈值。",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "category": {
+                          "type": "string",
+                          "enum": [
+                            "HARM_CATEGORY_HATE_SPEECH",
+                            "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                            "HARM_CATEGORY_DANGEROUS_CONTENT",
+                            "HARM_CATEGORY_HARASSMENT",
+                            "HARM_CATEGORY_CIVIC_INTEGRITY",
+                            "HARM_CATEGORY_JAILBREAK"
+                          ],
+                          "description": "安全类别。"
+                        },
+                        "threshold": {
+                          "type": "string",
+                          "description": "阻止阈值。"
+                        },
+                        "method": {
+                          "type": "string",
+                          "description": "安全评级方法。"
+                        }
+                      }
+                    }
+                  },
+                  "generationConfig": {
+                    "type": "object",
+                    "description": "生成与输出配置。",
+                    "properties": {
+                      "temperature": {
+                        "type": "number",
+                        "description": "采样温度。"
+                      },
+                      "topP": {
+                        "type": "number",
+                        "description": "核采样阈值。"
+                      },
+                      "topK": {
+                        "type": "integer",
+                        "description": "每步保留的最高概率候选数。"
+                      },
+                      "candidateCount": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "返回候选回复数量。"
+                      },
+                      "maxOutputTokens": {
+                        "type": "integer",
+                        "description": "最大输出词元数。"
+                      },
+                      "stopSequences": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "停止序列。"
+                      },
+                      "responseMimeType": {
+                        "type": "string",
+                        "enum": [
+                          "text/plain",
+                          "application/json"
+                        ],
+                        "description": "输出 MIME 类型。"
+                      },
+                      "responseSchema": {
+                        "type": "object",
+                        "description": "application/json 输出应遵循的 JSON Schema。",
+                        "properties": {}
+                      },
+                      "responseJsonSchema": {
+                        "type": "object",
+                        "description": "JSON 输出的原始 JSON Schema。",
+                        "properties": {}
+                      },
+                      "responseModalities": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "TEXT",
+                            "IMAGE",
+                            "AUDIO"
+                          ]
+                        },
+                        "description": "请求的输出模态。"
+                      },
+                      "thinkingConfig": {
+                        "type": "object",
+                        "properties": {
+                          "thinkingBudget": {
+                            "type": "integer",
+                            "description": "思考词元预算。"
+                          },
+                          "includeThoughts": {
+                            "type": "boolean",
+                            "description": "是否在响应中包含思考摘要。"
+                          }
+                        }
+                      },
+                      "mediaResolution": {
+                        "type": "string",
+                        "description": "媒体输入解析度设置。"
+                      }
+                    }
+                  },
+                  "cachedContent": {
+                    "type": "string",
+                    "description": "作为上下文使用的缓存内容名称，格式为 cachedContents/{cachedContent}。"
+                  },
+                  "serviceTier": {
+                    "type": "string",
+                    "description": "请求服务层级。"
+                  },
+                  "store": {
+                    "type": "boolean",
+                    "description": "是否记录本请求；若设置，会覆盖项目级日志配置。"
+                  }
+                },
+                "examples": [
+                  {
+                    "contents": [
+                      {
+                        "role": "user",
+                        "parts": [
+                          {
+                            "text": "Write a story about a magic backpack."
+                          }
+                        ]
+                      }
+                    ],
+                    "generationConfig": {
+                      "temperature": 1,
+                      "maxOutputTokens": 1024
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "默认": {
+                  "value": {
+                    "contents": [
+                      {
+                        "parts": [
+                          {
+                            "text": "How does AI work?"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "summary": "默认"
+                },
+                "多模态": {
+                  "value": {
+                    "contents": [
+                      {
+                        "parts": [
+                          {
+                            "text": "Tell me about this instrument"
+                          },
+                          {
+                            "inline_data": {
+                              "mime_type": "image/jpeg",
+                              "data": "iVBORw0K..."
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "summary": "多模态"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Gemini API：models.generateContent 普通响应。完全内联，适合导入 Apifox。",
+                  "properties": {
+                    "candidates": {
+                      "type": "array",
+                      "description": "模型生成的候选回复列表。",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "index": {
+                            "type": "integer",
+                            "description": "候选回复索引。"
+                          },
+                          "content": {
+                            "type": "object",
+                            "description": "候选回复内容。",
+                            "properties": {
+                              "role": {
+                                "type": "string",
+                                "enum": [
+                                  "model"
+                                ],
+                                "description": "角色，固定为 model。"
+                              },
+                              "parts": {
+                                "type": "array",
+                                "description": "回复内容部分。",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "text": {
+                                      "type": "string",
+                                      "description": "生成的文本。"
+                                    },
+                                    "inline_data": {
+                                      "type": "object",
+                                      "description": "内联生成的媒体数据。",
+                                      "properties": {
+                                        "mime_type": {
+                                          "type": "string"
+                                        },
+                                        "data": {
+                                          "type": "string",
+                                          "description": "Base64 编码数据。"
+                                        }
+                                      }
+                                    },
+                                    "file_data": {
+                                      "type": "object",
+                                      "properties": {
+                                        "mime_type": {
+                                          "type": "string"
+                                        },
+                                        "file_uri": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    },
+                                    "function_call": {
+                                      "type": "object",
+                                      "description": "模型请求调用函数。",
+                                      "properties": {
+                                        "name": {
+                                          "type": "string",
+                                          "description": "函数名称。"
+                                        },
+                                        "args": {
+                                          "type": "object",
+                                          "description": "函数参数。",
+                                          "properties": {}
+                                        },
+                                        "id": {
+                                          "type": "string",
+                                          "description": "函数调用 ID。"
+                                        }
+                                      }
+                                    },
+                                    "executable_code": {
+                                      "type": "object",
+                                      "properties": {
+                                        "language": {
+                                          "type": "string"
+                                        },
+                                        "code": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    },
+                                    "code_execution_result": {
+                                      "type": "object",
+                                      "properties": {
+                                        "outcome": {
+                                          "type": "string"
+                                        },
+                                        "output": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    },
+                                    "thought": {
+                                      "type": "boolean",
+                                      "description": "是否为思考内容。"
+                                    },
+                                    "thought_signature": {
+                                      "type": "string",
+                                      "description": "思考签名。"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "finishReason": {
+                            "type": "string",
+                            "description": "候选回复的结束原因。"
+                          },
+                          "finishMessage": {
+                            "type": "string",
+                            "description": "结束原因的说明。"
+                          },
+                          "safetyRatings": {
+                            "type": "array",
+                            "description": "候选回复的安全评级。",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "category": {
+                                  "type": "string"
+                                },
+                                "probability": {
+                                  "type": "string"
+                                },
+                                "blocked": {
+                                  "type": "boolean"
+                                }
+                              }
+                            }
+                          },
+                          "citationMetadata": {
+                            "type": "object",
+                            "description": "引用元数据。",
+                            "properties": {}
+                          },
+                          "tokenCount": {
+                            "type": "integer",
+                            "description": "候选回复词元数。"
+                          },
+                          "avgLogprobs": {
+                            "type": "number",
+                            "description": "候选回复的平均对数概率。"
+                          },
+                          "logprobsResult": {
+                            "type": "object",
+                            "description": "词元对数概率结果。",
+                            "properties": {}
+                          },
+                          "urlContextMetadata": {
+                            "type": "object",
+                            "description": "URL 上下文元数据。",
+                            "properties": {}
+                          }
+                        }
+                      }
+                    },
+                    "promptFeedback": {
+                      "type": "object",
+                      "description": "提示词被阻止或过滤时的反馈。",
+                      "properties": {
+                        "blockReason": {
+                          "type": "string",
+                          "description": "阻止原因。"
+                        },
+                        "blockReasonMessage": {
+                          "type": "string",
+                          "description": "阻止原因说明。"
+                        },
+                        "safetyRatings": {
+                          "type": "array",
+                          "description": "提示词安全评级。",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "usageMetadata": {
+                      "type": "object",
+                      "description": "词元使用统计。",
+                      "properties": {
+                        "promptTokenCount": {
+                          "type": "integer",
+                          "description": "提示词词元数。"
+                        },
+                        "candidatesTokenCount": {
+                          "type": "integer",
+                          "description": "候选回复词元数。"
+                        },
+                        "totalTokenCount": {
+                          "type": "integer",
+                          "description": "总词元数。"
+                        },
+                        "cachedContentTokenCount": {
+                          "type": "integer",
+                          "description": "缓存内容词元数。"
+                        },
+                        "thoughtsTokenCount": {
+                          "type": "integer",
+                          "description": "思考词元数。"
+                        },
+                        "toolUsePromptTokenCount": {
+                          "type": "integer",
+                          "description": "工具使用提示词词元数。"
+                        }
+                      }
+                    },
+                    "modelVersion": {
+                      "type": "string",
+                      "description": "实际使用的模型版本。"
+                    },
+                    "responseId": {
+                      "type": "string",
+                      "description": "响应唯一 ID。"
+                    }
+                  },
+                  "examples": [
+                    {
+                      "candidates": [
+                        {
+                          "index": 0,
+                          "content": {
+                            "role": "model",
+                            "parts": [
+                              {
+                                "text": "Once upon a time, a magic backpack..."
+                              }
+                            ]
+                          },
+                          "finishReason": "STOP"
+                        }
+                      ],
+                      "usageMetadata": {
+                        "promptTokenCount": 10,
+                        "candidatesTokenCount": 12,
+                        "totalTokenCount": 22
+                      },
+                      "modelVersion": "gemini-2.0-flash"
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/v1beta/models/{model}:streamGenerateContent": {
+      "post": {
+        "summary": "Stream Generate Content",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "对话补全/Gemini协议"
+        ],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "contents"
+                ],
+                "properties": {
+                  "contents": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "当前对话内容。单轮请求通常只有一个 Content；多轮对话按顺序包含历史与最新请求。",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "parts"
+                      ],
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "model"
+                          ],
+                          "description": "内容角色。省略时通常视为 user。"
+                        },
+                        "parts": {
+                          "type": "array",
+                          "minItems": 1,
+                          "description": "内容部分列表。",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "description": "文本输入。"
+                              },
+                              "inline_data": {
+                                "type": "object",
+                                "description": "内联 Base64 文件数据。",
+                                "properties": {
+                                  "mime_type": {
+                                    "type": "string",
+                                    "description": "MIME 类型，例如 image/jpeg。"
+                                  },
+                                  "data": {
+                                    "type": "string",
+                                    "description": "Base64 编码的数据。"
+                                  }
+                                }
+                              },
+                              "file_data": {
+                                "type": "object",
+                                "description": "File API 中已上传文件的引用。",
+                                "properties": {
+                                  "mime_type": {
+                                    "type": "string",
+                                    "description": "文件 MIME 类型。"
+                                  },
+                                  "file_uri": {
+                                    "type": "string",
+                                    "description": "文件 URI。"
+                                  }
+                                }
+                              },
+                              "function_call": {
+                                "type": "object",
+                                "description": "上一轮模型生成的函数调用。",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "description": "函数名称。"
+                                  },
+                                  "args": {
+                                    "type": "object",
+                                    "description": "函数参数。",
+                                    "properties": {}
+                                  }
+                                }
+                              },
+                              "function_response": {
+                                "type": "object",
+                                "description": "客户端对函数调用的执行结果。",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "description": "函数名称。"
+                                  },
+                                  "response": {
+                                    "type": "object",
+                                    "description": "函数执行返回值。",
+                                    "properties": {}
+                                  }
+                                }
+                              },
+                              "executable_code": {
+                                "type": "object",
+                                "description": "可执行代码。",
+                                "properties": {
+                                  "language": {
+                                    "type": "string",
+                                    "description": "编程语言。"
+                                  },
+                                  "code": {
+                                    "type": "string",
+                                    "description": "代码内容。"
+                                  }
+                                }
+                              },
+                              "code_execution_result": {
+                                "type": "object",
+                                "description": "代码执行结果。",
+                                "properties": {
+                                  "outcome": {
+                                    "type": "string",
+                                    "description": "执行结果状态。"
+                                  },
+                                  "output": {
+                                    "type": "string",
+                                    "description": "执行输出。"
+                                  }
+                                }
+                              },
+                              "thought": {
+                                "type": "boolean",
+                                "description": "该部分是否属于模型思考内容。"
+                              },
+                              "thought_signature": {
+                                "type": "string",
+                                "description": "思考内容签名；回传时保持原样。"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "systemInstruction": {
+                    "type": "object",
+                    "description": "开发者设定的系统指令，目前应使用纯文本部分。",
+                    "required": [
+                      "parts"
+                    ],
+                    "properties": {
+                      "parts": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "text": {
+                              "type": "string",
+                              "description": "系统指令文本。"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "tools": {
+                    "type": "array",
+                    "description": "模型可使用的工具列表，例如函数调用或代码执行。",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "function_declarations": {
+                          "type": "array",
+                          "description": "函数声明列表。",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "description": "函数名称。"
+                              },
+                              "description": {
+                                "type": "string",
+                                "description": "函数用途说明。"
+                              },
+                              "parameters": {
+                                "type": "object",
+                                "description": "函数参数 JSON Schema。",
+                                "properties": {}
+                              },
+                              "response": {
+                                "type": "object",
+                                "description": "函数响应 JSON Schema。",
+                                "properties": {}
+                              }
+                            }
+                          }
+                        },
+                        "code_execution": {
+                          "type": "object",
+                          "description": "启用代码执行工具。",
+                          "properties": {}
+                        },
+                        "google_search": {
+                          "type": "object",
+                          "description": "启用 Google 搜索工具。",
+                          "properties": {}
+                        },
+                        "url_context": {
+                          "type": "object",
+                          "description": "启用 URL 上下文工具。",
+                          "properties": {}
+                        }
+                      }
+                    }
+                  },
+                  "toolConfig": {
+                    "type": "object",
+                    "description": "工具调用配置。",
+                    "properties": {
+                      "functionCallingConfig": {
+                        "type": "object",
+                        "properties": {
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "AUTO",
+                              "ANY",
+                              "NONE",
+                              "VALIDATED"
+                            ],
+                            "description": "函数调用模式。"
+                          },
+                          "allowedFunctionNames": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "允许自动调用的函数名。"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "safetySettings": {
+                    "type": "array",
+                    "description": "安全过滤规则；同一类别最多配置一次，覆盖该类别的默认阈值。",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "category": {
+                          "type": "string",
+                          "enum": [
+                            "HARM_CATEGORY_HATE_SPEECH",
+                            "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                            "HARM_CATEGORY_DANGEROUS_CONTENT",
+                            "HARM_CATEGORY_HARASSMENT",
+                            "HARM_CATEGORY_CIVIC_INTEGRITY",
+                            "HARM_CATEGORY_JAILBREAK"
+                          ],
+                          "description": "安全类别。"
+                        },
+                        "threshold": {
+                          "type": "string",
+                          "description": "阻止阈值。"
+                        },
+                        "method": {
+                          "type": "string",
+                          "description": "安全评级方法。"
+                        }
+                      }
+                    }
+                  },
+                  "generationConfig": {
+                    "type": "object",
+                    "description": "生成与输出配置。",
+                    "properties": {
+                      "temperature": {
+                        "type": "number",
+                        "description": "采样温度。"
+                      },
+                      "topP": {
+                        "type": "number",
+                        "description": "核采样阈值。"
+                      },
+                      "topK": {
+                        "type": "integer",
+                        "description": "每步保留的最高概率候选数。"
+                      },
+                      "candidateCount": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "返回候选回复数量。"
+                      },
+                      "maxOutputTokens": {
+                        "type": "integer",
+                        "description": "最大输出词元数。"
+                      },
+                      "stopSequences": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "停止序列。"
+                      },
+                      "responseMimeType": {
+                        "type": "string",
+                        "enum": [
+                          "text/plain",
+                          "application/json"
+                        ],
+                        "description": "输出 MIME 类型。"
+                      },
+                      "responseSchema": {
+                        "type": "object",
+                        "description": "application/json 输出应遵循的 JSON Schema。",
+                        "properties": {}
+                      },
+                      "responseJsonSchema": {
+                        "type": "object",
+                        "description": "JSON 输出的原始 JSON Schema。",
+                        "properties": {}
+                      },
+                      "responseModalities": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "TEXT",
+                            "IMAGE",
+                            "AUDIO"
+                          ]
+                        },
+                        "description": "请求的输出模态。"
+                      },
+                      "thinkingConfig": {
+                        "type": "object",
+                        "properties": {
+                          "thinkingBudget": {
+                            "type": "integer",
+                            "description": "思考词元预算。"
+                          },
+                          "includeThoughts": {
+                            "type": "boolean",
+                            "description": "是否在响应中包含思考摘要。"
+                          }
+                        }
+                      },
+                      "mediaResolution": {
+                        "type": "string",
+                        "description": "媒体输入解析度设置。"
+                      }
+                    }
+                  },
+                  "cachedContent": {
+                    "type": "string",
+                    "description": "作为上下文使用的缓存内容名称，格式为 cachedContents/{cachedContent}。"
+                  },
+                  "serviceTier": {
+                    "type": "string",
+                    "description": "请求服务层级。"
+                  },
+                  "store": {
+                    "type": "boolean",
+                    "description": "是否记录本请求；若设置，会覆盖项目级日志配置。"
+                  }
+                },
+                "examples": [
+                  {
+                    "contents": [
+                      {
+                        "role": "user",
+                        "parts": [
+                          {
+                            "text": "Write a story about a magic backpack."
+                          }
+                        ]
+                      }
+                    ],
+                    "generationConfig": {
+                      "temperature": 1,
+                      "maxOutputTokens": 1024
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "默认": {
+                  "value": {
+                    "contents": [
+                      {
+                        "parts": [
+                          {
+                            "text": "Explain how AI works"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "summary": "默认"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Gemini API：models.generateContent 普通响应。完全内联，适合导入 Apifox。",
+                  "properties": {
+                    "candidates": {
+                      "type": "array",
+                      "description": "模型生成的候选回复列表。",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "index": {
+                            "type": "integer",
+                            "description": "候选回复索引。"
+                          },
+                          "content": {
+                            "type": "object",
+                            "description": "候选回复内容。",
+                            "properties": {
+                              "role": {
+                                "type": "string",
+                                "enum": [
+                                  "model"
+                                ],
+                                "description": "角色，固定为 model。"
+                              },
+                              "parts": {
+                                "type": "array",
+                                "description": "回复内容部分。",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "text": {
+                                      "type": "string",
+                                      "description": "生成的文本。"
+                                    },
+                                    "inline_data": {
+                                      "type": "object",
+                                      "description": "内联生成的媒体数据。",
+                                      "properties": {
+                                        "mime_type": {
+                                          "type": "string"
+                                        },
+                                        "data": {
+                                          "type": "string",
+                                          "description": "Base64 编码数据。"
+                                        }
+                                      }
+                                    },
+                                    "file_data": {
+                                      "type": "object",
+                                      "properties": {
+                                        "mime_type": {
+                                          "type": "string"
+                                        },
+                                        "file_uri": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    },
+                                    "function_call": {
+                                      "type": "object",
+                                      "description": "模型请求调用函数。",
+                                      "properties": {
+                                        "name": {
+                                          "type": "string",
+                                          "description": "函数名称。"
+                                        },
+                                        "args": {
+                                          "type": "object",
+                                          "description": "函数参数。",
+                                          "properties": {}
+                                        },
+                                        "id": {
+                                          "type": "string",
+                                          "description": "函数调用 ID。"
+                                        }
+                                      }
+                                    },
+                                    "executable_code": {
+                                      "type": "object",
+                                      "properties": {
+                                        "language": {
+                                          "type": "string"
+                                        },
+                                        "code": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    },
+                                    "code_execution_result": {
+                                      "type": "object",
+                                      "properties": {
+                                        "outcome": {
+                                          "type": "string"
+                                        },
+                                        "output": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    },
+                                    "thought": {
+                                      "type": "boolean",
+                                      "description": "是否为思考内容。"
+                                    },
+                                    "thought_signature": {
+                                      "type": "string",
+                                      "description": "思考签名。"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "finishReason": {
+                            "type": "string",
+                            "description": "候选回复的结束原因。"
+                          },
+                          "finishMessage": {
+                            "type": "string",
+                            "description": "结束原因的说明。"
+                          },
+                          "safetyRatings": {
+                            "type": "array",
+                            "description": "候选回复的安全评级。",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "category": {
+                                  "type": "string"
+                                },
+                                "probability": {
+                                  "type": "string"
+                                },
+                                "blocked": {
+                                  "type": "boolean"
+                                }
+                              }
+                            }
+                          },
+                          "citationMetadata": {
+                            "type": "object",
+                            "description": "引用元数据。",
+                            "properties": {}
+                          },
+                          "tokenCount": {
+                            "type": "integer",
+                            "description": "候选回复词元数。"
+                          },
+                          "avgLogprobs": {
+                            "type": "number",
+                            "description": "候选回复的平均对数概率。"
+                          },
+                          "logprobsResult": {
+                            "type": "object",
+                            "description": "词元对数概率结果。",
+                            "properties": {}
+                          },
+                          "urlContextMetadata": {
+                            "type": "object",
+                            "description": "URL 上下文元数据。",
+                            "properties": {}
+                          }
+                        }
+                      }
+                    },
+                    "promptFeedback": {
+                      "type": "object",
+                      "description": "提示词被阻止或过滤时的反馈。",
+                      "properties": {
+                        "blockReason": {
+                          "type": "string",
+                          "description": "阻止原因。"
+                        },
+                        "blockReasonMessage": {
+                          "type": "string",
+                          "description": "阻止原因说明。"
+                        },
+                        "safetyRatings": {
+                          "type": "array",
+                          "description": "提示词安全评级。",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "usageMetadata": {
+                      "type": "object",
+                      "description": "词元使用统计。",
+                      "properties": {
+                        "promptTokenCount": {
+                          "type": "integer",
+                          "description": "提示词词元数。"
+                        },
+                        "candidatesTokenCount": {
+                          "type": "integer",
+                          "description": "候选回复词元数。"
+                        },
+                        "totalTokenCount": {
+                          "type": "integer",
+                          "description": "总词元数。"
+                        },
+                        "cachedContentTokenCount": {
+                          "type": "integer",
+                          "description": "缓存内容词元数。"
+                        },
+                        "thoughtsTokenCount": {
+                          "type": "integer",
+                          "description": "思考词元数。"
+                        },
+                        "toolUsePromptTokenCount": {
+                          "type": "integer",
+                          "description": "工具使用提示词词元数。"
+                        }
+                      }
+                    },
+                    "modelVersion": {
+                      "type": "string",
+                      "description": "实际使用的模型版本。"
+                    },
+                    "responseId": {
+                      "type": "string",
+                      "description": "响应唯一 ID。"
+                    }
+                  },
+                  "examples": [
+                    {
+                      "candidates": [
+                        {
+                          "index": 0,
+                          "content": {
+                            "role": "model",
+                            "parts": [
+                              {
+                                "text": "Once upon a time, a magic backpack..."
+                              }
+                            ]
+                          },
+                          "finishReason": "STOP"
+                        }
+                      ],
+                      "usageMetadata": {
+                        "promptTokenCount": 10,
+                        "candidatesTokenCount": 12,
+                        "totalTokenCount": 22
+                      },
+                      "modelVersion": "gemini-2.0-flash"
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {}
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": []
+}
