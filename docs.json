@@ -147,7 +147,10 @@
                     "openapi": "zh/apis/chat-completions/gemini-openapi.json",
                     "pages": [
                       "POST /v1beta/models/{model}:generateContent",
-                      "POST /v1beta/models/{model}:streamGenerateContent"
+                      "POST /v1beta/models/{model}:streamGenerateContent",
+                      "POST /v1beta/cachedContents",
+                      "GET /v1beta/cachedContents/{id}",
+                      "DELETE /v1beta/cachedContents/{id}"
                     ]
                   }
                 ]
@@ -168,32 +171,61 @@
                     "openapi": "zh/apis/images/nano-banana-openapi.json",
                     "pages": [
                       "POST /v1/images/generations",
-                      "POST /v1/images/edits",
-                      "POST /v1beta/models/{model}:generateContent",
-                      "POST /v1beta/models/{edit-model}:generateContent"
+                      "POST /v1beta/models/{model}:generateContent"
                     ]
                   },
                   {
                     "group": "Qwen Image",
                     "openapi": "zh/apis/images/qwen-openapi.json",
+                    "pages": ["POST /v1/images/generations"]
+                  },
+                  {
+                    "group": "Seedream",
+                    "openapi": "zh/apis/images/seedream-openapi.json",
+                    "pages": ["POST /v1/images/generations"]
+                  },
+                  {
+                    "group": "MAI Image",
+                    "openapi": "zh/apis/images/mai-openapi.json",
                     "pages": [
                       "POST /v1/images/generations",
                       "POST /v1/images/edits"
                     ]
+                  },
+                  {
+                    "group": "Novel",
+                    "openapi": "zh/apis/images/novel-openapi.json",
+                    "pages": ["POST /v1/images/generations"]
                   }
                 ]
               },
               {
                 "group": "视频生成",
-                "pages": []
-              },
-              {
-                "group": "语音转写",
-                "pages": []
+                "pages": [
+                  {
+                    "group": "Seedance",
+                    "openapi": "zh/apis/videos/seedance-openapi.json",
+                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                  },
+                  {
+                    "group": "Wan",
+                    "openapi": "zh/apis/videos/wan-openapi.json",
+                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                  }
+                ]
               },
               {
                 "group": "向量嵌入",
-                "pages": []
+                "openapi": "zh/apis/embeddings/openapi.json",
+                "pages": [
+                  "POST /v1/embeddings",
+                  "POST /v1beta/models/google/{model}:embedContent"
+                ]
+              },
+              {
+                "group": "语音转写",
+                "openapi": "zh/apis/transcriptions/openapi.json",
+                "pages": ["POST /v1/audio/transcriptions"]
               }
             ]
           }

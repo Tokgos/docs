@@ -1,0 +1,374 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mintlify",
+    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "图片生成"
+    },
+    {
+      "name": "图片生成/Seedream"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "图片生成",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "图片生成/Seedream"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "DoubaoSeedream50ProGenerationRequest",
+                "description": "使用 Doubao Seedream 5.0 Pro 根据文字生成图片。",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "model",
+                  "prompt",
+                  "response_format"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "volcengine/doubao-seedream-5.0-pro",
+                    "description": "模型 ID。对应火山引擎原生模型 doubao-seedream-5-0-pro-260628。"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "图片生成提示词。官方建议不超过约 300 个中文字符或 600 个英文单词。",
+                    "examples": [
+                      "一座漂浮在云海上的未来城市，日出时分，电影级光影，建筑细节丰富"
+                    ]
+                  },
+                  "size": {
+                    "description": "doubao-seedream-5.0:支持 2K 、 3K 或指定宽高像素值；默认 2048x2048 ；总像素范围 [2560x1440, 3072x3072x1.1025] ；宽高比范围 [1/16, 16] 。\ndoubao-seedream-4.5：支持 2K、4K 或指定宽高像素值；默认 2048x2048；总像素范围 [2560x1440, 4096x4096]；宽高比范围 [1/16, 16]。\ndoubao-seedream-4.0：支持 1K、2K、4K 或指定宽高像素值；默认 2048x2048；总像素范围 [1280x720, 4096x4096]；宽高比范围 [1/16, 16]。",
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "1K",
+                          "1.5K",
+                          "2K"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
+                        "examples": [
+                          "1024x1024",
+                          "2048x2048",
+                          "2816x1584"
+                        ]
+                      }
+                    ]
+                  },
+                  "output_format": {
+                    "type": "string",
+                    "enum": [
+                      "png",
+                      "jpeg"
+                    ],
+                    "default": "jpeg",
+                    "description": "输出图片格式。透明背景必须使用 png。"
+                  },
+                  "background": {
+                    "type": "string",
+                    "enum": [
+                      "opaque",
+                      "transparent"
+                    ],
+                    "default": "opaque",
+                    "description": "输出背景。transparent 仅可与 output_format=png 一起使用。"
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "固定返回 Base64 图片，使响应符合本接口的 Response Schema。",
+                    "default": "b64_json",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
+                  },
+                  "watermark": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "是否在生成图片中添加水印。"
+                  },
+                  "optimize_prompt_options": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "mode"
+                    ],
+                    "properties": {
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "standard",
+                          "fast"
+                        ],
+                        "description": "提示词优化模式。standard 效果优先，fast 速度优先。"
+                      }
+                    },
+                    "description": "火山引擎提示词优化设置。"
+                  }
+                },
+                "allOf": [
+                  {
+                    "if": {
+                      "required": [
+                        "background"
+                      ],
+                      "properties": {
+                        "background": {
+                          "const": "transparent"
+                        }
+                      }
+                    },
+                    "then": {
+                      "required": [
+                        "output_format"
+                      ],
+                      "properties": {
+                        "output_format": {
+                          "const": "png"
+                        }
+                      }
+                    }
+                  }
+                ],
+                "examples": [
+                  {
+                    "model": "volcengine/doubao-seedream-5.0-pro",
+                    "prompt": "一座漂浮在云海上的未来城市，日出时分，电影级光影",
+                    "size": "2K",
+                    "output_format": "png",
+                    "response_format": "b64_json",
+                    "watermark": false,
+                    "optimize_prompt_options": {
+                      "mode": "standard"
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "model": "volcengine/doubao-seedream-4.5",
+                "prompt": "日落时分的群山景色，夕阳映照山峦与天空，光影柔和，画面自然细腻，具有电影感。",
+                "size": "1024x1024"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "DoubaoSeedream50ProGenerationResponse",
+                  "description": "Doubao Seedream 5.0 Pro 图片生成成功响应。",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "format": "int64",
+                      "minimum": 0,
+                      "description": "图片创建时间，Unix 时间戳，单位为秒。"
+                    },
+                    "data": {
+                      "type": "array",
+                      "minItems": 1,
+                      "maxItems": 1,
+                      "description": "生成结果。该模型每次返回一张图片。",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "b64_json"
+                        ],
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "minLength": 1,
+                            "contentEncoding": "base64",
+                            "description": "Base64 编码的图片二进制数据，不包含 data URL 前缀。"
+                          },
+                          "index": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "图片在结果数组中的索引。"
+                          },
+                          "size": {
+                            "type": "string",
+                            "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
+                            "description": "该图片的实际像素尺寸。"
+                          },
+                          "output_format": {
+                            "type": "string",
+                            "enum": [
+                              "png",
+                              "jpeg"
+                            ],
+                            "description": "该图片的实际编码格式。"
+                          }
+                        }
+                      }
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "实际执行请求的模型标识。"
+                    },
+                    "size": {
+                      "type": "string",
+                      "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
+                      "description": "实际生成尺寸。"
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "jpeg"
+                      ],
+                      "description": "实际输出格式。"
+                    },
+                    "background": {
+                      "type": "string",
+                      "enum": [
+                        "opaque",
+                        "transparent"
+                      ],
+                      "description": "实际使用的背景类型。"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "本次生成的用量信息。",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "输入 token 数。"
+                        },
+                        "input_tokens_details": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "text_tokens": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "description": "提示词消耗的 token 数。"
+                            },
+                            "image_tokens": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "description": "输入图片消耗的 token 数。"
+                            }
+                          }
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "输出 token 数。"
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "总 token 数。"
+                        },
+                        "generated_images": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "生成图片数量。"
+                        }
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "created": 1784696685,
+                      "data": [
+                        {
+                          "b64_json": "iVBORw0KGgoAAAANSUhEUgAA...",
+                          "index": 0
+                        }
+                      ],
+                      "model": "volcengine/doubao-seedream-5.0-pro",
+                      "size": "2048x2048",
+                      "output_format": "png",
+                      "usage": {
+                        "input_tokens": 42,
+                        "output_tokens": 2048,
+                        "total_tokens": 2090,
+                        "generated_images": 1
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "created": 1788920400,
+                  "data": [
+                    {
+                      "index": 0,
+                      "url": "https://example.com/media/images/8f7c2e41-5a93-4b16-9d72-3c84e1a6f205.jpg"
+                    }
+                  ],
+                  "model": "volcengine/doubao-seedream-4.5",
+                  "size": "2048x2048",
+                  "usage": {
+                    "output_tokens": 16384,
+                    "total_tokens": 16384
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

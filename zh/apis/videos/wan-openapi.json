@@ -1,0 +1,575 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mintlify",
+    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "视频生成"
+    },
+    {
+      "name": "视频生成/Wan"
+    }
+  ],
+  "paths": {
+    "/v1/videos": {
+      "post": {
+        "summary": "创建视频",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "视频生成/Wan"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$id": "urn:tikway:schema:protocols:openai:videos:create:request:1",
+                "title": "VideoCreateRequest",
+                "description": "POST /v1/videos 的 JSON 请求体。extra_body 中的字段会在网关路由前铺平；用户 callback_url 仅由 Java 服务在任务完成后回调，不会透传给上游。",
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "视频模型 ID 或别名。"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "视频生成提示词。"
+                  },
+                  "negative_prompt": {
+                    "type": "string",
+                    "description": "负向提示词，仅部分模型支持。"
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]*[x*][1-9][0-9]*$",
+                    "description": "像素尺寸，例如 1280x720。不能与 aspect_ratio 或 resolution 同时使用。"
+                  },
+                  "duration": {
+                    "oneOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    ],
+                    "description": "视频时长（秒）。"
+                  },
+                  "aspect_ratio": {
+                    "type": "string",
+                    "enum": [
+                      "16:9",
+                      "9:16",
+                      "1:1",
+                      "4:3",
+                      "3:4",
+                      "3:2",
+                      "2:3",
+                      "21:9",
+                      "9:21"
+                    ],
+                    "description": "视频比例。"
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "enum": [
+                      "480p",
+                      "720p",
+                      "1080p",
+                      "1K",
+                      "2K",
+                      "4K"
+                    ],
+                    "description": "输出分辨率，实际支持范围由模型决定。"
+                  },
+                  "frame_images": {
+                    "type": "array",
+                    "maxItems": 2,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "image_url"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "first_frame",
+                            "last_frame"
+                          ],
+                          "description": "参考帧位置。"
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "参考图 URL。不要传 {\"url\": \"...\"} 包装对象。"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "description": "首帧或尾帧参考图；同一类型最多一张。"
+                  },
+                  "input_references": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "required": [
+                            "image_url"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "audio_url"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "video_url"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "file_url"
+                          ]
+                        }
+                      ],
+                      "properties": {
+                        "image_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "图片 URL 字符串。不要传 {\"url\": \"...\"} 包装对象。"
+                        },
+                        "audio_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "音频 URL 字符串。不要传 {\"url\": \"...\"} 包装对象。"
+                        },
+                        "video_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "视频 URL 字符串。不要传 {\"url\": \"...\"} 包装对象。"
+                        },
+                        "file_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "文件 URL 字符串。不要传 {\"url\": \"...\"} 包装对象。"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "reference_image",
+                            "reference_video",
+                            "reference_audio",
+                            "source_video",
+                            "first_clip",
+                            "driving_audio"
+                          ],
+                          "description": "参考素材的用途；音频驱动视频时使用 driving_audio。"
+                        },
+                        "reference_voice": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "description": "输入参考素材，可包含图片、音频或视频。"
+                  },
+                  "real_person": {
+                    "type": "boolean",
+                    "description": "真人参考图开关；仅在供应商和模型支持时生效。"
+                  },
+                  "generate_audio": {
+                    "type": "boolean",
+                    "description": "是否生成音频；仅部分模型支持。"
+                  },
+                  "seed": {
+                    "oneOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -1,
+                        "maximum": 2147483647
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ],
+                    "description": "随机种子或供应商种子开关。"
+                  },
+                  "callback_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "用户任务回调地址。Java 服务处理后回调用户，不传给模型上游。"
+                  },
+                  "extra_body": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "供应商扩展参数。网关会将其字段铺平；OFOX 会封装到 provider.options 的模型命名空间。",
+                    "examples": [
+                      {
+                        "watermark": false
+                      }
+                    ],
+                    "properties": {}
+                  }
+                },
+                "additionalProperties": true
+              },
+              "examples": {
+                "1": {
+                  "value": {
+                    "model": "alibaba/wan-3.0",
+                    "prompt": "一只金毛寻回犬在日落时分的海滩上奔跑。夕阳洒在金色的沙滩和海面上，海风轻拂，狗狗自然欢快地向前奔跑，毛发随动作和微风自然摆动。画面光影柔和，色彩自然，具有电影感，镜头平稳地跟随狗狗移动，营造出温暖、真实且富有活力的氛围。",
+                    "duration": 5,
+                    "resolution": "480p",
+                    "aspect_ratio": "16:9",
+                    "generate_audio": true
+                  },
+                  "summary": "默认"
+                },
+                "2": {
+                  "value": {
+                    "model": "alibaba/wan-3.0",
+                    "prompt": "一只金毛寻回犬在日落时分的海滩上奔跑。夕阳洒在金色的沙滩和海面上，海风轻拂，狗狗自然欢快地向前奔跑，毛发随动作和微风自然摆动。画面光影柔和，色彩自然，具有电影感，镜头平稳地跟随狗狗移动，营造出温暖、真实且富有活力的氛围。",
+                    "duration": 5,
+                    "resolution": "480p",
+                    "aspect_ratio": "16:9",
+                    "generate_audio": true
+                  },
+                  "summary": "文生视频"
+                },
+                "3": {
+                  "value": {
+                    "model": "alibaba/wan-3.0",
+                    "prompt": "角色在积雪覆盖的高山上进行滑雪运动，自然地沿着雪坡高速滑行，动作流畅且具有动感。整个视频过程中保持角色的外观、服装和人物特征一致，不发生明显变化。场景包含壮丽的雪山、细腻真实的积雪和飞扬的雪雾，白天自然光照，画面具有电影感，镜头平稳地跟随角色移动，呈现自然、真实且具有视觉冲击力的滑雪场景。",
+                    "input_references": [
+                      {
+                        "type": "image_url",
+                        "image_url": {
+                          "url": "https://example.com/assets/character-reference.jpg"
+                        }
+                      },
+                      {
+                        "type": "image_url",
+                        "image_url": {
+                          "url": "https://example.com/assets/style-reference.jpg"
+                        }
+                      }
+                    ]
+                  },
+                  "summary": "图生视频"
+                },
+                "4": {
+                  "value": {
+                    "model": "alibaba/wan-3.0",
+                    "prompt": "让参考图中的角色进行自然流畅的说话表演，保持角色的外观、服装、面部特征和人物形象一致。说话时参考输入音频中的声音特征、语气、情绪和表达方式，使角色的口型、表情和说话节奏与配音保持自然同步。整体画面风格、镜头语言、构图和视觉表现参考输入视频，确保最终视频具有一致的视觉风格和自然流畅的动态效果。",
+                    "input_references": [
+                      {
+                        "type": "image_url",
+                        "image_url": {
+                          "url": "https://example.com/assets/character-reference.jpg"
+                        }
+                      },
+                      {
+                        "type": "audio_url",
+                        "audio_url": {
+                          "url": "https://example.com/assets/voice-reference.mp3"
+                        }
+                      },
+                      {
+                        "type": "video_url",
+                        "video_url": {
+                          "url": "https://example.com/assets/style-reference.mp4"
+                        }
+                      }
+                    ]
+                  },
+                  "summary": "参考生视频"
+                },
+                "5": {
+                  "value": {
+                    "model": "alibaba/wan-3.0",
+                    "prompt": "从首帧画面自然过渡至尾帧画面，确保两个画面之间的主体、场景和运动变化连贯自然。保持画面构图和视觉风格的一致性，避免出现突兀的镜头切换、人物变形或场景跳变，整体呈现平滑、自然且具有电影感的过渡效果。",
+                    "frame_images": [
+                      {
+                        "type": "image_url",
+                        "image_url": {
+                          "url": "https://example.com/assets/first-frame.jpg"
+                        },
+                        "frame_type": "first_frame"
+                      },
+                      {
+                        "type": "image_url",
+                        "image_url": {
+                          "url": "https://example.com/assets/last-frame.jpg"
+                        },
+                        "frame_type": "last_frame"
+                      }
+                    ]
+                  },
+                  "summary": "首尾帧生视频"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "created_at": {
+                      "type": "integer",
+                      "description": "任务创建时间，Unix 时间戳（秒）。"
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "视频生成任务的唯一标识符。"
+                    },
+                    "mirror_urls": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "原始视频 URL，可能在一定时间后失效（例如 24 小时）。"
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "视频模型 ID 或别名。"
+                    },
+                    "native_urls": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "tikway CDN镜像。相比原始视频 URL，通常具有更长的有效期。"
+                    },
+                    "prompt": {
+                      "type": "string",
+                      "description": "用于生成视频的文本提示词（Prompt）。"
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "视频生成任务的当前状态，例如 pending、in_progress、completed 或 failed。"
+                    },
+                    "updated_at": {
+                      "type": "integer",
+                      "description": "任务最后更新时间，Unix 时间戳（秒）。"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "properties": {
+                        "video_seconds": {
+                          "type": "number",
+                          "description": "生成视频的实际时长，单位为秒。"
+                        }
+                      },
+                      "required": [
+                        "video_seconds"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "created_at",
+                    "id",
+                    "mirror_urls",
+                    "model",
+                    "native_urls",
+                    "prompt",
+                    "status",
+                    "updated_at",
+                    "usage"
+                  ]
+                },
+                "example": {
+                  "id": "4a7e2c91-63f5-4b08-a829-1d6c94e57320",
+                  "model": "alibaba/wan-3.0",
+                  "status": "pending",
+                  "created_at": 1788874000,
+                  "updated_at": 1788874000,
+                  "prompt": "一只金毛寻回犬在日落海滩上奔跑，夕阳照亮沙滩和海面，画面自然真实，镜头平稳跟随。",
+                  "mirror_urls": [],
+                  "native_urls": [],
+                  "usage": {
+                    "video_seconds": 5
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/videos/{id}": {
+      "get": {
+        "summary": "查询视频任务",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "视频生成/Wan"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "视频生成任务的唯一标识符。",
+            "required": true,
+            "example": "4a7e2c91-63f5-4b08-a829-1d6c94e57320",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "created_at": {
+                      "type": "integer",
+                      "description": "任务创建时间，Unix 时间戳（秒）。"
+                    },
+                    "id": {
+                      "type": "string",
+                      "description": "视频生成任务的唯一标识符。"
+                    },
+                    "mirror_urls": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "原始视频 URL，可能在一定时间后失效（例如 24 小时）。"
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "视频模型 ID 或别名。"
+                    },
+                    "native_urls": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "tikway CDN镜像。相比原始视频 URL，通常具有更长的有效期。"
+                    },
+                    "prompt": {
+                      "type": "string",
+                      "description": "用于生成视频的文本提示词（Prompt）。"
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "视频生成任务的当前状态，例如 pending、in_progress、completed 或 failed。"
+                    },
+                    "updated_at": {
+                      "type": "integer",
+                      "description": "任务最后更新时间，Unix 时间戳（秒）。"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "properties": {
+                        "video_seconds": {
+                          "type": "integer",
+                          "description": "生成视频的实际时长，单位为秒。"
+                        }
+                      },
+                      "required": [
+                        "video_seconds"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "created_at",
+                    "id",
+                    "mirror_urls",
+                    "model",
+                    "native_urls",
+                    "prompt",
+                    "status",
+                    "updated_at",
+                    "usage"
+                  ]
+                },
+                "example": {
+                  "id": "4a7e2c91-63f5-4b08-a829-1d6c94e57320",
+                  "model": "alibaba/wan-3.0",
+                  "status": "completed",
+                  "created_at": 1788874000,
+                  "updated_at": 1788874065,
+                  "prompt": "一只金毛寻回犬在日落海滩上奔跑，夕阳照亮沙滩和海面，画面自然真实，镜头平稳跟随。",
+                  "mirror_urls": [
+                    "https://example.com/media/videos/4a7e2c91-63f5-4b08-a829-1d6c94e57320.mp4"
+                  ],
+                  "native_urls": [
+                    "https://example.com/media/videos/4a7e2c91-63f5-4b08-a829-1d6c94e57320-native.mp4"
+                  ],
+                  "usage": {
+                    "video_seconds": 5
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

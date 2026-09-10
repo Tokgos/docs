@@ -1,0 +1,556 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mintlify",
+    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "图片生成"
+    },
+    {
+      "name": "图片生成/MAI Image"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "生成图片",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "图片生成/MAI Image"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "DoubaoSeedream50ProGenerationRequest",
+                "description": "使用 Doubao Seedream 5.0 Pro 根据文字生成图片。",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "model",
+                  "prompt",
+                  "response_format"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "volcengine/doubao-seedream-5.0-pro",
+                    "description": "模型 ID。对应火山引擎原生模型 doubao-seedream-5-0-pro-260628。"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "图片生成提示词。官方建议不超过约 300 个中文字符或 600 个英文单词。",
+                    "examples": [
+                      "一座漂浮在云海上的未来城市，日出时分，电影级光影，建筑细节丰富"
+                    ]
+                  },
+                  "size": {
+                    "description": "输出尺寸。可传 auto、1K、1.5K、2K，或 WIDTHxHEIGHT。自定义尺寸总像素应在 921600 到 4624220 之间，宽高比应在 1:16 到 16:1 之间。",
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "1K",
+                          "1.5K",
+                          "2K"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
+                        "examples": [
+                          "1024x1024",
+                          "2048x2048",
+                          "2816x1584"
+                        ]
+                      }
+                    ]
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "固定返回 Base64 图片，使响应符合本接口的 Response Schema。",
+                    "default": "b64_json",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
+                  }
+                },
+                "allOf": [
+                  {
+                    "if": {
+                      "required": [
+                        "background"
+                      ],
+                      "properties": {
+                        "background": {
+                          "const": "transparent"
+                        }
+                      }
+                    },
+                    "then": {
+                      "required": [
+                        "output_format"
+                      ],
+                      "properties": {
+                        "output_format": {
+                          "const": "png"
+                        }
+                      }
+                    }
+                  }
+                ],
+                "examples": [
+                  {
+                    "model": "volcengine/doubao-seedream-5.0-pro",
+                    "prompt": "一座漂浮在云海上的未来城市，日出时分，电影级光影",
+                    "size": "2K",
+                    "output_format": "png",
+                    "response_format": "b64_json",
+                    "watermark": false,
+                    "optimize_prompt_options": {
+                      "mode": "standard"
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "model": "microsoft/mai-image-2.5-pro",
+                "prompt": "日落时分的群山景色，夕阳映照山峦与天空，光影柔和，画面自然细腻，具有电影感。",
+                "size": "1024x1024"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "图片创建时间的 Unix 时间戳，单位为秒。",
+                      "examples": [
+                        1788480000
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "index": {
+                            "type": "integer"
+                          },
+                          "url": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "description": "生成结果列表。"
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "实际执行请求的模型标识。"
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "description": "实际输出格式。"
+                    },
+                    "size": {
+                      "type": "string",
+                      "description": "实际生成尺寸。"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "description": "输入 token 数。"
+                        },
+                        "input_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "提示词消耗的 token 数。"
+                            }
+                          },
+                          "required": [
+                            "text_tokens"
+                          ]
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "description": "输出 token 数。"
+                        },
+                        "output_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "输出图片消耗的token数。"
+                            }
+                          },
+                          "required": [
+                            "image_tokens"
+                          ]
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "description": "总 token 数。"
+                        }
+                      },
+                      "required": [
+                        "input_tokens",
+                        "input_tokens_details",
+                        "output_tokens",
+                        "output_tokens_details",
+                        "total_tokens"
+                      ],
+                      "description": "本次生成的用量信息。"
+                    }
+                  },
+                  "required": [
+                    "created",
+                    "data",
+                    "model",
+                    "output_format",
+                    "size",
+                    "usage"
+                  ],
+                  "title": "Microsoft MAI Image 2.5 图片生成响应",
+                  "description": "统一转换后的 OpenAI Images 响应。"
+                },
+                "example": {
+                  "created": 1788923928,
+                  "model": "microsoft/mai-image-2.5-pro",
+                  "data": [
+                    {
+                      "index": 0,
+                      "url": "https://example.com/generated-image.png"
+                    }
+                  ],
+                  "output_format": "png",
+                  "size": "1024x1024",
+                  "usage": {
+                    "input_tokens": 36,
+                    "output_tokens": 1024,
+                    "total_tokens": 1060,
+                    "input_tokens_details": {
+                      "text_tokens": 36
+                    },
+                    "output_tokens_details": {
+                      "image_tokens": 1024
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/images/edits": {
+      "post": {
+        "summary": "图片编辑",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "图片生成/MAI Image"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "images",
+                  "prompt"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "const": "volcengine/doubao-seedream-5.0-pro",
+                    "description": "模型 ID。microsoft/mai-image-2.5-pro"
+                  },
+                  "images": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 16,
+                    "description": "必填。待编辑的源图列表。GPT Image 模型最多 16 张；每项需提供 file_id 或 image_url 之一。若直接上传文件，使用 multipart 字段 image[]（或你的网关定义的 images）。",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "file_id": {
+                          "type": "string",
+                          "description": "已上传至 Files API 的源图文件 ID。"
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "description": "完整图片 URL，或 Base64 data URL。"
+                        }
+                      }
+                    }
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "必填。期望如何编辑或扩展图像的文字描述。"
+                  },
+                  "size": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "auto",
+                      "1024x1024",
+                      "1536x1024",
+                      "1024x1536",
+                      null
+                    ],
+                    "description": "请求的输出图片尺寸。"
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "固定返回 Base64 图片，使响应符合本接口的 Response Schema。",
+                    "default": "b64_json",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
+                  }
+                },
+                "examples": [
+                  {
+                    "images": [
+                      {
+                        "image_url": "https://example.com/source-image.png"
+                      }
+                    ],
+                    "prompt": "为这张图添加水彩效果",
+                    "model": "gpt-image-1.5",
+                    "quality": "high",
+                    "size": "1024x1024"
+                  }
+                ]
+              },
+              "example": {
+                "model": "microsoft/mai-image-2.5-pro",
+                "prompt": "Keep the apple unchanged and replace only its background with a misty enchanted forest under soft cinematic lighting.",
+                "size": "1024x1024",
+                "images": [
+                  {
+                    "image_url": "https://gd-hbimg.huaban.com/cb36fdfc6ee4707de3ec666d6bc202fb99d9bef326a10d-oQHn3b_fw658"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "编辑结果创建时的 Unix 时间戳（秒）。"
+                    },
+                    "background": {
+                      "type": "string",
+                      "enum": [
+                        "transparent",
+                        "opaque"
+                      ],
+                      "description": "实际采用的输出背景。"
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "编辑后的图像列表。",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "description": "Base64 编码的图片内容。GPT Image 模型默认返回。"
+                          },
+                          "revised_prompt": {
+                            "type": "string",
+                            "description": "DALL·E 3 的实际修订提示词；本编辑接口通常不返回该字段。"
+                          },
+                          "url": {
+                            "type": "string",
+                            "description": "生成图片 URL。DALL·E 使用 URL 返回格式时提供，通常有效 60 分钟。"
+                          }
+                        }
+                      }
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "webp",
+                        "jpeg"
+                      ],
+                      "description": "实际输出格式。"
+                    },
+                    "quality": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "auto"
+                      ],
+                      "description": "实际使用的输出质量。"
+                    },
+                    "size": {
+                      "type": "string",
+                      "description": "实际生成的图片尺寸。"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "description": "GPT Image 模型的 token 用量。",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "description": "输入文本和图像的 token 数。"
+                        },
+                        "input_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "输入图像 token 数。"
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "输入文本 token 数。"
+                            }
+                          }
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "description": "输出 token 数。"
+                        },
+                        "output_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "输出图像 token 数。"
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "输出文本 token 数。"
+                            }
+                          }
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "description": "输入和输出 token 总数。"
+                        }
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "created": 1713833628,
+                      "data": [
+                        {
+                          "b64_json": "..."
+                        }
+                      ],
+                      "usage": {
+                        "total_tokens": 100,
+                        "input_tokens": 50,
+                        "output_tokens": 50,
+                        "input_tokens_details": {
+                          "text_tokens": 10,
+                          "image_tokens": 40
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "created": 1713833628,
+                  "data": [
+                    {
+                      "b64_json": "..."
+                    }
+                  ],
+                  "usage": {
+                    "total_tokens": 100,
+                    "input_tokens": 50,
+                    "output_tokens": 50,
+                    "input_tokens_details": {
+                      "text_tokens": 10,
+                      "image_tokens": 40
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

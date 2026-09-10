@@ -1,0 +1,438 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mintlify",
+    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "语音转写"
+    }
+  ],
+  "paths": {
+    "/v1/audio/transcriptions": {
+      "post": {
+        "summary": "语音转写",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "语音转写"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "encoding": {
+                "file": {
+                  "contentType": ""
+                },
+                "model": {
+                  "contentType": ""
+                },
+                "language": {
+                  "contentType": ""
+                },
+                "languages": {
+                  "contentType": ""
+                },
+                "prompt": {
+                  "contentType": ""
+                },
+                "keywords": {
+                  "contentType": ""
+                },
+                "response_format": {
+                  "contentType": ""
+                },
+                "temperature": {
+                  "contentType": ""
+                },
+                "stream": {
+                  "contentType": ""
+                },
+                "chunking_strategy": {
+                  "contentType": ""
+                },
+                "known_speaker_names": {
+                  "contentType": ""
+                },
+                "known_speaker_references": {
+                  "contentType": ""
+                }
+              },
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "type": "string",
+                    "description": "待转写的音频文件。",
+                    "example": ""
+                  },
+                  "model": {
+                    "format": "binary",
+                    "type": "string",
+                    "description": "语音转写模型 ID。",
+                    "example": "gpt-4o-transcribe"
+                  },
+                  "language": {
+                    "description": "输入音频语言，建议使用 ISO 639-1 语言代码。",
+                    "example": "zh",
+                    "type": "string"
+                  },
+                  "languages": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "可能出现的语言代码。",
+                    "example": "zh,en"
+                  },
+                  "prompt": {
+                    "description": "用于指导转写风格、术语和上下文的提示词。",
+                    "example": "会议纪要术语：Tikway",
+                    "type": "string"
+                  },
+                  "keywords": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "需要重点识别的词语或短语。",
+                    "example": "Tikway,API"
+                  },
+                  "response_format": {
+                    "description": "响应格式。",
+                    "example": "json",
+                    "type": "string"
+                  },
+                  "temperature": {
+                    "description": "采样温度。",
+                    "example": "0",
+                    "type": "string"
+                  },
+                  "stream": {
+                    "type": "number",
+                    "description": "是否使用 SSE 流式返回。",
+                    "example": "false"
+                  },
+                  "chunking_strategy": {
+                    "type": "boolean",
+                    "description": "分块策略。",
+                    "example": "auto"
+                  },
+                  "known_speaker_names": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "已知说话人名称。",
+                    "example": "Alice,Bob"
+                  },
+                  "known_speaker_references": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "已知说话人的音频 Base64 data URL。",
+                    "example": "data:audio/wav;base64,UklGRg=="
+                  }
+                },
+                "required": [
+                  "file",
+                  "model"
+                ]
+              },
+              "example": {
+                "file": "",
+                "model": "gpt-4o-transcribe",
+                "language": "zh",
+                "languages": "zh,en",
+                "prompt": "会议纪要术语：Tikway",
+                "keywords": "Tikway,API",
+                "response_format": "json",
+                "temperature": "0",
+                "stream": "false",
+                "chunking_strategy": "auto",
+                "known_speaker_names": "Alice,Bob",
+                "known_speaker_references": "data:audio/wav;base64,UklGRg=="
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "AudioTranscriptionJsonResponse",
+                  "description": "非流式语音转写 JSON 响应。兼容普通转写、详细时间戳转写和说话人分离结果。",
+                  "type": "object",
+                  "additionalProperties": true,
+                  "required": [
+                    "text"
+                  ],
+                  "properties": {
+                    "task": {
+                      "type": "string",
+                      "const": "transcribe",
+                      "description": "任务类型。详细 JSON 和说话人分离响应通常返回该字段。"
+                    },
+                    "language": {
+                      "type": "string",
+                      "description": "检测或使用的音频语言。"
+                    },
+                    "duration": {
+                      "type": "number",
+                      "minimum": 0,
+                      "description": "音频时长，单位为秒。"
+                    },
+                    "text": {
+                      "type": "string",
+                      "description": "完整转写文本。"
+                    },
+                    "words": {
+                      "type": "array",
+                      "description": "词级时间戳，仅请求 word 粒度时返回。",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "required": [
+                          "word",
+                          "start",
+                          "end"
+                        ],
+                        "properties": {
+                          "word": {
+                            "type": "string"
+                          },
+                          "start": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "end": {
+                            "type": "number",
+                            "minimum": 0
+                          }
+                        }
+                      }
+                    },
+                    "segments": {
+                      "type": "array",
+                      "description": "分段转写结果。verbose_json 返回时间戳分段；diarized_json 还会返回说话人信息。",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "required": [
+                          "start",
+                          "end",
+                          "text"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "description": "说话人分离分段通常固定为 transcript.text.segment。"
+                          },
+                          "id": {
+                            "oneOf": [
+                              {
+                                "type": "integer"
+                              },
+                              {
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "seek": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "start": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "end": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "speaker": {
+                            "type": "string",
+                            "description": "说话人名称或系统生成的说话人标签。"
+                          },
+                          "tokens": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          },
+                          "temperature": {
+                            "type": "number"
+                          },
+                          "avg_logprob": {
+                            "type": "number"
+                          },
+                          "compression_ratio": {
+                            "type": "number"
+                          },
+                          "no_speech_prob": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "logprobs": {
+                      "type": "array",
+                      "description": "请求 include[]=logprobs 时可能返回。",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "token",
+                          "logprob",
+                          "bytes"
+                        ],
+                        "properties": {
+                          "token": {
+                            "type": "string"
+                          },
+                          "logprob": {
+                            "type": "number"
+                          },
+                          "bytes": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 255
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "usage": {
+                      "description": "上游返回的 token 或音频时长用量。",
+                      "oneOf": [
+                        {
+                          "title": "TokenUsage",
+                          "type": "object",
+                          "additionalProperties": true,
+                          "required": [
+                            "type",
+                            "input_tokens",
+                            "output_tokens",
+                            "total_tokens"
+                          ],
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "tokens"
+                            },
+                            "input_tokens": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "input_token_details": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "text_tokens": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "audio_tokens": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                }
+                              }
+                            },
+                            "output_tokens": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "total_tokens": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          }
+                        },
+                        {
+                          "title": "DurationUsage",
+                          "type": "object",
+                          "additionalProperties": true,
+                          "required": [
+                            "type",
+                            "seconds"
+                          ],
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "duration"
+                            },
+                            "seconds": {
+                              "type": "number",
+                              "minimum": 0
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "examples": [
+                    {
+                      "text": "今天会议主要讨论了新版本的发布时间。",
+                      "usage": {
+                        "type": "tokens",
+                        "input_tokens": 120,
+                        "input_token_details": {
+                          "text_tokens": 0,
+                          "audio_tokens": 120
+                        },
+                        "output_tokens": 18,
+                        "total_tokens": 138
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

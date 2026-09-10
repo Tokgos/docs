@@ -414,39 +414,98 @@
                 ]
               },
               "examples": {
-                "默认": {
+                "文本输入": {
                   "value": {
+                    "systemInstruction": {
+                      "parts": [
+                        {
+                          "text": "You are a helpful assistant."
+                        }
+                      ]
+                    },
                     "contents": [
                       {
+                        "role": "user",
                         "parts": [
                           {
-                            "text": "How does AI work?"
+                            "text": "Write a short bedtime story about a unicorn."
                           }
                         ]
                       }
-                    ]
+                    ],
+                    "generationConfig": {
+                      "maxOutputTokens": 1024
+                    }
                   },
-                  "summary": "默认"
+                  "summary": "文本输入"
                 },
-                "多模态": {
+                "图片输入": {
+                  "value": {
+                    "systemInstruction": {
+                      "parts": [
+                        {
+                          "text": "You are a helpful assistant."
+                        }
+                      ]
+                    },
+                    "contents": [
+                      {
+                        "role": "user",
+                        "parts": [
+                          {
+                            "inlineData": {
+                              "mimeType": "image/jpeg",
+                              "data": "<图片的Base64字符串>"
+                            }
+                          },
+                          {
+                            "text": "Describe this painting in Chinese, including its style, colors, and mood."
+                          }
+                        ]
+                      }
+                    ],
+                    "generationConfig": {
+                      "maxOutputTokens": 1024
+                    }
+                  },
+                  "summary": "图片输入"
+                },
+                "函数调用": {
                   "value": {
                     "contents": [
                       {
+                        "role": "user",
                         "parts": [
                           {
-                            "text": "Tell me about this instrument"
-                          },
+                            "text": "What's the weather in Shanghai today?"
+                          }
+                        ]
+                      }
+                    ],
+                    "tools": [
+                      {
+                        "functionDeclarations": [
                           {
-                            "inline_data": {
-                              "mime_type": "image/jpeg",
-                              "data": "iVBORw0K..."
+                            "name": "get_weather",
+                            "description": "Get current weather for a city.",
+                            "parameters": {
+                              "type": "OBJECT",
+                              "properties": {
+                                "city": {
+                                  "type": "STRING",
+                                  "description": "City name, such as Shanghai."
+                                }
+                              },
+                              "required": [
+                                "city"
+                              ]
                             }
                           }
                         ]
                       }
                     ]
                   },
-                  "summary": "多模态"
+                  "summary": "函数调用"
                 }
               }
             }
@@ -713,7 +772,11 @@
             "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
       }
     },
     "/v1beta/models/{model}:streamGenerateContent": {
@@ -1116,19 +1179,30 @@
                 ]
               },
               "examples": {
-                "默认": {
+                "流式输出": {
                   "value": {
+                    "systemInstruction": {
+                      "parts": [
+                        {
+                          "text": "You are a helpful assistant."
+                        }
+                      ]
+                    },
                     "contents": [
                       {
+                        "role": "user",
                         "parts": [
                           {
-                            "text": "Explain how AI works"
+                            "text": "Write a short bedtime story about a unicorn."
                           }
                         ]
                       }
-                    ]
+                    ],
+                    "generationConfig": {
+                      "maxOutputTokens": 1024
+                    }
                   },
-                  "summary": "默认"
+                  "summary": "流式输出"
                 }
               }
             }
@@ -1395,7 +1469,619 @@
             "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1beta/cachedContents": {
+      "post": {
+        "summary": "Create Cached Content",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "对话补全/Gemini协议"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "创建缓存内容的请求体。缓存内容经过预处理后，可以在后续生成请求中重复使用。缓存只能用于创建它时指定的模型。",
+                "required": [
+                  "model"
+                ],
+                "properties": {
+                  "contents": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "需要缓存的内容列表。可以包含单轮内容，也可以按照对话顺序包含多轮历史内容。该字段仅用于输入，缓存创建后不可修改。",
+                    "items": {
+                      "type": "object",
+                      "description": "一条对话内容，由角色和一个或多个内容部分组成。",
+                      "required": [
+                        "parts"
+                      ],
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "model"
+                          ],
+                          "description": "内容所属角色。user 表示用户内容，model 表示模型生成的历史内容。"
+                        },
+                        "parts": {
+                          "type": "array",
+                          "minItems": 1,
+                          "description": "组成当前内容的部分列表。每个 Part 可表示文本、内联文件、已上传文件、函数调用、函数响应或代码执行信息。",
+                          "items": {
+                            "type": "object",
+                            "description": "内容的一个组成部分。text、inlineData、fileData、functionCall、functionResponse、executableCode、codeExecutionResult 通常只设置其中一种。",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "description": "纯文本内容。"
+                              },
+                              "inlineData": {
+                                "type": "object",
+                                "description": "直接嵌入请求中的二进制数据，数据需要使用 Base64 编码。",
+                                "required": [
+                                  "mimeType",
+                                  "data"
+                                ],
+                                "properties": {
+                                  "mimeType": {
+                                    "type": "string",
+                                    "description": "内联数据的 MIME 类型，例如 text/plain、image/jpeg、application/pdf。"
+                                  },
+                                  "data": {
+                                    "type": "string",
+                                    "format": "byte",
+                                    "description": "经过 Base64 编码的文件内容。"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "fileData": {
+                                "type": "object",
+                                "description": "通过 Gemini File API 上传后得到的文件引用。",
+                                "required": [
+                                  "mimeType",
+                                  "fileUri"
+                                ],
+                                "properties": {
+                                  "mimeType": {
+                                    "type": "string",
+                                    "description": "被引用文件的 MIME 类型，例如 text/plain、image/jpeg、application/pdf。"
+                                  },
+                                  "fileUri": {
+                                    "type": "string",
+                                    "description": "File API 返回的文件 URI。"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "functionCall": {
+                                "type": "object",
+                                "description": "模型在历史对话中生成的函数调用信息。",
+                                "required": [
+                                  "name",
+                                  "args"
+                                ],
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "description": "需要调用的函数名称，应与 tools.functionDeclarations 中声明的函数名称一致。"
+                                  },
+                                  "args": {
+                                    "type": "object",
+                                    "description": "调用函数时使用的参数，结构由对应函数的 parameters JSON Schema 决定。",
+                                    "additionalProperties": true,
+                                    "properties": {}
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "functionResponse": {
+                                "type": "object",
+                                "description": "客户端执行函数后返回给模型的结果。",
+                                "required": [
+                                  "name",
+                                  "response"
+                                ],
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "description": "已执行函数的名称，应与对应的 functionCall.name 一致。"
+                                  },
+                                  "response": {
+                                    "type": "object",
+                                    "description": "函数执行结果。可以包含函数返回的数据、状态或错误信息。",
+                                    "additionalProperties": true,
+                                    "properties": {}
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "executableCode": {
+                                "type": "object",
+                                "description": "由模型生成、可以交给代码执行环境运行的代码。",
+                                "required": [
+                                  "language",
+                                  "code"
+                                ],
+                                "properties": {
+                                  "language": {
+                                    "type": "string",
+                                    "enum": [
+                                      "LANGUAGE_UNSPECIFIED",
+                                      "PYTHON"
+                                    ],
+                                    "description": "代码使用的编程语言。LANGUAGE_UNSPECIFIED 表示未指定，PYTHON 表示 Python。"
+                                  },
+                                  "code": {
+                                    "type": "string",
+                                    "description": "需要执行的源代码。"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "codeExecutionResult": {
+                                "type": "object",
+                                "description": "代码执行环境返回的执行结果。",
+                                "required": [
+                                  "outcome"
+                                ],
+                                "properties": {
+                                  "outcome": {
+                                    "type": "string",
+                                    "enum": [
+                                      "OUTCOME_UNSPECIFIED",
+                                      "OUTCOME_OK",
+                                      "OUTCOME_FAILED",
+                                      "OUTCOME_DEADLINE_EXCEEDED"
+                                    ],
+                                    "description": "代码执行状态。OUTCOME_OK 表示成功，OUTCOME_FAILED 表示失败，OUTCOME_DEADLINE_EXCEEDED 表示执行超时。"
+                                  },
+                                  "output": {
+                                    "type": "string",
+                                    "description": "代码执行产生的标准输出、错误信息或其他文本结果。"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "thought": {
+                                "type": "boolean",
+                                "description": "表示当前 Part 是否属于模型的思考内容。通常由服务端生成，回传历史内容时应保持原值。"
+                              },
+                              "thoughtSignature": {
+                                "type": "string",
+                                "format": "byte",
+                                "description": "模型思考内容的签名。回传模型历史内容时应保持原样，不应由客户端修改或自行生成。"
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "tools": {
+                    "type": "array",
+                    "description": "模型在后续生成内容时可以使用的工具列表。该字段仅用于输入，缓存创建后不可修改。",
+                    "items": {
+                      "type": "object",
+                      "description": "一个工具声明。可以声明客户端函数、代码执行工具或其他模型支持的工具。",
+                      "properties": {
+                        "functionDeclarations": {
+                          "type": "array",
+                          "minItems": 1,
+                          "description": "客户端提供给模型使用的函数声明列表。",
+                          "items": {
+                            "type": "object",
+                            "description": "一个可由模型调用的函数定义。",
+                            "required": [
+                              "name"
+                            ],
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "description": "函数名称。名称应唯一，并符合服务端支持的命名规则。"
+                              },
+                              "description": {
+                                "type": "string",
+                                "description": "函数用途和调用场景说明，模型将根据该说明判断是否调用函数。"
+                              },
+                              "parameters": {
+                                "type": "object",
+                                "description": "函数参数的 JSON Schema。通常根节点的 type 为 object，并通过 properties 声明参数。",
+                                "additionalProperties": true,
+                                "properties": {}
+                              },
+                              "response": {
+                                "type": "object",
+                                "description": "函数返回值的 JSON Schema，用于描述函数执行结果的结构。",
+                                "additionalProperties": true,
+                                "properties": {}
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        },
+                        "codeExecution": {
+                          "type": "object",
+                          "description": "启用模型代码执行能力。当前配置对象通常为空。",
+                          "additionalProperties": false,
+                          "properties": {}
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "expireTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "缓存失效的绝对时间，使用 RFC 3339 格式。服务端输出时会规范化为 UTC 时间。该字段与 ttl 互斥，最多设置其中一个。",
+                    "examples": [
+                      "2026-09-08T12:00:00Z",
+                      "2026-09-08T12:00:00.123Z"
+                    ]
+                  },
+                  "ttl": {
+                    "type": "string",
+                    "pattern": "^[0-9]+(?:\\.[0-9]{1,9})?s$",
+                    "description": "缓存的相对有效时长，以秒为单位，最多支持 9 位小数，并以 s 结尾。该字段仅用于输入，与 expireTime 互斥。",
+                    "examples": [
+                      "300s",
+                      "3600s",
+                      "3.5s"
+                    ]
+                  },
+                  "displayName": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "description": "用户为缓存内容设置的可读名称，最多包含 128 个 Unicode 字符。该字段在缓存创建后不可修改。"
+                  },
+                  "model": {
+                    "type": "string",
+                    "pattern": "^models/[^/]+$",
+                    "description": "用于创建和使用该缓存的模型资源名称。缓存只能用于这里指定的模型，格式为 models/{model}。该字段为必填项，创建后不可修改。",
+                    "examples": [
+                      "models/gemini-1.5-flash-001",
+                      "models/gemini-2.5-flash"
+                    ]
+                  },
+                  "systemInstruction": {
+                    "type": "object",
+                    "description": "由开发者设置的系统指令。当前仅支持纯文本 Part。该字段仅用于输入，缓存创建后不可修改。",
+                    "required": [
+                      "parts"
+                    ],
+                    "properties": {
+                      "role": {
+                        "type": "string",
+                        "enum": [
+                          "user",
+                          "model"
+                        ],
+                        "description": "系统指令内容的角色。通常可以省略该字段。"
+                      },
+                      "parts": {
+                        "type": "array",
+                        "minItems": 1,
+                        "description": "组成系统指令的文本部分列表。",
+                        "items": {
+                          "type": "object",
+                          "description": "系统指令中的一个文本部分。",
+                          "required": [
+                            "text"
+                          ],
+                          "properties": {
+                            "text": {
+                              "type": "string",
+                              "description": "系统指令文本，用于定义模型的身份、行为、任务要求或输出规则。"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "toolConfig": {
+                    "type": "object",
+                    "description": "工具调用配置。该配置由所有 tools 共享，仅用于输入，缓存创建后不可修改。",
+                    "properties": {
+                      "functionCallingConfig": {
+                        "type": "object",
+                        "description": "函数调用行为配置。",
+                        "properties": {
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "MODE_UNSPECIFIED",
+                              "AUTO",
+                              "ANY",
+                              "NONE",
+                              "VALIDATED"
+                            ],
+                            "default": "AUTO",
+                            "description": "函数调用模式。MODE_UNSPECIFIED 表示未指定且不建议使用；AUTO 表示模型自行决定返回文本或调用函数；ANY 表示模型必须调用函数；NONE 表示禁止函数调用；VALIDATED 表示模型可返回文本或调用经过约束验证的函数。"
+                          },
+                          "allowedFunctionNames": {
+                            "type": "array",
+                            "minItems": 1,
+                            "description": "允许模型调用的函数名称列表。仅应在 mode 为 ANY 或 VALIDATED 时设置，名称必须与 functionDeclarations 中的函数名称一致。",
+                            "items": {
+                              "type": "string",
+                              "description": "允许调用的函数名称。"
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "retrievalConfig": {
+                        "type": "object",
+                        "description": "检索工具使用的上下文配置。",
+                        "properties": {
+                          "latLng": {
+                            "type": "object",
+                            "description": "用户所在位置的经纬度，遵循 WGS84 坐标标准。",
+                            "required": [
+                              "latitude",
+                              "longitude"
+                            ],
+                            "properties": {
+                              "latitude": {
+                                "type": "number",
+                                "minimum": -90,
+                                "maximum": 90,
+                                "description": "纬度，单位为度，取值范围为 -90 到 90。"
+                              },
+                              "longitude": {
+                                "type": "number",
+                                "minimum": -180,
+                                "maximum": 180,
+                                "description": "经度，单位为度，取值范围为 -180 到 180。"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "languageCode": {
+                            "type": "string",
+                            "description": "用户内容使用的语言代码，应使用 BCP 47 语言标签，例如 zh-CN、en-US。"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "includeServerSideToolInvocations": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "是否在模型响应的 Content 中包含服务端工具调用及其响应。设为 true 后，客户端可以观察服务端工具的调用过程。"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "not": {
+                  "required": [
+                    "expireTime",
+                    "ttl"
+                  ]
+                },
+                "additionalProperties": false
+              },
+              "examples": {
+                "默认": {
+                  "value": {
+                    "model": "models/gemini-2.5-flash",
+                    "displayName": "unicorn-story-context",
+                    "systemInstruction": {
+                      "parts": [
+                        {
+                          "text": "You are a creative bedtime-story assistant. Keep stories gentle and suitable for children."
+                        }
+                      ]
+                    },
+                    "contents": [
+                      {
+                        "role": "user",
+                        "parts": [
+                          {
+                            "text": "Reference material: Unicorns are magical horses with a single horn. They live in enchanted forests and help kind-hearted people."
+                          }
+                        ]
+                      }
+                    ],
+                    "ttl": "3600s"
+                  },
+                  "summary": "默认"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "创建成功后返回的缓存内容资源。响应主要包含缓存标识、模型、创建时间、更新时间、实际过期时间和令牌用量。",
+                  "required": [
+                    "name",
+                    "model",
+                    "expireTime"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "pattern": "^cachedContents/[^/]+$",
+                      "description": "缓存内容的唯一资源名称，由服务端生成，格式为 cachedContents/{id}。",
+                      "examples": [
+                        "cachedContents/abc123def456"
+                      ]
+                    },
+                    "displayName": {
+                      "type": "string",
+                      "maxLength": 128,
+                      "description": "创建缓存时设置的可读名称。未设置时可能不返回该字段。"
+                    },
+                    "model": {
+                      "type": "string",
+                      "pattern": "^models/[^/]+$",
+                      "description": "该缓存绑定的模型资源名称。缓存只能用于此模型。",
+                      "examples": [
+                        "models/gemini-1.5-flash-001"
+                      ]
+                    },
+                    "createTime": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "缓存资源的创建时间，由服务端生成，采用 RFC 3339 格式并通常规范化为 UTC 时间。",
+                      "examples": [
+                        "2026-09-08T10:00:00Z"
+                      ]
+                    },
+                    "updateTime": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "缓存资源最后一次更新的时间，由服务端生成，采用 RFC 3339 格式并通常规范化为 UTC 时间。",
+                      "examples": [
+                        "2026-09-08T10:00:00Z"
+                      ]
+                    },
+                    "expireTime": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "缓存实际失效的绝对时间。无论请求中使用 expireTime 还是 ttl，服务端都会在响应中返回该字段。",
+                      "examples": [
+                        "2026-09-08T11:00:00Z"
+                      ]
+                    },
+                    "usageMetadata": {
+                      "type": "object",
+                      "description": "缓存内容的令牌用量信息。",
+                      "properties": {
+                        "totalTokenCount": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "当前缓存内容占用的令牌总数。"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "example": {
+                  "name": "cachedContents/abc123xyz",
+                  "displayName": "starry-night-reference",
+                  "model": "models/gemini-2.5-flash",
+                  "createTime": "2026-09-10T08:30:00.123456Z",
+                  "updateTime": "2026-09-10T08:30:00.123456Z",
+                  "expireTime": "2026-09-10T09:30:00.123456Z",
+                  "usageMetadata": {
+                    "totalTokenCount": 1864
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1beta/cachedContents/{id}": {
+      "get": {
+        "summary": "Get Cached Content",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "对话补全/Gemini协议"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "支持全部传递，推荐1357412997877727232",
+            "required": true,
+            "example": "projects/658681666030/locations/global/cachedContents/1357412997877727232",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Delete Cached Content",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "对话补全/Gemini协议"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "支持全部传递，推荐1357412997877727232",
+            "required": true,
+            "example": "projects/658681666030/locations/global/cachedContents/1357412997877727232",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
       }
     }
   },
@@ -1403,7 +2089,12 @@
   "components": {
     "schemas": {},
     "responses": {},
-    "securitySchemes": {}
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
   },
   "servers": [
     {
@@ -1411,5 +2102,9 @@
       "description": "生产环境"
     }
   ],
-  "security": []
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
 }

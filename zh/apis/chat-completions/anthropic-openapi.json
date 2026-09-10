@@ -526,40 +526,91 @@
                 ]
               },
               "examples": {
-                "默认": {
+                "文本输入": {
                   "value": {
+                    "model": "claude-sonnet-4-6",
                     "max_tokens": 1024,
+                    "system": "You are a helpful assistant.",
                     "messages": [
                       {
-                        "content": "Hello, world",
-                        "role": "user"
+                        "role": "user",
+                        "content": "Write a short bedtime story about a unicorn."
+                      }
+                    ]
+                  },
+                  "summary": "文本输入"
+                },
+                "流式输出": {
+                  "value": {
+                    "model": "claude-sonnet-4-6",
+                    "max_tokens": 1024,
+                    "system": "You are a helpful assistant.",
+                    "messages": [
+                      {
+                        "role": "user",
+                        "content": "Write a short bedtime story about a unicorn."
                       }
                     ],
-                    "model": "claude-opus-5",
-                    "stream": false,
-                    "temperature": 1,
-                    "thinking": {
-                      "type": "adaptive"
-                    },
+                    "stream": true
+                  },
+                  "summary": "流式输出"
+                },
+                "图片输入": {
+                  "value": {
+                    "model": "claude-sonnet-4-6",
+                    "max_tokens": 1024,
+                    "system": "You are a helpful assistant.",
+                    "messages": [
+                      {
+                        "role": "user",
+                        "content": [
+                          {
+                            "type": "image",
+                            "source": {
+                              "type": "url",
+                              "url": "https://uploads3.wikiart.org/00475/images/vincent-van-gogh/the-starry-night-1889.jpg"
+                            }
+                          },
+                          {
+                            "type": "text",
+                            "text": "Describe this painting in Chinese, including its style, colors, and mood."
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "summary": "图片输入"
+                },
+                "函数调用": {
+                  "value": {
+                    "model": "claude-sonnet-4-6",
+                    "max_tokens": 1024,
                     "tools": [
                       {
+                        "name": "get_weather",
+                        "description": "Get current weather for a city.",
                         "input_schema": {
                           "type": "object",
                           "properties": {
-                            "location": "bar",
-                            "unit": "bar"
+                            "city": {
+                              "type": "string",
+                              "description": "City name, such as Shanghai."
+                            }
                           },
                           "required": [
-                            "location"
+                            "city"
                           ]
-                        },
-                        "name": "name"
+                        }
                       }
                     ],
-                    "top_k": 5,
-                    "top_p": 0.7
+                    "messages": [
+                      {
+                        "role": "user",
+                        "content": "What's the weather in Shanghai today?"
+                      }
+                    ]
                   },
-                  "summary": "默认"
+                  "summary": "函数调用"
                 }
               }
             }
@@ -1010,7 +1061,11 @@
             "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
       }
     }
   },
@@ -1018,7 +1073,12 @@
   "components": {
     "schemas": {},
     "responses": {},
-    "securitySchemes": {}
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
   },
   "servers": [
     {
@@ -1026,5 +1086,9 @@
       "description": "生产环境"
     }
   ],
-  "security": []
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
 }

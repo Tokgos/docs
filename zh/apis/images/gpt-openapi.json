@@ -137,16 +137,13 @@
                     "description": "图像质量。GPT Image 支持 auto/low/medium/high；dall-e-3 支持 standard/hd；dall-e-2 仅 standard。"
                   },
                   "response_format": {
-                    "type": [
-                      "string",
-                      "null"
-                    ],
+                    "type": "string",
+                    "description": "固定返回 Base64 图片，使响应符合本接口的 Response Schema。",
+                    "default": "b64_json",
                     "enum": [
-                      "url",
                       "b64_json",
-                      null
-                    ],
-                    "description": "dall-e-2、dall-e-3 的返回格式。GPT Image 始终返回 b64_json。"
+                      "url"
+                    ]
                   },
                   "size": {
                     "type": [
@@ -201,11 +198,17 @@
                   }
                 ]
               },
-              "example": {
-                "model": "gpt-image-2",
-                "prompt": "A cute baby sea otter",
-                "n": 1,
-                "size": "1024x1024"
+              "examples": {
+                "默认": {
+                  "value": {
+                    "model": "gpt-image-2",
+                    "prompt": "Generate a photorealistic red apple resting on a rustic wooden table, soft window light, shallow depth of field.",
+                    "size": "1024x1024",
+                    "quality": "high",
+                    "output_format": "png"
+                  },
+                  "summary": "默认"
+                }
               }
             }
           },
@@ -366,7 +369,11 @@
             "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
       }
     },
     "/v1/images/edits": {
@@ -558,6 +565,15 @@
                   "user": {
                     "type": "string",
                     "description": "终端用户唯一标识，用于滥用监控和检测。"
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "固定返回 Base64 图片，使响应符合本接口的 Response Schema。",
+                    "default": "b64_json",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
                   }
                 },
                 "examples": [
@@ -576,13 +592,13 @@
               },
               "example": {
                 "model": "gpt-image-2",
-                "prompt": "换成蓝色的苹果",
+                "prompt": "Keep the apple unchanged and replace only its background with a misty enchanted forest under soft cinematic lighting.",
                 "size": "1024x1024",
-                "quality": "medium",
-                "n": 1,
+                "quality": "high",
+                "output_format": "png",
                 "images": [
                   {
-                    "image_url": "https://tse4.mm.bing.net/th/id/OIP.BUyCY__2XCH8Z1pYX5IPvQHaE7?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+                    "image_url": "https://gd-hbimg.huaban.com/cb36fdfc6ee4707de3ec666d6bc202fb99d9bef326a10d-oQHn3b_fw658"
                   }
                 ]
               }
@@ -745,7 +761,11 @@
             "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
       }
     }
   },
@@ -753,7 +773,12 @@
   "components": {
     "schemas": {},
     "responses": {},
-    "securitySchemes": {}
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
   },
   "servers": [
     {
@@ -761,5 +786,9 @@
       "description": "生产环境"
     }
   ],
-  "security": []
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
 }
