@@ -21,7 +21,7 @@
       "post": {
         "summary": "图片生成",
         "deprecated": false,
-        "description": "使用文字生成图片；传入 input_images 时，同一端点执行图生图或图片编辑。当前网关不支持 Qwen 的 n、quality、output_format、response_format、stream、background、moderation、partial_images、style 和 user 参数。",
+        "description": "`qwen-image-3.0-pro`（以及 `bailian/` 别名）在同一端点支持文生图和最多 3 张参考图的图生图。\n\n支持：`model`、`prompt`、`size`、`images`、`prompt_extend`、`prompt_extend_mode`、`enable_thinking`、`negative_prompt`、`seed`、`watermark`、`response_format`。\n\n官方兼容接口还支持 `n=1..6`，但当前网关会明确拒绝 Qwen 的 `n`，因此本规范不暴露该字段。`prompt_extend_mode=agent` 仅支持文生图；`enable_thinking` 仅在 `prompt_extend=true` 时生效。",
         "tags": [
           "图片生成/Qwen",
           "图片生成/Qwen Image"
@@ -53,20 +53,20 @@
                   },
                   "size": {
                     "type": "string",
-                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
+                    "pattern": "^(auto|[1-9]\\d*x[1-9]\\d*)$",
                     "default": "1024x1024",
                     "examples": [
                       "1024x1024",
                       "2048x2048",
                       "1536x1024"
                     ],
-                    "description": "可选。输出尺寸，格式为 WIDTHxHEIGHT。省略或传 auto 时，当前网关统一向上游发送 1024x1024；具体像素面积和宽高比限制由上游模型校验。"
+                    "description": "可选。输出尺寸，格式为 WIDTHxHEIGHT，例如 1024x1024。省略或传 auto 时，网关向上游发送 1024x1024；官方像素面积范围为 512×512 到 2048×2048，宽高比 1:8～8:1。"
                   },
                   "images": {
                     "type": "array",
                     "minItems": 1,
                     "maxItems": 3,
-                    "description": "必填。待编辑的源图列表。Qwen 模型最多 3 张；每项需提供 file_id 或 image_url 之一。若直接上传文件，使用 multipart 字段 image[]（或你的网关定义的 images）。",
+                    "description": "可选。图生图/编辑参考图，最多 3 张。每项提供 file_id 或 image_url；省略时为文生图。",
                     "items": {
                       "type": "object",
                       "properties": {
@@ -219,25 +219,24 @@
                       "description": "生成结果列表。",
                       "items": {
                         "type": "object",
-                        "required": [
-                          "b64_json",
-                          "index"
-                        ],
                         "properties": {
                           "b64_json": {
                             "type": "string",
                             "minLength": 1,
                             "contentEncoding": "base64",
-                            "description": "纯 Base64 图片数据，不包含 data:image/...;base64, 前缀。"
+                            "description": "网关下载并转换后的 Base64 图片。"
                           },
                           "index": {
                             "type": "integer",
-                            "format": "int64",
                             "minimum": 0,
-                            "description": "结果索引；优先保留上游 index，否则按数组位置生成。"
+                            "description": "结果索引。"
                           }
                         },
-                        "additionalProperties": false
+                        "additionalProperties": false,
+                        "required": [
+                          "b64_json",
+                          "index"
+                        ]
                       }
                     },
                     "output_format": {
@@ -278,7 +277,33 @@
           {
             "bearer": []
           }
-        ]
+        ],
+        "x-model-capabilities": {
+          "bailian/qwen-image-3.0-pro": [
+            "prompt",
+            "size",
+            "images",
+            "prompt_extend",
+            "prompt_extend_mode",
+            "enable_thinking",
+            "negative_prompt",
+            "seed",
+            "watermark",
+            "response_format"
+          ],
+          "qwen-image-3.0-pro": [
+            "prompt",
+            "size",
+            "images",
+            "prompt_extend",
+            "prompt_extend_mode",
+            "enable_thinking",
+            "negative_prompt",
+            "seed",
+            "watermark",
+            "response_format"
+          ]
+        }
       }
     }
   },

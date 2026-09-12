@@ -774,7 +774,7 @@
         },
         "security": [
           {
-            "bearer": []
+            "geminiApiKey": []
           }
         ]
       }
@@ -1471,7 +1471,7 @@
         },
         "security": [
           {
-            "bearer": []
+            "geminiApiKey": []
           }
         ]
       }
@@ -1999,7 +1999,7 @@
         },
         "security": [
           {
-            "bearer": []
+            "geminiApiKey": []
           }
         ]
       }
@@ -2040,7 +2040,7 @@
         },
         "security": [
           {
-            "bearer": []
+            "geminiApiKey": []
           }
         ]
       },
@@ -2079,7 +2079,7 @@
         },
         "security": [
           {
-            "bearer": []
+            "geminiApiKey": []
           }
         ]
       }
@@ -2090,9 +2090,11 @@
     "schemas": {},
     "responses": {},
     "securitySchemes": {
-      "bearer": {
-        "type": "http",
-        "scheme": "bearer"
+      "geminiApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-goog-api-key",
+        "description": "Tikway API Key。按 Gemini 原生协议通过 x-goog-api-key 请求头传递。"
       }
     }
   },
@@ -2104,7 +2106,7 @@
   ],
   "security": [
     {
-      "bearer": []
+      "geminiApiKey": []
     }
   ]
 }

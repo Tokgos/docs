@@ -18,7 +18,7 @@
       "post": {
         "summary": "图片生成",
         "deprecated": false,
-        "description": "",
+        "description": "`diffusion-4-5-full` 与 `diffusion-4-5-curated` 使用相同参数集：`prompt`、`images`、`negative_prompt`、`n`、`size`、`seed`、`steps`、`scale`、`quality_toggle`、`sampler`、`noise_schedule`、`character_prompts`、`hook_url` 和 `response_format`。\n\n`n` 为 1～4。普通图生图源图最多 1 张；`vibe_transfer` 与 `character_reference` 不能同时使用。NovelAI 没有独立 JSON 编辑端点，编辑仍通过本生成端点的 `images` 完成。",
         "tags": [
           "图片生成/Novel AI"
         ],
@@ -40,13 +40,18 @@
                     "type": "string",
                     "minLength": 1,
                     "examples": [
-                      "nai-diffusion-4-5-full",
-                      "nai-diffusion-4-5-curated"
-                    ]
+                      "diffusion-4-5-full",
+                      "diffusion-4-5-curated"
+                    ],
+                    "enum": [
+                      "diffusion-4-5-full",
+                      "diffusion-4-5-curated"
+                    ],
+                    "description": "必填。TTAPI 当前接入的 NovelAI Diffusion V4.5 模型。"
                   },
                   "images": {
                     "type": "array",
-                    "description": "统一参考图。type 缺失或为 null 时表示图生图源图。",
+                    "description": "可选。统一参考图数组。type=image（或省略）为单张图生图源图；type=vibe_transfer 为氛围参考；type=character_reference 为精确角色/风格参考。只能有 1 张普通图生图源图，vibe_transfer 与 character_reference 不能混用。",
                     "items": {
                       "type": "object",
                       "required": [
@@ -91,7 +96,8 @@
                         }
                       },
                       "additionalProperties": false
-                    }
+                    },
+                    "maxItems": 16
                   },
                   "prompt": {
                     "type": "string",
@@ -203,6 +209,11 @@
                       "b64_json",
                       "url"
                     ]
+                  },
+                  "hook_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "可选。TTAPI 任务完成或失败时的回调地址。"
                   }
                 },
                 "additionalProperties": false
@@ -217,7 +228,7 @@
                     "n": 1,
                     "steps": 28,
                     "scale": 5,
-                    "sampler": "k_euler_ancestral",
+                    "sampler": "Euler Ancestral",
                     "noise_schedule": "karras"
                   },
                   "summary": "文生图"
@@ -375,7 +386,41 @@
           {
             "bearer": []
           }
-        ]
+        ],
+        "x-model-capabilities": {
+          "diffusion-4-5-full": [
+            "prompt",
+            "images",
+            "negative_prompt",
+            "n",
+            "size",
+            "seed",
+            "steps",
+            "scale",
+            "quality_toggle",
+            "sampler",
+            "noise_schedule",
+            "character_prompts",
+            "hook_url",
+            "response_format"
+          ],
+          "diffusion-4-5-curated": [
+            "prompt",
+            "images",
+            "negative_prompt",
+            "n",
+            "size",
+            "seed",
+            "steps",
+            "scale",
+            "quality_toggle",
+            "sampler",
+            "noise_schedule",
+            "character_prompts",
+            "hook_url",
+            "response_format"
+          ]
+        }
       }
     }
   },

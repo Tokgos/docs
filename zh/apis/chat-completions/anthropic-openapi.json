@@ -1063,7 +1063,7 @@
         },
         "security": [
           {
-            "bearer": []
+            "anthropicApiKey": []
           }
         ]
       }
@@ -1074,9 +1074,11 @@
     "schemas": {},
     "responses": {},
     "securitySchemes": {
-      "bearer": {
-        "type": "http",
-        "scheme": "bearer"
+      "anthropicApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "Tikway API Key。按 Anthropic 原生协议通过 x-api-key 请求头传递。"
       }
     }
   },
@@ -1088,7 +1090,7 @@
   ],
   "security": [
     {
-      "bearer": []
+      "anthropicApiKey": []
     }
   ]
 }

@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Tikway Wan 视频 API",
-    "description": "阿里云百炼 Wan 模型的 OpenAI 兼容异步视频生成接口。",
+    "title": "Tikway Veo 视频 API",
+    "description": "Google（经 TTAPI） Veo 模型的 OpenAI 兼容异步视频生成接口。",
     "version": "1.1.0"
   },
   "tags": [
@@ -10,84 +10,69 @@
       "name": "视频生成"
     },
     {
-      "name": "视频生成/Wan"
+      "name": "视频生成/Veo"
     }
   ],
   "paths": {
     "/v1/videos": {
       "post": {
-        "summary": "创建 Wan 视频",
+        "summary": "创建 Veo 视频",
         "deprecated": false,
-        "description": "通过统一的 `POST /v1/videos` 创建 Wan 视频任务。模型能力以当前 Tikway 网关实际可调用范围为准。\n\n| 模型 | 分辨率 | 时长 | 支持模式 | 音频 | 参考限制 |\n| --- | --- | --- | --- | --- | --- |\n| `wan-3.0` | 480p / 720p / 1080p | 2–30 秒或 -1 智能时长 | 文生、首帧、首尾帧、全模态参考 | 支持，默认开启 | 10 图 / 5 视频 / 5 音频；另可传 1 个文件或链接 |\n| `wan-2.7` | 720p / 1080p | 生成 2–15 秒；参考/编辑 2–10 秒 | 文生、首帧、首尾帧、续写、参考、编辑 | 支持 | 模式相关 |\n| `wan-2.6` | 720p / 1080p | 生成 2–15 秒；参考 2–10 秒 | 文生、首帧、参考；首尾帧/编辑使用兼容模型 | 支持；兼容模式可能无声 | 参考生视频 1–5 个图片/视频 |\n\n来源：[阿里云视频生成模型总览](https://help.aliyun.com/zh/model-studio/use-video-generation)。官网能力与当前网关未开放能力之间的差异见本次审计报告。",
+        "description": "通过统一的 `POST /v1/videos` 创建 Veo 视频任务。模型能力以当前 Tikway 网关实际可调用范围为准。\n\n| 模型 | 分辨率 | 时长 | 支持模式 | 音频 | 参考限制 |\n| --- | --- | --- | --- | --- | --- |\n| `veo-3.1-fast` | 720p / 1080p | 当前网关固定 8 秒 | 文生、首帧、首尾帧、最多 3 图参考 | 始终生成，不能关闭 | 不支持视频输入/延长的统一入口 |\n| `veo-3.1-quality` | 720p / 1080p | 当前网关固定 8 秒 | 文生、首帧、首尾帧、最多 3 图参考 | 始终生成，不能关闭 | 不支持视频输入/延长的统一入口 |\n| `veo-3.1-lite` | 720p / 1080p | 当前网关固定 8 秒 | 文生、首帧、首尾帧；不支持普通参考图模式 | 始终生成，不能关闭 | 不支持视频输入/延长的统一入口 |\n\n来源：[Google Veo 3.1 API](https://ai.google.dev/gemini-api/docs/veo?hl=en)。官网能力与当前网关未开放能力之间的差异见本次审计报告。",
         "tags": [
-          "视频生成/Wan"
+          "视频生成/Veo"
         ],
 
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "title": "WanVideoCreateRequest",
-                "description": "创建 Wan 视频任务。参数按当前 Tikway 网关能力收窄；模型之间的差异见 operation 描述与 x-model-capabilities。",
+                "title": "VeoVideoCreateRequest",
+                "description": "创建 Veo 视频任务。参数按当前 Tikway 网关能力收窄；模型之间的差异见 operation 描述与 x-model-capabilities。",
                 "type": "object",
                 "required": [
-                  "model"
+                  "model",
+                  "prompt"
                 ],
                 "properties": {
                   "model": {
                     "type": "string",
                     "enum": [
-                      "wan-3.0",
-                      "wan3.0-video",
-                      "wan-2.7",
-                      "wan-2.6"
+                      "veo-3.1-fast",
+                      "veo-3.1-quality",
+                      "veo-3.1-lite"
                     ],
-                    "description": "Wan 模型 ID。"
+                    "description": "Veo 模型 ID。"
                   },
                   "prompt": {
                     "type": "string",
                     "minLength": 1,
                     "description": "视频生成或编辑提示词。"
                   },
-                  "negative_prompt": {
-                    "type": "string",
-                    "description": "Wan 2.6/2.7 可用。Wan 3.0 不支持顶层 negative_prompt；如上游扩展已支持，请放入 extra_body。"
-                  },
-                  "size": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]*[x*][1-9][0-9]*$",
-                    "description": "仅 wan-2.6 支持精确像素尺寸；其他 Wan 模型请使用 resolution + aspect_ratio。"
-                  },
                   "duration": {
                     "oneOf": [
                       {
                         "type": "integer",
-                        "minimum": -1,
-                        "maximum": 30
+                        "const": 8
                       },
                       {
                         "type": "string",
-                        "pattern": "^(?:-1|[2-9]|[12][0-9]|30)$"
+                        "const": "8"
                       }
                     ],
-                    "description": "视频时长（秒）。Wan 3.0 为 2–30 或 -1；Wan 2.7/2.6 的上限随生成模式变化，详见模型能力表。"
+                    "description": "当前 Tikway 路由固定生成 8 秒视频。Google 原生 Veo 3.1 还支持 4 秒和 6 秒，但当前网关尚未开放。"
                   },
                   "aspect_ratio": {
                     "type": "string",
                     "enum": [
-                      "adaptive",
                       "16:9",
-                      "9:16",
-                      "1:1",
-                      "4:3",
-                      "3:4"
+                      "9:16"
                     ],
                     "description": "视频宽高比。图生视频时，部分模型会按输入素材自动决定比例。"
                   },
                   "resolution": {
                     "type": "string",
                     "enum": [
-                      "480p",
                       "720p",
                       "1080p"
                     ],
@@ -124,8 +109,8 @@
                   },
                   "input_references": {
                     "type": "array",
-                    "maxItems": 21,
-                    "description": "Wan 参考素材。不同模型和模式的数量限制不同；Wan 3.0 的参考素材不能与首尾帧混用，file 与 link 互斥。",
+                    "maxItems": 3,
+                    "description": "最多 3 张参考图。Veo 3.1 Lite 不支持普通参考图模式；首帧和尾帧请使用 frame_images。",
                     "items": {
                       "type": "object",
                       "oneOf": [
@@ -133,51 +118,20 @@
                           "required": [
                             "image_url"
                           ]
-                        },
-                        {
-                          "required": [
-                            "video_url"
-                          ]
-                        },
-                        {
-                          "required": [
-                            "audio_url"
-                          ]
-                        },
-                        {
-                          "required": [
-                            "file_url"
-                          ]
-                        },
-                        {
-                          "required": [
-                            "link_url"
-                          ]
                         }
                       ],
                       "properties": {
                         "type": {
                           "type": "string",
                           "enum": [
-                            "image_url",
-                            "video_url",
-                            "audio_url",
-                            "file_url",
-                            "link_url"
+                            "image_url"
                           ],
                           "description": "可选。素材类型；若提供，必须与对应 URL 字段一致。"
                         },
                         "role": {
                           "type": "string",
                           "enum": [
-                            "reference_image",
-                            "reference_video",
-                            "reference_audio",
-                            "source_video",
-                            "first_clip",
-                            "driving_audio",
-                            "file",
-                            "link"
+                            "reference_image"
                           ],
                           "description": "素材用途。省略时按 URL 字段推断为普通参考素材。"
                         },
@@ -186,49 +140,10 @@
                           "minLength": 1,
                           "format": "uri",
                           "description": "图片 URL 字符串。"
-                        },
-                        "video_url": {
-                          "type": "string",
-                          "minLength": 1,
-                          "format": "uri",
-                          "description": "视频 URL 字符串。"
-                        },
-                        "audio_url": {
-                          "type": "string",
-                          "minLength": 1,
-                          "format": "uri",
-                          "description": "音频 URL 字符串。"
-                        },
-                        "file_url": {
-                          "type": "string",
-                          "minLength": 1,
-                          "format": "uri",
-                          "description": "文件 URL 字符串。"
-                        },
-                        "link_url": {
-                          "type": "string",
-                          "minLength": 1,
-                          "format": "uri",
-                          "description": "网页 URL 字符串。"
-                        },
-                        "reference_voice": {
-                          "type": "string",
-                          "minLength": 1,
-                          "description": "预设音色 ID；仅部分支持音色参考的模型使用。"
                         }
                       },
                       "additionalProperties": false
                     }
-                  },
-                  "generate_audio": {
-                    "type": "boolean",
-                    "description": "是否生成音频。Wan 3.0 默认开启；Wan 2.6/2.7 的具体行为由模式决定。"
-                  },
-                  "seed": {
-                    "type": "integer",
-                    "minimum": -1,
-                    "maximum": 2147483647,
-                    "description": "随机种子。固定种子只能提高可复现性，不保证输出完全一致。"
                   },
                   "callback_url": {
                     "type": "string",
@@ -238,31 +153,14 @@
                   },
                   "extra_body": {
                     "type": "object",
-                    "description": "阿里云百炼视频模型扩展参数。字段会合并到上游 parameters。",
+                    "description": "TTAPI Veo 扩展参数。通常无需设置，网关会根据 frame_images 或 input_references 自动选择 generation_type。",
                     "properties": {
-                      "prompt_extend": {
-                        "type": "boolean",
-                        "description": "是否开启提示词改写。"
-                      },
-                      "shot_type": {
+                      "generation_type": {
                         "type": "string",
                         "enum": [
-                          "single",
-                          "multi"
-                        ],
-                        "description": "单镜头或多镜头。"
-                      },
-                      "watermark": {
-                        "type": "boolean",
-                        "description": "是否添加水印。"
-                      },
-                      "audio_setting": {
-                        "type": "string",
-                        "enum": [
-                          "auto",
-                          "origin"
-                        ],
-                        "description": "视频编辑时的音频处理方式。"
+                          "frame",
+                          "reference"
+                        ]
                       }
                     },
                     "additionalProperties": false
@@ -271,28 +169,28 @@
                 "additionalProperties": false,
                 "x-model-capabilities": [
                   {
-                    "model": "wan-3.0",
-                    "resolution": "480p / 720p / 1080p",
-                    "duration": "2–30 秒或 -1 智能时长",
-                    "modes": "文生、首帧、首尾帧、全模态参考",
-                    "audio": "支持，默认开启",
-                    "references": "10 图 / 5 视频 / 5 音频；另可传 1 个文件或链接"
+                    "model": "veo-3.1-fast",
+                    "resolution": "720p / 1080p",
+                    "duration": "当前网关固定 8 秒",
+                    "modes": "文生、首帧、首尾帧、最多 3 图参考",
+                    "audio": "始终生成，不能关闭",
+                    "references": "不支持视频输入/延长的统一入口"
                   },
                   {
-                    "model": "wan-2.7",
+                    "model": "veo-3.1-quality",
                     "resolution": "720p / 1080p",
-                    "duration": "生成 2–15 秒；参考/编辑 2–10 秒",
-                    "modes": "文生、首帧、首尾帧、续写、参考、编辑",
-                    "audio": "支持",
-                    "references": "模式相关"
+                    "duration": "当前网关固定 8 秒",
+                    "modes": "文生、首帧、首尾帧、最多 3 图参考",
+                    "audio": "始终生成，不能关闭",
+                    "references": "不支持视频输入/延长的统一入口"
                   },
                   {
-                    "model": "wan-2.6",
+                    "model": "veo-3.1-lite",
                     "resolution": "720p / 1080p",
-                    "duration": "生成 2–15 秒；参考 2–10 秒",
-                    "modes": "文生、首帧、参考；首尾帧/编辑使用兼容模型",
-                    "audio": "支持；兼容模式可能无声",
-                    "references": "参考生视频 1–5 个图片/视频"
+                    "duration": "当前网关固定 8 秒",
+                    "modes": "文生、首帧、首尾帧；不支持普通参考图模式",
+                    "audio": "始终生成，不能关闭",
+                    "references": "不支持视频输入/延长的统一入口"
                   }
                 ]
               },
@@ -300,22 +198,21 @@
                 "文生视频": {
                   "summary": "文生视频",
                   "value": {
-                    "model": "wan-3.0",
+                    "model": "veo-3.1-fast",
                     "prompt": "一只金毛寻回犬在日落时分的海滩上奔跑，镜头平稳跟随，画面具有自然细腻的电影质感。",
                     "duration": 8,
                     "resolution": "1080p",
-                    "aspect_ratio": "16:9",
-                    "generate_audio": true
+                    "aspect_ratio": "16:9"
                   }
                 },
                 "首尾帧生视频": {
                   "summary": "首尾帧生视频",
                   "value": {
-                    "model": "wan-3.0",
+                    "model": "veo-3.1-quality",
                     "prompt": "从首帧自然过渡到尾帧，保持主体、构图与视觉风格连贯。",
                     "duration": 8,
-                    "resolution": "720p",
-                    "aspect_ratio": "adaptive",
+                    "resolution": "1080p",
+                    "aspect_ratio": "16:9",
                     "frame_images": [
                       {
                         "type": "first_frame",
@@ -328,25 +225,22 @@
                     ]
                   }
                 },
-                "全模态参考": {
-                  "summary": "全模态参考",
+                "参考生视频": {
+                  "summary": "参考生视频",
                   "value": {
-                    "model": "wan-3.0",
+                    "model": "veo-3.1-quality",
                     "prompt": "保持参考素材中的人物身份与视觉风格，生成一段连贯的电影感短片。",
-                    "duration": 10,
+                    "duration": 8,
                     "resolution": "720p",
+                    "aspect_ratio": "9:16",
                     "input_references": [
                       {
                         "image_url": "https://example.com/assets/character.jpg",
                         "role": "reference_image"
                       },
                       {
-                        "video_url": "https://example.com/assets/style.mp4",
-                        "role": "reference_video"
-                      },
-                      {
-                        "audio_url": "https://example.com/assets/voice.mp3",
-                        "role": "reference_audio"
+                        "image_url": "https://example.com/assets/product.jpg",
+                        "role": "reference_image"
                       }
                     ]
                   }
@@ -422,11 +316,11 @@
     },
     "/v1/videos/{id}": {
       "get": {
-        "summary": "查询 Wan 视频任务",
+        "summary": "查询 Veo 视频任务",
         "deprecated": false,
         "description": "",
         "tags": [
-          "视频生成/Wan"
+          "视频生成/Veo"
         ],
         "parameters": [
           {
@@ -682,7 +576,7 @@
                     "value": {
                       "created": 1789108566,
                       "id": "9552de3d-171f-4cca-b492-7baa56523239",
-                      "model": "wan-3.0",
+                      "model": "veo-3.1-fast",
                       "prompt": "一只金毛犬在日落时分的海滩上奔跑，镜头平稳跟随，海风吹动毛发，画面呈现自然细腻的电影质感",
                       "status": "in_progress",
                       "usage": {
@@ -695,7 +589,7 @@
                     "value": {
                       "created": 1789108566,
                       "id": "9552de3d-171f-4cca-b492-7baa56523239",
-                      "model": "wan-3.0",
+                      "model": "veo-3.1-fast",
                       "prompt": "一只金毛犬在日落时分的海滩上奔跑，镜头平稳跟随，海风吹动毛发，画面呈现自然细腻的电影质感",
                       "status": "completed",
                       "data": [

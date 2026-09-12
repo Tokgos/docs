@@ -18,7 +18,7 @@
       "post": {
         "summary": "图片生成",
         "deprecated": false,
-        "description": "",
+        "description": "Seedream 使用 `/v1/images/generations`。`model` 和 `prompt` 必填，`response_format` 可选。\n\n| 模型 | 尺寸 | 其他参数 |\n| --- | --- | --- |\n| `volcengine/doubao-seedream-5.0-pro` | 2K、3K 或合规 `WIDTHxHEIGHT` | `output_format`、`background`、`response_format`、`watermark`、`optimize_prompt_options` |\n| `volcengine/doubao-seedream-4.5` | 2K、4K 或合规 `WIDTHxHEIGHT` | `response_format`、`watermark`、`optimize_prompt_options`；透明背景能力以账户上游为准 |\n\n透明背景必须同时使用 `output_format=png`。当前规范没有暴露组图控制和参考图字段。",
         "tags": [
           "图片生成/Seedream"
         ],
@@ -33,14 +33,16 @@
                 "additionalProperties": false,
                 "required": [
                   "model",
-                  "prompt",
-                  "response_format"
+                  "prompt"
                 ],
                 "properties": {
                   "model": {
                     "type": "string",
-                    "const": "volcengine/doubao-seedream-5.0-pro",
-                    "description": "模型 ID。对应火山引擎原生模型 doubao-seedream-5-0-pro-260628。"
+                    "description": "必填。Forward 公开模型 ID。网关按 doubao/seedream 模型族转发到 OFOX OpenAI Images 兼容接口。",
+                    "enum": [
+                      "volcengine/doubao-seedream-5.0-pro",
+                      "volcengine/doubao-seedream-4.5"
+                    ]
                   },
                   "prompt": {
                     "type": "string",
@@ -93,7 +95,7 @@
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "固定返回 Base64 图片，使响应符合本接口的 Response Schema。",
+                    "description": "响应格式。b64_json 返回 Base64；url 返回临时图片链接；默认 b64_json。",
                     "default": "b64_json",
                     "enum": [
                       "b64_json",
@@ -200,35 +202,35 @@
                       "items": {
                         "type": "object",
                         "additionalProperties": false,
-                        "required": [
-                          "b64_json"
-                        ],
                         "properties": {
-                          "b64_json": {
-                            "type": "string",
-                            "minLength": 1,
-                            "contentEncoding": "base64",
-                            "description": "Base64 编码的图片二进制数据，不包含 data URL 前缀。"
-                          },
                           "index": {
                             "type": "integer",
                             "minimum": 0,
-                            "description": "图片在结果数组中的索引。"
+                            "description": "结果索引。"
                           },
-                          "size": {
+                          "b64_json": {
                             "type": "string",
-                            "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
-                            "description": "该图片的实际像素尺寸。"
+                            "minLength": 1,
+                            "description": "Base64 编码图片；response_format=b64_json 时返回。"
                           },
-                          "output_format": {
+                          "url": {
                             "type": "string",
-                            "enum": [
-                              "png",
-                              "jpeg"
-                            ],
-                            "description": "该图片的实际编码格式。"
+                            "format": "uri",
+                            "description": "临时图片链接；response_format=url 时返回。"
                           }
-                        }
+                        },
+                        "oneOf": [
+                          {
+                            "required": [
+                              "b64_json"
+                            ]
+                          },
+                          {
+                            "required": [
+                              "url"
+                            ]
+                          }
+                        ]
                       }
                     },
                     "model": {
@@ -326,15 +328,11 @@
                   "data": [
                     {
                       "index": 0,
-                      "url": "https://example.com/media/images/8f7c2e41-5a93-4b16-9d72-3c84e1a6f205.jpg"
+                      "b64_json": "iVBORw0KGgoAAAANSUhEUgAA..."
                     }
                   ],
-                  "model": "volcengine/doubao-seedream-4.5",
-                  "size": "2048x2048",
-                  "usage": {
-                    "output_tokens": 16384,
-                    "total_tokens": 16384
-                  }
+                  "model": "volcengine/doubao-seedream-5.0-pro",
+                  "size": "2048x2048"
                 }
               }
             },
@@ -345,7 +343,25 @@
           {
             "bearer": []
           }
-        ]
+        ],
+        "x-model-capabilities": {
+          "volcengine/doubao-seedream-5.0-pro": [
+            "prompt",
+            "size",
+            "output_format",
+            "background",
+            "response_format",
+            "watermark",
+            "optimize_prompt_options"
+          ],
+          "volcengine/doubao-seedream-4.5": [
+            "prompt",
+            "size",
+            "response_format",
+            "watermark",
+            "optimize_prompt_options"
+          ]
+        }
       }
     }
   },

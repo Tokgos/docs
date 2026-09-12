@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Tikway Wan 视频 API",
-    "description": "阿里云百炼 Wan 模型的 OpenAI 兼容异步视频生成接口。",
+    "title": "Tikway Grok Imagine Video 视频 API",
+    "description": "xAI（经 TTAPI） Grok Imagine Video 模型的 OpenAI 兼容异步视频生成接口。",
     "version": "1.1.0"
   },
   "tags": [
@@ -10,77 +10,58 @@
       "name": "视频生成"
     },
     {
-      "name": "视频生成/Wan"
+      "name": "视频生成/Grok Imagine Video"
     }
   ],
   "paths": {
     "/v1/videos": {
       "post": {
-        "summary": "创建 Wan 视频",
+        "summary": "创建 Grok Imagine Video 视频",
         "deprecated": false,
-        "description": "通过统一的 `POST /v1/videos` 创建 Wan 视频任务。模型能力以当前 Tikway 网关实际可调用范围为准。\n\n| 模型 | 分辨率 | 时长 | 支持模式 | 音频 | 参考限制 |\n| --- | --- | --- | --- | --- | --- |\n| `wan-3.0` | 480p / 720p / 1080p | 2–30 秒或 -1 智能时长 | 文生、首帧、首尾帧、全模态参考 | 支持，默认开启 | 10 图 / 5 视频 / 5 音频；另可传 1 个文件或链接 |\n| `wan-2.7` | 720p / 1080p | 生成 2–15 秒；参考/编辑 2–10 秒 | 文生、首帧、首尾帧、续写、参考、编辑 | 支持 | 模式相关 |\n| `wan-2.6` | 720p / 1080p | 生成 2–15 秒；参考 2–10 秒 | 文生、首帧、参考；首尾帧/编辑使用兼容模型 | 支持；兼容模式可能无声 | 参考生视频 1–5 个图片/视频 |\n\n来源：[阿里云视频生成模型总览](https://help.aliyun.com/zh/model-studio/use-video-generation)。官网能力与当前网关未开放能力之间的差异见本次审计报告。",
+        "description": "通过统一的 `POST /v1/videos` 创建 Grok Imagine Video 视频任务。模型能力以当前 Tikway 网关实际可调用范围为准。\n\n| 模型 | 分辨率 | 时长 | 支持模式 | 音频 | 参考限制 |\n| --- | --- | --- | --- | --- | --- |\n| `grok-imagine-video-1.5-fast` | 480p / 720p | 6–30 秒 | 文生、最多 7 图参考、首尾帧 | 上游默认有声；当前统一字段不能关闭 | 非官方高速通道 |\n| `grok-imagine-video-1.5` | 480p / 720p / 1080p | 1–15 秒 | 当前网关要求恰好 1 张图；可带最多 3 个预设音色 | 默认有声；当前统一字段不能关闭 | 不支持尾帧 |\n| `grok-imagine-video` | 480p / 720p | 生成 1–15 秒；延长 1–10 秒 | 文生、多图参考、视频延长 | 上游默认有声；当前统一字段不能关闭 | 不支持尾帧 |\n\n来源：[xAI 视频生成文档](https://docs.x.ai/developers/model-capabilities/video/generation)。官网能力与当前网关未开放能力之间的差异见本次审计报告。",
         "tags": [
-          "视频生成/Wan"
+          "视频生成/Grok Imagine Video"
         ],
 
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "title": "WanVideoCreateRequest",
-                "description": "创建 Wan 视频任务。参数按当前 Tikway 网关能力收窄；模型之间的差异见 operation 描述与 x-model-capabilities。",
+                "title": "Grok Imagine VideoVideoCreateRequest",
+                "description": "创建 Grok Imagine Video 视频任务。参数按当前 Tikway 网关能力收窄；模型之间的差异见 operation 描述与 x-model-capabilities。",
                 "type": "object",
                 "required": [
-                  "model"
+                  "model",
+                  "prompt"
                 ],
                 "properties": {
                   "model": {
                     "type": "string",
                     "enum": [
-                      "wan-3.0",
-                      "wan3.0-video",
-                      "wan-2.7",
-                      "wan-2.6"
+                      "grok-imagine-video-1.5",
+                      "grok-imagine-video"
                     ],
-                    "description": "Wan 模型 ID。"
+                    "description": "Grok Imagine Video 模型 ID。"
                   },
                   "prompt": {
                     "type": "string",
                     "minLength": 1,
                     "description": "视频生成或编辑提示词。"
                   },
-                  "negative_prompt": {
-                    "type": "string",
-                    "description": "Wan 2.6/2.7 可用。Wan 3.0 不支持顶层 negative_prompt；如上游扩展已支持，请放入 extra_body。"
-                  },
-                  "size": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]*[x*][1-9][0-9]*$",
-                    "description": "仅 wan-2.6 支持精确像素尺寸；其他 Wan 模型请使用 resolution + aspect_ratio。"
-                  },
                   "duration": {
-                    "oneOf": [
-                      {
-                        "type": "integer",
-                        "minimum": -1,
-                        "maximum": 30
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^(?:-1|[2-9]|[12][0-9]|30)$"
-                      }
-                    ],
-                    "description": "视频时长（秒）。Wan 3.0 为 2–30 或 -1；Wan 2.7/2.6 的上限随生成模式变化，详见模型能力表。"
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 30,
+                    "description": "模型相关：1.5 Fast 为 6–30 秒；1.5 和基础版为 1–15 秒；基础版视频延长为 1–10 秒。"
                   },
                   "aspect_ratio": {
                     "type": "string",
                     "enum": [
-                      "adaptive",
-                      "16:9",
-                      "9:16",
+                      "2:3",
+                      "3:2",
                       "1:1",
-                      "4:3",
-                      "3:4"
+                      "9:16",
+                      "16:9"
                     ],
                     "description": "视频宽高比。图生视频时，部分模型会按输入素材自动决定比例。"
                   },
@@ -96,7 +77,7 @@
                   "frame_images": {
                     "type": "array",
                     "maxItems": 2,
-                    "description": "首帧或尾帧参考图；同一类型最多一张。",
+                    "description": "1.5 Fast 支持首尾帧；1.5 与基础版仅能把一张图作为首帧，不能传 last_frame。",
                     "items": {
                       "type": "object",
                       "required": [
@@ -124,8 +105,8 @@
                   },
                   "input_references": {
                     "type": "array",
-                    "maxItems": 21,
-                    "description": "Wan 参考素材。不同模型和模式的数量限制不同；Wan 3.0 的参考素材不能与首尾帧混用，file 与 link 互斥。",
+                    "maxItems": 7,
+                    "description": "图片参考最多 7 张；1.5 当前路由要求恰好 1 张图。视频仅供基础版延长。1.5 可传最多 3 个 reference_audio，并在 reference_voice 中填写预设 voice_id；audio_url 仅作统一协议占位。",
                     "items": {
                       "type": "object",
                       "oneOf": [
@@ -143,16 +124,6 @@
                           "required": [
                             "audio_url"
                           ]
-                        },
-                        {
-                          "required": [
-                            "file_url"
-                          ]
-                        },
-                        {
-                          "required": [
-                            "link_url"
-                          ]
                         }
                       ],
                       "properties": {
@@ -161,9 +132,7 @@
                           "enum": [
                             "image_url",
                             "video_url",
-                            "audio_url",
-                            "file_url",
-                            "link_url"
+                            "audio_url"
                           ],
                           "description": "可选。素材类型；若提供，必须与对应 URL 字段一致。"
                         },
@@ -171,13 +140,9 @@
                           "type": "string",
                           "enum": [
                             "reference_image",
-                            "reference_video",
-                            "reference_audio",
                             "source_video",
                             "first_clip",
-                            "driving_audio",
-                            "file",
-                            "link"
+                            "reference_audio"
                           ],
                           "description": "素材用途。省略时按 URL 字段推断为普通参考素材。"
                         },
@@ -199,18 +164,6 @@
                           "format": "uri",
                           "description": "音频 URL 字符串。"
                         },
-                        "file_url": {
-                          "type": "string",
-                          "minLength": 1,
-                          "format": "uri",
-                          "description": "文件 URL 字符串。"
-                        },
-                        "link_url": {
-                          "type": "string",
-                          "minLength": 1,
-                          "format": "uri",
-                          "description": "网页 URL 字符串。"
-                        },
                         "reference_voice": {
                           "type": "string",
                           "minLength": 1,
@@ -220,16 +173,6 @@
                       "additionalProperties": false
                     }
                   },
-                  "generate_audio": {
-                    "type": "boolean",
-                    "description": "是否生成音频。Wan 3.0 默认开启；Wan 2.6/2.7 的具体行为由模式决定。"
-                  },
-                  "seed": {
-                    "type": "integer",
-                    "minimum": -1,
-                    "maximum": 2147483647,
-                    "description": "随机种子。固定种子只能提高可复现性，不保证输出完全一致。"
-                  },
                   "callback_url": {
                     "type": "string",
                     "format": "uri",
@@ -238,84 +181,74 @@
                   },
                   "extra_body": {
                     "type": "object",
-                    "description": "阿里云百炼视频模型扩展参数。字段会合并到上游 parameters。",
-                    "properties": {
-                      "prompt_extend": {
-                        "type": "boolean",
-                        "description": "是否开启提示词改写。"
-                      },
-                      "shot_type": {
-                        "type": "string",
-                        "enum": [
-                          "single",
-                          "multi"
-                        ],
-                        "description": "单镜头或多镜头。"
-                      },
-                      "watermark": {
-                        "type": "boolean",
-                        "description": "是否添加水印。"
-                      },
-                      "audio_setting": {
-                        "type": "string",
-                        "enum": [
-                          "auto",
-                          "origin"
-                        ],
-                        "description": "视频编辑时的音频处理方式。"
-                      }
-                    },
+                    "description": "Grok TTAPI 扩展参数。建议优先使用统一字段。",
+                    "properties": {},
                     "additionalProperties": false
                   }
                 },
                 "additionalProperties": false,
                 "x-model-capabilities": [
                   {
-                    "model": "wan-3.0",
+                    "model": "grok-imagine-video-1.5-fast",
+                    "resolution": "480p / 720p",
+                    "duration": "6–30 秒",
+                    "modes": "文生、最多 7 图参考、首尾帧",
+                    "audio": "上游默认有声；当前统一字段不能关闭",
+                    "references": "非官方高速通道"
+                  },
+                  {
+                    "model": "grok-imagine-video-1.5",
                     "resolution": "480p / 720p / 1080p",
-                    "duration": "2–30 秒或 -1 智能时长",
-                    "modes": "文生、首帧、首尾帧、全模态参考",
-                    "audio": "支持，默认开启",
-                    "references": "10 图 / 5 视频 / 5 音频；另可传 1 个文件或链接"
+                    "duration": "1–15 秒",
+                    "modes": "当前网关要求恰好 1 张图；可带最多 3 个预设音色",
+                    "audio": "默认有声；当前统一字段不能关闭",
+                    "references": "不支持尾帧"
                   },
                   {
-                    "model": "wan-2.7",
-                    "resolution": "720p / 1080p",
-                    "duration": "生成 2–15 秒；参考/编辑 2–10 秒",
-                    "modes": "文生、首帧、首尾帧、续写、参考、编辑",
-                    "audio": "支持",
-                    "references": "模式相关"
-                  },
-                  {
-                    "model": "wan-2.6",
-                    "resolution": "720p / 1080p",
-                    "duration": "生成 2–15 秒；参考 2–10 秒",
-                    "modes": "文生、首帧、参考；首尾帧/编辑使用兼容模型",
-                    "audio": "支持；兼容模式可能无声",
-                    "references": "参考生视频 1–5 个图片/视频"
+                    "model": "grok-imagine-video",
+                    "resolution": "480p / 720p",
+                    "duration": "生成 1–15 秒；延长 1–10 秒",
+                    "modes": "文生、多图参考、视频延长",
+                    "audio": "上游默认有声；当前统一字段不能关闭",
+                    "references": "不支持尾帧"
                   }
                 ]
               },
               "examples": {
-                "文生视频": {
-                  "summary": "文生视频",
+                "快速文生视频": {
+                  "summary": "快速文生视频",
                   "value": {
-                    "model": "wan-3.0",
+                    "model": "grok-imagine-video-1.5-fast",
                     "prompt": "一只金毛寻回犬在日落时分的海滩上奔跑，镜头平稳跟随，画面具有自然细腻的电影质感。",
-                    "duration": 8,
+                    "duration": 10,
+                    "resolution": "720p",
+                    "aspect_ratio": "16:9"
+                  }
+                },
+                "1080p 首帧生视频": {
+                  "summary": "1080p 首帧生视频",
+                  "value": {
+                    "model": "grok-imagine-video-1.5",
+                    "prompt": "保持首帧中的人物外观与服装一致，让人物自然向前行走，镜头缓慢推进。",
+                    "duration": 10,
                     "resolution": "1080p",
                     "aspect_ratio": "16:9",
-                    "generate_audio": true
+                    "frame_images": [
+                      {
+                        "type": "first_frame",
+                        "image_url": "https://example.com/assets/first-frame.jpg"
+                      }
+                    ]
                   }
                 },
                 "首尾帧生视频": {
                   "summary": "首尾帧生视频",
                   "value": {
-                    "model": "wan-3.0",
+                    "model": "grok-imagine-video-1.5-fast",
                     "prompt": "从首帧自然过渡到尾帧，保持主体、构图与视觉风格连贯。",
-                    "duration": 8,
+                    "duration": 10,
                     "resolution": "720p",
-                    "aspect_ratio": "adaptive",
+                    "aspect_ratio": "16:9",
                     "frame_images": [
                       {
                         "type": "first_frame",
@@ -328,25 +261,17 @@
                     ]
                   }
                 },
-                "全模态参考": {
-                  "summary": "全模态参考",
+                "视频延长": {
+                  "summary": "视频延长",
                   "value": {
-                    "model": "wan-3.0",
-                    "prompt": "保持参考素材中的人物身份与视觉风格，生成一段连贯的电影感短片。",
-                    "duration": 10,
+                    "model": "grok-imagine-video",
+                    "prompt": "延续原视频的镜头运动、主体动作与光线，让场景自然向后发展。",
+                    "duration": 6,
                     "resolution": "720p",
                     "input_references": [
                       {
-                        "image_url": "https://example.com/assets/character.jpg",
-                        "role": "reference_image"
-                      },
-                      {
-                        "video_url": "https://example.com/assets/style.mp4",
-                        "role": "reference_video"
-                      },
-                      {
-                        "audio_url": "https://example.com/assets/voice.mp3",
-                        "role": "reference_audio"
+                        "video_url": "https://example.com/assets/source.mp4",
+                        "role": "first_clip"
                       }
                     ]
                   }
@@ -422,11 +347,11 @@
     },
     "/v1/videos/{id}": {
       "get": {
-        "summary": "查询 Wan 视频任务",
+        "summary": "查询 Grok Imagine Video 视频任务",
         "deprecated": false,
         "description": "",
         "tags": [
-          "视频生成/Wan"
+          "视频生成/Grok Imagine Video"
         ],
         "parameters": [
           {
@@ -682,7 +607,7 @@
                     "value": {
                       "created": 1789108566,
                       "id": "9552de3d-171f-4cca-b492-7baa56523239",
-                      "model": "wan-3.0",
+                      "model": "grok-imagine-video-1.5-fast",
                       "prompt": "一只金毛犬在日落时分的海滩上奔跑，镜头平稳跟随，海风吹动毛发，画面呈现自然细腻的电影质感",
                       "status": "in_progress",
                       "usage": {
@@ -695,7 +620,7 @@
                     "value": {
                       "created": 1789108566,
                       "id": "9552de3d-171f-4cca-b492-7baa56523239",
-                      "model": "wan-3.0",
+                      "model": "grok-imagine-video-1.5-fast",
                       "prompt": "一只金毛犬在日落时分的海滩上奔跑，镜头平稳跟随，海风吹动毛发，画面呈现自然细腻的电影质感",
                       "status": "completed",
                       "data": [

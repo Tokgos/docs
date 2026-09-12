@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Tikway Wan 视频 API",
-    "description": "阿里云百炼 Wan 模型的 OpenAI 兼容异步视频生成接口。",
+    "title": "Tikway HappyHorse 视频 API",
+    "description": "阿里云百炼 HappyHorse 模型的 OpenAI 兼容异步视频生成接口。",
     "version": "1.1.0"
   },
   "tags": [
@@ -10,25 +10,25 @@
       "name": "视频生成"
     },
     {
-      "name": "视频生成/Wan"
+      "name": "视频生成/HappyHorse"
     }
   ],
   "paths": {
     "/v1/videos": {
       "post": {
-        "summary": "创建 Wan 视频",
+        "summary": "创建 HappyHorse 视频",
         "deprecated": false,
-        "description": "通过统一的 `POST /v1/videos` 创建 Wan 视频任务。模型能力以当前 Tikway 网关实际可调用范围为准。\n\n| 模型 | 分辨率 | 时长 | 支持模式 | 音频 | 参考限制 |\n| --- | --- | --- | --- | --- | --- |\n| `wan-3.0` | 480p / 720p / 1080p | 2–30 秒或 -1 智能时长 | 文生、首帧、首尾帧、全模态参考 | 支持，默认开启 | 10 图 / 5 视频 / 5 音频；另可传 1 个文件或链接 |\n| `wan-2.7` | 720p / 1080p | 生成 2–15 秒；参考/编辑 2–10 秒 | 文生、首帧、首尾帧、续写、参考、编辑 | 支持 | 模式相关 |\n| `wan-2.6` | 720p / 1080p | 生成 2–15 秒；参考 2–10 秒 | 文生、首帧、参考；首尾帧/编辑使用兼容模型 | 支持；兼容模式可能无声 | 参考生视频 1–5 个图片/视频 |\n\n来源：[阿里云视频生成模型总览](https://help.aliyun.com/zh/model-studio/use-video-generation)。官网能力与当前网关未开放能力之间的差异见本次审计报告。",
+        "description": "通过统一的 `POST /v1/videos` 创建 HappyHorse 视频任务。模型能力以当前 Tikway 网关实际可调用范围为准。\n\n| 模型 | 分辨率 | 时长 | 支持模式 | 音频 | 参考限制 |\n| --- | --- | --- | --- | --- | --- |\n| `happyhorse-1.1` | 480p / 720p / 1080p | 3–15 秒 | 文生、首帧图生、1–9 图参考 | 上游生成有声视频；无开关 | 不支持尾帧、视频编辑或延长 |\n| `happyhorse-1.0` | 480p / 720p / 1080p；编辑仅 720p / 1080p | 3–15 秒；编辑跟随输入视频 | 文生、首帧图生、1–9 图参考、视频编辑 | 无 generate_audio；编辑可用 audio_setting | 不支持尾帧或视频延长 |\n\n来源：[阿里云视频生成与编辑模型](https://help.aliyun.com/en/model-studio/video-generate-edit-model/)。官网能力与当前网关未开放能力之间的差异见本次审计报告。",
         "tags": [
-          "视频生成/Wan"
+          "视频生成/HappyHorse"
         ],
 
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "title": "WanVideoCreateRequest",
-                "description": "创建 Wan 视频任务。参数按当前 Tikway 网关能力收窄；模型之间的差异见 operation 描述与 x-model-capabilities。",
+                "title": "HappyHorseVideoCreateRequest",
+                "description": "创建 HappyHorse 视频任务。参数按当前 Tikway 网关能力收窄；模型之间的差异见 operation 描述与 x-model-capabilities。",
                 "type": "object",
                 "required": [
                   "model"
@@ -37,50 +37,34 @@
                   "model": {
                     "type": "string",
                     "enum": [
-                      "wan-3.0",
-                      "wan3.0-video",
-                      "wan-2.7",
-                      "wan-2.6"
+                      "happyhorse-1.1",
+                      "happyhorse-1.0"
                     ],
-                    "description": "Wan 模型 ID。"
+                    "description": "HappyHorse 模型 ID。"
                   },
                   "prompt": {
                     "type": "string",
                     "minLength": 1,
                     "description": "视频生成或编辑提示词。"
                   },
-                  "negative_prompt": {
-                    "type": "string",
-                    "description": "Wan 2.6/2.7 可用。Wan 3.0 不支持顶层 negative_prompt；如上游扩展已支持，请放入 extra_body。"
-                  },
-                  "size": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]*[x*][1-9][0-9]*$",
-                    "description": "仅 wan-2.6 支持精确像素尺寸；其他 Wan 模型请使用 resolution + aspect_ratio。"
-                  },
                   "duration": {
-                    "oneOf": [
-                      {
-                        "type": "integer",
-                        "minimum": -1,
-                        "maximum": 30
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^(?:-1|[2-9]|[12][0-9]|30)$"
-                      }
-                    ],
-                    "description": "视频时长（秒）。Wan 3.0 为 2–30 或 -1；Wan 2.7/2.6 的上限随生成模式变化，详见模型能力表。"
+                    "type": "integer",
+                    "minimum": 3,
+                    "maximum": 15,
+                    "description": "输出时长为 3–15 秒。视频编辑忽略该字段并沿用输入视频时长。"
                   },
                   "aspect_ratio": {
                     "type": "string",
                     "enum": [
-                      "adaptive",
                       "16:9",
                       "9:16",
                       "1:1",
                       "4:3",
-                      "3:4"
+                      "3:4",
+                      "4:5",
+                      "5:4",
+                      "21:9",
+                      "9:21"
                     ],
                     "description": "视频宽高比。图生视频时，部分模型会按输入素材自动决定比例。"
                   },
@@ -95,8 +79,8 @@
                   },
                   "frame_images": {
                     "type": "array",
-                    "maxItems": 2,
-                    "description": "首帧或尾帧参考图；同一类型最多一张。",
+                    "maxItems": 1,
+                    "description": "仅支持一张首帧图，不支持尾帧或首尾帧插值。",
                     "items": {
                       "type": "object",
                       "required": [
@@ -107,8 +91,7 @@
                         "type": {
                           "type": "string",
                           "enum": [
-                            "first_frame",
-                            "last_frame"
+                            "first_frame"
                           ],
                           "description": "参考帧位置。"
                         },
@@ -124,8 +107,8 @@
                   },
                   "input_references": {
                     "type": "array",
-                    "maxItems": 21,
-                    "description": "Wan 参考素材。不同模型和模式的数量限制不同；Wan 3.0 的参考素材不能与首尾帧混用，file 与 link 互斥。",
+                    "maxItems": 9,
+                    "description": "参考生视频仅接受 1–9 张 reference_image。happyhorse-1.0 视频编辑接受 1 个 source_video 和最多 5 张 reference_image。",
                     "items": {
                       "type": "object",
                       "oneOf": [
@@ -138,21 +121,6 @@
                           "required": [
                             "video_url"
                           ]
-                        },
-                        {
-                          "required": [
-                            "audio_url"
-                          ]
-                        },
-                        {
-                          "required": [
-                            "file_url"
-                          ]
-                        },
-                        {
-                          "required": [
-                            "link_url"
-                          ]
                         }
                       ],
                       "properties": {
@@ -160,10 +128,7 @@
                           "type": "string",
                           "enum": [
                             "image_url",
-                            "video_url",
-                            "audio_url",
-                            "file_url",
-                            "link_url"
+                            "video_url"
                           ],
                           "description": "可选。素材类型；若提供，必须与对应 URL 字段一致。"
                         },
@@ -171,13 +136,7 @@
                           "type": "string",
                           "enum": [
                             "reference_image",
-                            "reference_video",
-                            "reference_audio",
-                            "source_video",
-                            "first_clip",
-                            "driving_audio",
-                            "file",
-                            "link"
+                            "source_video"
                           ],
                           "description": "素材用途。省略时按 URL 字段推断为普通参考素材。"
                         },
@@ -192,37 +151,10 @@
                           "minLength": 1,
                           "format": "uri",
                           "description": "视频 URL 字符串。"
-                        },
-                        "audio_url": {
-                          "type": "string",
-                          "minLength": 1,
-                          "format": "uri",
-                          "description": "音频 URL 字符串。"
-                        },
-                        "file_url": {
-                          "type": "string",
-                          "minLength": 1,
-                          "format": "uri",
-                          "description": "文件 URL 字符串。"
-                        },
-                        "link_url": {
-                          "type": "string",
-                          "minLength": 1,
-                          "format": "uri",
-                          "description": "网页 URL 字符串。"
-                        },
-                        "reference_voice": {
-                          "type": "string",
-                          "minLength": 1,
-                          "description": "预设音色 ID；仅部分支持音色参考的模型使用。"
                         }
                       },
                       "additionalProperties": false
                     }
-                  },
-                  "generate_audio": {
-                    "type": "boolean",
-                    "description": "是否生成音频。Wan 3.0 默认开启；Wan 2.6/2.7 的具体行为由模式决定。"
                   },
                   "seed": {
                     "type": "integer",
@@ -238,23 +170,11 @@
                   },
                   "extra_body": {
                     "type": "object",
-                    "description": "阿里云百炼视频模型扩展参数。字段会合并到上游 parameters。",
+                    "description": "HappyHorse 上游扩展参数。",
                     "properties": {
-                      "prompt_extend": {
-                        "type": "boolean",
-                        "description": "是否开启提示词改写。"
-                      },
-                      "shot_type": {
-                        "type": "string",
-                        "enum": [
-                          "single",
-                          "multi"
-                        ],
-                        "description": "单镜头或多镜头。"
-                      },
                       "watermark": {
                         "type": "boolean",
-                        "description": "是否添加水印。"
+                        "description": "是否添加 HappyHorse 水印。"
                       },
                       "audio_setting": {
                         "type": "string",
@@ -262,7 +182,7 @@
                           "auto",
                           "origin"
                         ],
-                        "description": "视频编辑时的音频处理方式。"
+                        "description": "仅视频编辑：自动处理音频或保留原音频。"
                       }
                     },
                     "additionalProperties": false
@@ -271,28 +191,20 @@
                 "additionalProperties": false,
                 "x-model-capabilities": [
                   {
-                    "model": "wan-3.0",
+                    "model": "happyhorse-1.1",
                     "resolution": "480p / 720p / 1080p",
-                    "duration": "2–30 秒或 -1 智能时长",
-                    "modes": "文生、首帧、首尾帧、全模态参考",
-                    "audio": "支持，默认开启",
-                    "references": "10 图 / 5 视频 / 5 音频；另可传 1 个文件或链接"
+                    "duration": "3–15 秒",
+                    "modes": "文生、首帧图生、1–9 图参考",
+                    "audio": "上游生成有声视频；无开关",
+                    "references": "不支持尾帧、视频编辑或延长"
                   },
                   {
-                    "model": "wan-2.7",
-                    "resolution": "720p / 1080p",
-                    "duration": "生成 2–15 秒；参考/编辑 2–10 秒",
-                    "modes": "文生、首帧、首尾帧、续写、参考、编辑",
-                    "audio": "支持",
-                    "references": "模式相关"
-                  },
-                  {
-                    "model": "wan-2.6",
-                    "resolution": "720p / 1080p",
-                    "duration": "生成 2–15 秒；参考 2–10 秒",
-                    "modes": "文生、首帧、参考；首尾帧/编辑使用兼容模型",
-                    "audio": "支持；兼容模式可能无声",
-                    "references": "参考生视频 1–5 个图片/视频"
+                    "model": "happyhorse-1.0",
+                    "resolution": "480p / 720p / 1080p；编辑仅 720p / 1080p",
+                    "duration": "3–15 秒；编辑跟随输入视频",
+                    "modes": "文生、首帧图生、1–9 图参考、视频编辑",
+                    "audio": "无 generate_audio；编辑可用 audio_setting",
+                    "references": "不支持尾帧或视频延长"
                   }
                 ]
               },
@@ -300,55 +212,67 @@
                 "文生视频": {
                   "summary": "文生视频",
                   "value": {
-                    "model": "wan-3.0",
+                    "model": "happyhorse-1.1",
                     "prompt": "一只金毛寻回犬在日落时分的海滩上奔跑，镜头平稳跟随，画面具有自然细腻的电影质感。",
-                    "duration": 8,
+                    "duration": 5,
                     "resolution": "1080p",
-                    "aspect_ratio": "16:9",
-                    "generate_audio": true
+                    "aspect_ratio": "16:9"
                   }
                 },
-                "首尾帧生视频": {
-                  "summary": "首尾帧生视频",
+                "首帧生视频": {
+                  "summary": "首帧生视频",
                   "value": {
-                    "model": "wan-3.0",
-                    "prompt": "从首帧自然过渡到尾帧，保持主体、构图与视觉风格连贯。",
-                    "duration": 8,
+                    "model": "happyhorse-1.1",
+                    "prompt": "保持首帧中的人物外观与服装一致，让人物自然向前行走，镜头缓慢推进。",
+                    "duration": 5,
                     "resolution": "720p",
-                    "aspect_ratio": "adaptive",
                     "frame_images": [
                       {
                         "type": "first_frame",
                         "image_url": "https://example.com/assets/first-frame.jpg"
-                      },
-                      {
-                        "type": "last_frame",
-                        "image_url": "https://example.com/assets/last-frame.jpg"
                       }
                     ]
                   }
                 },
-                "全模态参考": {
-                  "summary": "全模态参考",
+                "参考生视频": {
+                  "summary": "参考生视频",
                   "value": {
-                    "model": "wan-3.0",
+                    "model": "happyhorse-1.1",
                     "prompt": "保持参考素材中的人物身份与视觉风格，生成一段连贯的电影感短片。",
-                    "duration": 10,
+                    "duration": 8,
                     "resolution": "720p",
                     "input_references": [
                       {
-                        "image_url": "https://example.com/assets/character.jpg",
+                        "image_url": "https://example.com/assets/character-front.jpg",
                         "role": "reference_image"
                       },
                       {
-                        "video_url": "https://example.com/assets/style.mp4",
-                        "role": "reference_video"
-                      },
-                      {
-                        "audio_url": "https://example.com/assets/voice.mp3",
-                        "role": "reference_audio"
+                        "image_url": "https://example.com/assets/character-side.jpg",
+                        "role": "reference_image"
                       }
                     ]
+                  }
+                },
+                "视频编辑": {
+                  "summary": "视频编辑",
+                  "value": {
+                    "model": "happyhorse-1.0",
+                    "prompt": "把人物服装替换成参考图中的外套，保持原视频动作和镜头不变。",
+                    "resolution": "720p",
+                    "input_references": [
+                      {
+                        "video_url": "https://example.com/assets/source.mp4",
+                        "role": "source_video"
+                      },
+                      {
+                        "image_url": "https://example.com/assets/coat.jpg",
+                        "role": "reference_image"
+                      }
+                    ],
+                    "extra_body": {
+                      "audio_setting": "origin",
+                      "watermark": false
+                    }
                   }
                 }
               }
@@ -422,11 +346,11 @@
     },
     "/v1/videos/{id}": {
       "get": {
-        "summary": "查询 Wan 视频任务",
+        "summary": "查询 HappyHorse 视频任务",
         "deprecated": false,
         "description": "",
         "tags": [
-          "视频生成/Wan"
+          "视频生成/HappyHorse"
         ],
         "parameters": [
           {
@@ -682,7 +606,7 @@
                     "value": {
                       "created": 1789108566,
                       "id": "9552de3d-171f-4cca-b492-7baa56523239",
-                      "model": "wan-3.0",
+                      "model": "happyhorse-1.1",
                       "prompt": "一只金毛犬在日落时分的海滩上奔跑，镜头平稳跟随，海风吹动毛发，画面呈现自然细腻的电影质感",
                       "status": "in_progress",
                       "usage": {
@@ -695,7 +619,7 @@
                     "value": {
                       "created": 1789108566,
                       "id": "9552de3d-171f-4cca-b492-7baa56523239",
-                      "model": "wan-3.0",
+                      "model": "happyhorse-1.1",
                       "prompt": "一只金毛犬在日落时分的海滩上奔跑，镜头平稳跟随，海风吹动毛发，画面呈现自然细腻的电影质感",
                       "status": "completed",
                       "data": [

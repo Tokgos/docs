@@ -18,7 +18,7 @@
       "post": {
         "summary": "图片生成",
         "deprecated": false,
-        "description": "",
+        "description": "网关要求显式传入 `model`。不同模型只支持下表中的参数组合。\n\n| 模型 | 尺寸 | 质量 | 模型专属参数 |\n| --- | --- | --- | --- |\n| `gpt-image-2.5-sunburst` / `flare`（含快照） | 任意 `WIDTHxHEIGHT`（16 倍数、1:3～3:1、最高 3840x2160） | `auto/low/medium/high/xhigh/max` | `background`、`moderation`、`output_format`、`output_compression`、`stream`、`partial_images` |\n| `gpt-image-2`（含快照） | 同上 | `auto/low/medium/high` | 同上；透明背景仍为预览能力 |\n| `gpt-image-1` / `1.5` / `1-mini` | `auto`、1024×1024、1536×1024、1024×1536 | `auto/low/medium/high` | `background`、`moderation`、`output_format`、`output_compression`、`stream`、`partial_images` |\n| `dall-e-3` | 1024×1024、1792×1024、1024×1792 | `standard/hd` | `n` 只能为 1；支持 `style`、`response_format` |\n| `dall-e-2` | 256×256、512×512、1024×1024 | `standard` | 支持 `n=1..10`、`response_format` |",
         "tags": [
           "图片生成/GPT Image"
         ],
@@ -29,6 +29,7 @@
               "schema": {
                 "type": "object",
                 "required": [
+                  "model",
                   "prompt"
                 ],
                 "properties": {
@@ -52,21 +53,21 @@
                     "description": "背景设置，仅 GPT Image 模型支持。transparent 使用时 output_format 必须为 png 或 webp。"
                   },
                   "model": {
-                    "type": [
-                      "string",
-                      "null"
-                    ],
+                    "type": "string",
                     "enum": [
-                      "gpt-image-1",
-                      "gpt-image-1-mini",
-                      "gpt-image-1.5",
+                      "gpt-image-2.5-sunburst",
+                      "gpt-image-2.5-sunburst-2026-09-08",
+                      "gpt-image-2.5-flare",
+                      "gpt-image-2.5-flare-2026-09-08",
                       "gpt-image-2",
                       "gpt-image-2-2026-04-21",
+                      "gpt-image-1.5",
+                      "gpt-image-1",
+                      "gpt-image-1-mini",
                       "dall-e-2",
-                      "dall-e-3",
-                      null
+                      "dall-e-3"
                     ],
-                    "description": "图像生成模型。未指定时默认为 dall-e-2，除非使用 GPT Image 专属参数。"
+                    "description": "必填。图片生成模型。网关不会采用 OpenAI 的 dall-e-2 默认值，必须显式传 model。"
                   },
                   "moderation": {
                     "type": [
@@ -130,15 +131,17 @@
                       "low",
                       "medium",
                       "high",
+                      "xhigh",
+                      "max",
                       "standard",
                       "hd",
                       null
                     ],
-                    "description": "图像质量。GPT Image 支持 auto/low/medium/high；dall-e-3 支持 standard/hd；dall-e-2 仅 standard。"
+                    "description": "图像质量。GPT Image 支持 auto/low/medium/high；GPT Image 2.5 额外支持 xhigh/max；dall-e-3 支持 standard/hd；dall-e-2 仅支持 standard。"
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "固定返回 Base64 图片，使响应符合本接口的 Response Schema。",
+                    "description": "仅 dall-e-2 和 dall-e-3 支持 url 或 b64_json。GPT Image 模型始终返回 Base64，不支持此上游参数。",
                     "default": "b64_json",
                     "enum": [
                       "b64_json",
@@ -161,7 +164,7 @@
                       "1024x1792",
                       null
                     ],
-                    "description": "图像尺寸。gpt-image-2 系列还可传符合限制的任意 WIDTHxHEIGHT 字符串。"
+                    "description": "图像尺寸。GPT Image 2/2.5 支持 WIDTHxHEIGHT：宽高均为 16 的倍数、比例 1:3～3:1，最高 3840x2160；其他 GPT Image 使用 auto、1024x1024、1536x1024 或 1024x1536；dall-e-2 支持 256x256、512x512、1024x1024；dall-e-3 支持 1024x1024、1792x1024、1024x1792。"
                   },
                   "stream": {
                     "type": [
@@ -373,14 +376,67 @@
           {
             "bearer": []
           }
-        ]
+        ],
+        "x-model-capabilities": {
+          "gpt-image-2.5-*": [
+            "background",
+            "moderation",
+            "n",
+            "output_compression",
+            "output_format",
+            "partial_images",
+            "quality",
+            "size",
+            "stream",
+            "user"
+          ],
+          "gpt-image-2*": [
+            "background",
+            "moderation",
+            "n",
+            "output_compression",
+            "output_format",
+            "partial_images",
+            "quality",
+            "size",
+            "stream",
+            "user"
+          ],
+          "gpt-image-1*": [
+            "background",
+            "moderation",
+            "n",
+            "output_compression",
+            "output_format",
+            "partial_images",
+            "quality",
+            "size",
+            "stream",
+            "user"
+          ],
+          "dall-e-3": [
+            "n",
+            "quality",
+            "response_format",
+            "size",
+            "style",
+            "user"
+          ],
+          "dall-e-2": [
+            "n",
+            "quality",
+            "response_format",
+            "size",
+            "user"
+          ]
+        }
       }
     },
     "/v1/images/edits": {
       "post": {
         "summary": "图片编辑",
         "deprecated": false,
-        "description": "",
+        "description": "网关要求显式传入 `model`、`images` 和 `prompt`。GPT Image 最多接收 16 张参考图；`dall-e-2` 只接收单张 PNG 输入；`dall-e-3` 不支持编辑。\n\nGPT Image 2/2.5 支持任意合规 `WIDTHxHEIGHT`，其他 GPT Image 使用标准三档尺寸。`input_fidelity`、`background`、`moderation`、`output_format`、`output_compression`、`stream` 和 `partial_images` 仅用于 GPT Image 系列。",
         "tags": [
           "图片生成/GPT Image"
         ],
@@ -391,6 +447,7 @@
               "schema": {
                 "type": "object",
                 "required": [
+                  "model",
                   "images",
                   "prompt"
                 ],
@@ -459,21 +516,21 @@
                     }
                   },
                   "model": {
-                    "type": [
-                      "string",
-                      "null"
-                    ],
+                    "type": "string",
                     "enum": [
-                      "gpt-image-1.5",
+                      "gpt-image-2.5-sunburst",
+                      "gpt-image-2.5-sunburst-2026-09-08",
+                      "gpt-image-2.5-flare",
+                      "gpt-image-2.5-flare-2026-09-08",
                       "gpt-image-2",
                       "gpt-image-2-2026-04-21",
+                      "gpt-image-1.5",
                       "gpt-image-1",
                       "gpt-image-1-mini",
                       "chatgpt-image-latest",
-                      "dall-e-2",
-                      null
+                      "dall-e-2"
                     ],
-                    "description": "用于图像编辑的模型。"
+                    "description": "必填。用于图片编辑的模型。dall-e-3 不支持图片编辑。"
                   },
                   "moderation": {
                     "type": [
@@ -536,10 +593,12 @@
                       "low",
                       "medium",
                       "high",
+                      "xhigh",
+                      "max",
                       "auto",
                       null
                     ],
-                    "description": "输出质量，仅 GPT Image 模型支持。"
+                    "description": "输出质量。GPT Image 支持 low/medium/high/auto；GPT Image 2.5 额外支持 xhigh/max。"
                   },
                   "size": {
                     "type": [
@@ -553,7 +612,7 @@
                       "1024x1536",
                       null
                     ],
-                    "description": "请求的输出图片尺寸。"
+                    "description": "图像尺寸。GPT Image 2/2.5 支持 WIDTHxHEIGHT：宽高均为 16 的倍数、比例 1:3～3:1，最高 3840x2160；其他 GPT Image 使用 auto、1024x1024、1536x1024 或 1024x1536；dall-e-2 支持 256x256、512x512、1024x1024；dall-e-3 支持 1024x1024、1792x1024、1024x1792。"
                   },
                   "stream": {
                     "type": [
@@ -568,7 +627,7 @@
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "固定返回 Base64 图片，使响应符合本接口的 Response Schema。",
+                    "description": "dall-e-2 可用 url 或 b64_json。GPT Image 模型固定返回 Base64。",
                     "default": "b64_json",
                     "enum": [
                       "b64_json",
@@ -765,7 +824,35 @@
           {
             "bearer": []
           }
-        ]
+        ],
+        "x-model-capabilities": {
+          "gpt-image-*": [
+            "images",
+            "prompt",
+            "background",
+            "input_fidelity",
+            "mask",
+            "moderation",
+            "n",
+            "output_compression",
+            "output_format",
+            "partial_images",
+            "quality",
+            "size",
+            "stream",
+            "user"
+          ],
+          "dall-e-2": [
+            "images",
+            "prompt",
+            "mask",
+            "n",
+            "response_format",
+            "size",
+            "user"
+          ],
+          "dall-e-3": []
+        }
       }
     }
   },

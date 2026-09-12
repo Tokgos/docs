@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Mintlify",
-    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
-    "version": "1.0.0"
+    "title": "Tikway Seedance 视频 API",
+    "description": "字节跳动 Seedance 模型的 OpenAI 兼容异步视频生成接口。",
+    "version": "1.1.0"
   },
   "tags": [
     {
@@ -16,20 +16,19 @@
   "paths": {
     "/v1/videos": {
       "post": {
-        "summary": "创建视频",
+        "summary": "创建 Seedance 视频",
         "deprecated": false,
-        "description": "",
+        "description": "通过统一的 `POST /v1/videos` 创建 Seedance 视频任务。模型能力以当前 Tikway 网关实际可调用范围为准。\n\n| 模型 | 分辨率 | 时长 | 支持模式 | 音频 | 参考限制 |\n| --- | --- | --- | --- | --- | --- |\n| `seedance-2.5` | 480p / 720p / 1080p | 4–30 秒；编辑/延长可用 -1 智能时长 | 文生、首帧、首尾帧、全模态参考、编辑、延长 | 支持 | 最多 50 个参考项 |\n| `seedance-2.0` | 480p / 720p / 1080p / 4K | 4–15 秒；编辑/延长可用 -1 智能时长 | 文生、首帧、首尾帧、全模态参考、编辑、延长 | 支持 | 最多 15 个参考项 |\n| `seedance-2.0-mini` | 480p / 720p | 4–15 秒 | 文生、首帧、首尾帧 | 支持 | 不支持全模态参考、编辑或延长 |\n\n来源：[火山方舟视频生成 API](https://www.volcengine.com/docs/82379/1520758?lang=zh)。官网能力与当前网关未开放能力之间的差异见本次审计报告。",
         "tags": [
           "视频生成/Seedance"
         ],
-        "parameters": [],
+
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$id": "urn:tikway:schema:protocols:openai:videos:create:request:1",
-                "title": "VideoCreateRequest",
-                "description": "POST /v1/videos 的 JSON 请求体。extra_body 中的字段会在网关路由前铺平；用户 callback_url 仅由 Java 服务在任务完成后回调，不会透传给上游。",
+                "title": "SeedanceVideoCreateRequest",
+                "description": "创建 Seedance 视频任务。参数按当前 Tikway 网关能力收窄；模型之间的差异见 operation 描述与 x-model-capabilities。",
                 "type": "object",
                 "required": [
                   "model"
@@ -37,49 +36,44 @@
                 "properties": {
                   "model": {
                     "type": "string",
-                    "minLength": 1,
-                    "description": "视频模型 ID 或别名。"
+                    "enum": [
+                      "seedance-2.5",
+                      "seedance-2.0",
+                      "seedance-2.0-mini"
+                    ],
+                    "description": "Seedance 模型 ID。"
                   },
                   "prompt": {
                     "type": "string",
-                    "description": "视频生成提示词。"
-                  },
-                  "negative_prompt": {
-                    "type": "string",
-                    "description": "负向提示词，仅部分模型支持。"
-                  },
-                  "size": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]*[x*][1-9][0-9]*$",
-                    "description": "像素尺寸，例如 1280x720。不能与 aspect_ratio 或 resolution 同时使用。"
+                    "minLength": 1,
+                    "description": "视频生成或编辑提示词。"
                   },
                   "duration": {
                     "oneOf": [
                       {
                         "type": "integer",
-                        "minimum": 1
+                        "minimum": -1,
+                        "maximum": 30
                       },
                       {
                         "type": "string",
-                        "minLength": 1
+                        "pattern": "^(?:-1|[4-9]|[12][0-9]|30)$"
                       }
                     ],
-                    "description": "视频时长（秒）。"
+                    "description": "视频时长（秒）。2.0 Mini 为 4–15；2.0 为 4–15；2.5 为 4–30。编辑或延长任务可传 -1 让模型按输入素材决定时长。"
                   },
                   "aspect_ratio": {
                     "type": "string",
                     "enum": [
+                      "adaptive",
                       "16:9",
                       "9:16",
                       "1:1",
                       "4:3",
                       "3:4",
-                      "3:2",
-                      "2:3",
-                      "21:9",
-                      "9:21"
+                      "21:9"
                     ],
-                    "description": "视频比例。"
+                    "description": "视频宽高比。图生视频时，部分模型会按输入素材自动决定比例。"
                   },
                   "resolution": {
                     "type": "string",
@@ -87,15 +81,14 @@
                       "480p",
                       "720p",
                       "1080p",
-                      "1K",
-                      "2K",
                       "4K"
                     ],
-                    "description": "输出分辨率，实际支持范围由模型决定。"
+                    "description": "输出分辨率。不同模型或模式的可用值见模型能力表。"
                   },
                   "frame_images": {
                     "type": "array",
                     "maxItems": 2,
+                    "description": "首帧或尾帧参考图；同一类型最多一张。",
                     "items": {
                       "type": "object",
                       "required": [
@@ -115,15 +108,16 @@
                           "type": "string",
                           "minLength": 1,
                           "format": "uri",
-                          "description": "参考图 URL。不要传 {\"url\": \"...\"} 包装对象。"
+                          "description": "参考图 URL 字符串。"
                         }
                       },
                       "additionalProperties": false
-                    },
-                    "description": "首帧或尾帧参考图；同一类型最多一张。"
+                    }
                   },
                   "input_references": {
                     "type": "array",
+                    "maxItems": 50,
+                    "description": "全模态参考素材。2.0 Mini 不支持；2.0 最多 15 项；2.5 最多 50 项。参考模式不能与首尾帧模式混用。",
                     "items": {
                       "type": "object",
                       "oneOf": [
@@ -134,44 +128,24 @@
                         },
                         {
                           "required": [
-                            "audio_url"
-                          ]
-                        },
-                        {
-                          "required": [
                             "video_url"
                           ]
                         },
                         {
                           "required": [
-                            "file_url"
+                            "audio_url"
                           ]
                         }
                       ],
                       "properties": {
-                        "image_url": {
+                        "type": {
                           "type": "string",
-                          "minLength": 1,
-                          "format": "uri",
-                          "description": "图片 URL 字符串。不要传 {\"url\": \"...\"} 包装对象。"
-                        },
-                        "audio_url": {
-                          "type": "string",
-                          "minLength": 1,
-                          "format": "uri",
-                          "description": "音频 URL 字符串。不要传 {\"url\": \"...\"} 包装对象。"
-                        },
-                        "video_url": {
-                          "type": "string",
-                          "minLength": 1,
-                          "format": "uri",
-                          "description": "视频 URL 字符串。不要传 {\"url\": \"...\"} 包装对象。"
-                        },
-                        "file_url": {
-                          "type": "string",
-                          "minLength": 1,
-                          "format": "uri",
-                          "description": "文件 URL 字符串。不要传 {\"url\": \"...\"} 包装对象。"
+                          "enum": [
+                            "image_url",
+                            "video_url",
+                            "audio_url"
+                          ],
+                          "description": "可选。素材类型；若提供，必须与对应 URL 字段一致。"
                         },
                         "role": {
                           "type": "string",
@@ -180,153 +154,199 @@
                             "reference_video",
                             "reference_audio",
                             "source_video",
-                            "first_clip",
-                            "driving_audio"
+                            "first_clip"
                           ],
-                          "description": "参考素材的用途；音频驱动视频时使用 driving_audio。"
+                          "description": "素材用途。省略时按 URL 字段推断为普通参考素材。"
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "图片 URL 字符串。"
+                        },
+                        "video_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "视频 URL 字符串。"
+                        },
+                        "audio_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "音频 URL 字符串。"
                         },
                         "reference_voice": {
                           "type": "string",
-                          "minLength": 1
+                          "minLength": 1,
+                          "description": "预设音色 ID；仅部分支持音色参考的模型使用。"
                         }
                       },
                       "additionalProperties": false
-                    },
-                    "description": "输入参考素材，可包含图片、音频或视频。"
-                  },
-                  "real_person": {
-                    "type": "boolean",
-                    "description": "真人参考图开关；仅在供应商和模型支持时生效。"
+                    }
                   },
                   "generate_audio": {
                     "type": "boolean",
-                    "description": "是否生成音频；仅部分模型支持。"
+                    "description": "支持生成音频；是否默认开启由模型与上游账号配置决定。"
                   },
                   "seed": {
-                    "oneOf": [
-                      {
-                        "type": "integer",
-                        "minimum": -1,
-                        "maximum": 2147483647
-                      },
-                      {
-                        "type": "boolean"
-                      }
-                    ],
-                    "description": "随机种子或供应商种子开关。"
+                    "type": "integer",
+                    "minimum": -1,
+                    "maximum": 2147483647,
+                    "description": "随机种子。固定种子只能提高可复现性，不保证输出完全一致。"
                   },
                   "callback_url": {
                     "type": "string",
                     "format": "uri",
-                    "description": "用户任务回调地址。Java 服务处理后回调用户，不传给模型上游。"
+                    "pattern": "^https://",
+                    "description": "用户任务回调地址。由 Tikway 在任务状态变化后调用，不直接传给模型上游。"
                   },
                   "extra_body": {
                     "type": "object",
-                    "additionalProperties": true,
-                    "description": "供应商扩展参数。网关会将其字段铺平；OFOX 会封装到 provider.options 的模型命名空间。",
-                    "examples": [
-                      {
-                        "watermark": false
+                    "description": "Seedance 上游扩展参数。",
+                    "properties": {
+                      "camera_fixed": {
+                        "type": "boolean",
+                        "description": "是否固定摄像头。"
+                      },
+                      "watermark": {
+                        "type": "boolean",
+                        "description": "是否添加水印。"
+                      },
+                      "return_last_frame": {
+                        "type": "boolean",
+                        "description": "是否在结果中返回最后一帧。"
+                      },
+                      "omni_reference_task_type": {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "reference",
+                          "edit",
+                          "extend"
+                        ],
+                        "description": "全模态参考任务类型；编辑和延长由网关自动设置。"
+                      },
+                      "output_format": {
+                        "type": "string",
+                        "enum": [
+                          "mp4",
+                          "mov"
+                        ],
+                        "default": "mp4"
+                      },
+                      "service_tier": {
+                        "type": "string",
+                        "enum": [
+                          "default",
+                          "flex"
+                        ]
+                      },
+                      "priority": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9
                       }
-                    ],
-                    "properties": {}
+                    },
+                    "additionalProperties": false
                   }
                 },
-                "additionalProperties": true
+                "additionalProperties": false,
+                "x-model-capabilities": [
+                  {
+                    "model": "seedance-2.5",
+                    "resolution": "480p / 720p / 1080p",
+                    "duration": "4–30 秒；编辑/延长可用 -1 智能时长",
+                    "modes": "文生、首帧、首尾帧、全模态参考、编辑、延长",
+                    "audio": "支持",
+                    "references": "最多 50 个参考项"
+                  },
+                  {
+                    "model": "seedance-2.0",
+                    "resolution": "480p / 720p / 1080p / 4K",
+                    "duration": "4–15 秒；编辑/延长可用 -1 智能时长",
+                    "modes": "文生、首帧、首尾帧、全模态参考、编辑、延长",
+                    "audio": "支持",
+                    "references": "最多 15 个参考项"
+                  },
+                  {
+                    "model": "seedance-2.0-mini",
+                    "resolution": "480p / 720p",
+                    "duration": "4–15 秒",
+                    "modes": "文生、首帧、首尾帧",
+                    "audio": "支持",
+                    "references": "不支持全模态参考、编辑或延长"
+                  }
+                ]
               },
               "examples": {
-                "1": {
+                "文生视频": {
+                  "summary": "文生视频",
                   "value": {
-                    "model": "bytedance/seedance-2.5",
-                    "prompt": "一只金毛寻回犬在日落时分的海滩上奔跑。夕阳洒在金色的沙滩和海面上，海风轻拂，狗狗自然欢快地向前奔跑，毛发随动作和微风自然摆动。画面光影柔和，色彩自然，具有电影感，镜头平稳地跟随狗狗移动，营造出温暖、真实且富有活力的氛围。",
-                    "duration": 5,
-                    "resolution": "480p",
+                    "model": "seedance-2.5",
+                    "prompt": "一只金毛寻回犬在日落时分的海滩上奔跑，镜头平稳跟随，画面具有自然细腻的电影质感。",
+                    "duration": 8,
+                    "resolution": "1080p",
                     "aspect_ratio": "16:9",
                     "generate_audio": true
-                  },
-                  "summary": "默认"
+                  }
                 },
-                "2": {
+                "首帧生视频": {
+                  "summary": "首帧生视频",
                   "value": {
-                    "model": "bytedance/seedance-2.5",
-                    "prompt": "一只金毛寻回犬在日落时分的海滩上奔跑。夕阳洒在金色的沙滩和海面上，海风轻拂，狗狗自然欢快地向前奔跑，毛发随动作和微风自然摆动。画面光影柔和，色彩自然，具有电影感，镜头平稳地跟随狗狗移动，营造出温暖、真实且富有活力的氛围。",
+                    "model": "seedance-2.0-mini",
+                    "prompt": "保持首帧中的人物外观与服装一致，让人物自然向前行走，镜头缓慢推进。",
                     "duration": 5,
-                    "resolution": "480p",
-                    "aspect_ratio": "16:9",
-                    "generate_audio": true
-                  },
-                  "summary": "文生视频"
-                },
-                "3": {
-                  "value": {
-                    "model": "bytedance/seedance-2.0",
-                    "prompt": "角色在积雪覆盖的高山上进行滑雪运动，自然地沿着雪坡高速滑行，动作流畅且具有动感。整个视频过程中保持角色的外观、服装和人物特征一致，不发生明显变化。场景包含壮丽的雪山、细腻真实的积雪和飞扬的雪雾，白天自然光照，画面具有电影感，镜头平稳地跟随角色移动，呈现自然、真实且具有视觉冲击力的滑雪场景。",
-                    "input_references": [
-                      {
-                        "type": "image_url",
-                        "image_url": {
-                          "url": "https://example.com/assets/character-reference.jpg"
-                        }
-                      },
-                      {
-                        "type": "image_url",
-                        "image_url": {
-                          "url": "https://example.com/assets/style-reference.jpg"
-                        }
-                      }
-                    ]
-                  },
-                  "summary": "图生视频"
-                },
-                "4": {
-                  "value": {
-                    "model": "bytedance/seedance-2.0",
-                    "prompt": "让参考图中的角色进行自然流畅的说话表演，保持角色的外观、服装、面部特征和人物形象一致。说话时参考输入音频中的声音特征、语气、情绪和表达方式，使角色的口型、表情和说话节奏与配音保持自然同步。整体画面风格、镜头语言、构图和视觉表现参考输入视频，确保最终视频具有一致的视觉风格和自然流畅的动态效果。",
-                    "input_references": [
-                      {
-                        "type": "image_url",
-                        "image_url": {
-                          "url": "https://example.com/assets/character-reference.jpg"
-                        }
-                      },
-                      {
-                        "type": "audio_url",
-                        "audio_url": {
-                          "url": "https://example.com/assets/voice-reference.mp3"
-                        }
-                      },
-                      {
-                        "type": "video_url",
-                        "video_url": {
-                          "url": "https://example.com/assets/style-reference.mp4"
-                        }
-                      }
-                    ]
-                  },
-                  "summary": "参考生视频"
-                },
-                "5": {
-                  "value": {
-                    "model": "bytedance/seedance-2.0",
-                    "prompt": "从首帧画面自然过渡至尾帧画面，确保两个画面之间的主体、场景和运动变化连贯自然。保持画面构图和视觉风格的一致性，避免出现突兀的镜头切换、人物变形或场景跳变，整体呈现平滑、自然且具有电影感的过渡效果。",
+                    "resolution": "720p",
                     "frame_images": [
                       {
-                        "type": "image_url",
-                        "image_url": {
-                          "url": "https://example.com/assets/first-frame.jpg"
-                        },
-                        "frame_type": "first_frame"
-                      },
-                      {
-                        "type": "image_url",
-                        "image_url": {
-                          "url": "https://example.com/assets/last-frame.jpg"
-                        },
-                        "frame_type": "last_frame"
+                        "type": "first_frame",
+                        "image_url": "https://example.com/assets/first-frame.jpg"
                       }
                     ]
-                  },
-                  "summary": "首尾帧生视频"
+                  }
+                },
+                "首尾帧生视频": {
+                  "summary": "首尾帧生视频",
+                  "value": {
+                    "model": "seedance-2.0",
+                    "prompt": "从首帧自然过渡到尾帧，保持主体、构图与视觉风格连贯。",
+                    "duration": 8,
+                    "resolution": "1080p",
+                    "frame_images": [
+                      {
+                        "type": "first_frame",
+                        "image_url": "https://example.com/assets/first-frame.jpg"
+                      },
+                      {
+                        "type": "last_frame",
+                        "image_url": "https://example.com/assets/last-frame.jpg"
+                      }
+                    ]
+                  }
+                },
+                "全模态参考": {
+                  "summary": "全模态参考",
+                  "value": {
+                    "model": "seedance-2.5",
+                    "prompt": "保持参考素材中的人物身份与视觉风格，生成一段连贯的电影感短片。",
+                    "duration": 10,
+                    "resolution": "720p",
+                    "input_references": [
+                      {
+                        "image_url": "https://example.com/assets/character.jpg",
+                        "role": "reference_image"
+                      },
+                      {
+                        "video_url": "https://example.com/assets/style.mp4",
+                        "role": "reference_video"
+                      },
+                      {
+                        "audio_url": "https://example.com/assets/voice.mp3",
+                        "role": "reference_audio"
+                      }
+                    ]
+                  }
                 }
               }
             }
@@ -339,104 +359,51 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "$id": "https://api.example.com/schemas/videos/create-response.json",
+                  "title": "创建视频任务响应",
+                  "description": "POST /v1/videos 创建视频任务成功后的响应参数，接口返回 HTTP 202。",
                   "type": "object",
+                  "required": [
+                    "id",
+                    "status",
+                    "polling_url"
+                  ],
                   "properties": {
-                    "created_at": {
-                      "type": "integer",
-                      "description": "任务创建时间，Unix 时间戳（秒）。"
-                    },
                     "id": {
                       "type": "string",
-                      "description": "视频生成任务的唯一标识符。"
-                    },
-                    "mirror_urls": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "原始视频 URL，可能在一定时间后失效（例如 24 小时）。"
-                    },
-                    "model": {
-                      "type": "string",
-                      "description": "视频模型 ID 或别名。"
-                    },
-                    "native_urls": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "tikway CDN镜像。相比原始视频 URL，通常具有更长的有效期。"
-                    },
-                    "prompt": {
-                      "type": "string",
-                      "description": "用于生成视频的文本提示词（Prompt）。"
+                      "minLength": 1,
+                      "description": "视频生成任务的唯一标识，用于后续查询任务状态。",
+                      "examples": [
+                        "9552de3d-171f-4cca-b492-7baa56523239"
+                      ]
                     },
                     "status": {
                       "type": "string",
-                      "description": "视频生成任务的当前状态，例如 pending、in_progress、completed 或 failed。"
+                      "enum": [
+                        "pending",
+                        "queue"
+                      ],
+                      "description": "任务创建状态。pending 表示任务已创建、等待提交处理；queue 表示任务已进入生成队列。",
+                      "examples": [
+                        "queue"
+                      ]
                     },
-                    "updated_at": {
-                      "type": "integer",
-                      "description": "任务最后更新时间，Unix 时间戳（秒）。"
-                    },
-                    "usage": {
-                      "type": "object",
-                      "properties": {
-                        "video_seconds": {
-                          "type": "number",
-                          "description": "生成视频的实际时长，单位为秒。"
-                        }
-                      },
-                      "required": [
-                        "video_seconds"
+                    "polling_url": {
+                      "type": "string",
+                      "format": "uri",
+                      "pattern": "^https://",
+                      "description": "视频任务查询地址，客户端可通过 GET 请求轮询任务状态。",
+                      "examples": [
+                        "https://api.example.com/v1/videos/9552de3d-171f-4cca-b492-7baa56523239"
                       ]
                     }
                   },
-                  "required": [
-                    "created_at",
-                    "id",
-                    "mirror_urls",
-                    "model",
-                    "native_urls",
-                    "prompt",
-                    "status",
-                    "updated_at",
-                    "usage"
-                  ]
+                  "additionalProperties": false
                 },
-                "examples": {
-                  "1": {
-                    "summary": "成功",
-                    "value": {
-                      "id": "8f7c2e41-5a93-4b16-9d72-3c84e1a6f205",
-                      "model": "bytedance/seedance-2.5",
-                      "status": "pending",
-                      "created_at": 1788860068,
-                      "updated_at": 1788860068,
-                      "prompt": "一只金毛寻回犬在日落海滩上自然奔跑，金色夕阳映照着沙滩与海面，狗狗的毛发随奔跑和海风自然摆动。镜头平稳跟随狗狗移动，画面光影柔和、色彩自然，整体呈现真实细腻的电影感，并配合自然的环境音效。",
-                      "mirror_urls": [],
-                      "native_urls": [],
-                      "usage": {
-                        "video_seconds": null
-                      }
-                    }
-                  },
-                  "2": {
-                    "summary": "成功示例",
-                    "value": {
-                      "created_at": 1788860068,
-                      "id": "6d2e5043-6c0c-4ff4-b4ad-c8601948fd78",
-                      "mirror_urls": [],
-                      "model": "bytedance/seedance-2.5",
-                      "native_urls": [],
-                      "prompt": "A golden retriever running on the beach at sunset",
-                      "status": "pending",
-                      "updated_at": 1788860068,
-                      "usage": {
-                        "video_seconds": null
-                      }
-                    }
-                  }
+                "example": {
+                  "id": "9552de3d-171f-4cca-b492-7baa56523239",
+                  "status": "pending",
+                  "polling_url": "https://api.tikway.ai/v1/videos/9552de3d-171f-4cca-b492-7baa56523239"
                 }
               }
             },
@@ -452,7 +419,7 @@
     },
     "/v1/videos/{id}": {
       "get": {
-        "summary": "查询视频任务",
+        "summary": "查询 Seedance 视频任务",
         "deprecated": false,
         "description": "",
         "tags": [
@@ -468,6 +435,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-debugger-mode",
+            "in": "header",
+            "description": "",
+            "example": "true",
+            "schema": {
+              "type": "string",
+              "default": "true"
+            }
           }
         ],
         "responses": {
@@ -476,87 +453,268 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "$id": "https://api.example.com/schemas/videos/retrieve-response.json",
+                  "title": "查询视频任务响应",
+                  "description": "GET /v1/videos/{id} 的响应参数。只有任务状态为 completed 时才返回 data。",
                   "type": "object",
+                  "required": [
+                    "created",
+                    "id",
+                    "model",
+                    "prompt",
+                    "status",
+                    "usage"
+                  ],
                   "properties": {
-                    "created_at": {
+                    "created": {
                       "type": "integer",
-                      "description": "任务创建时间，Unix 时间戳（秒）。"
+                      "minimum": 0,
+                      "description": "视频任务创建时间，Unix 时间戳，单位为秒。",
+                      "examples": [
+                        1789108566
+                      ]
                     },
                     "id": {
                       "type": "string",
-                      "description": "视频生成任务的唯一标识符。"
-                    },
-                    "mirror_urls": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "原始视频 URL，可能在一定时间后失效（例如 24 小时）。"
+                      "minLength": 1,
+                      "description": "视频生成任务的唯一标识。",
+                      "examples": [
+                        "9552de3d-171f-4cca-b492-7baa56523239"
+                      ]
                     },
                     "model": {
                       "type": "string",
-                      "description": "视频模型 ID 或别名。"
-                    },
-                    "native_urls": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "tikway CDN镜像。相比原始视频 URL，通常具有更长的有效期。"
+                      "minLength": 1,
+                      "description": "创建视频任务时使用的模型 ID。",
+                      "examples": [
+                        "seedance-2.0-mini"
+                      ]
                     },
                     "prompt": {
                       "type": "string",
-                      "description": "用于生成视频的文本提示词（Prompt）。"
+                      "description": "创建视频任务时提交的提示词。",
+                      "examples": [
+                        "一只金毛犬在日落时分的海滩上奔跑，镜头平稳跟随，画面呈现自然细腻的电影质感"
+                      ]
                     },
                     "status": {
                       "type": "string",
-                      "description": "视频生成任务的当前状态，例如 pending、in_progress、completed 或 failed。"
+                      "enum": [
+                        "pending",
+                        "queue",
+                        "in_progress",
+                        "completed",
+                        "failed",
+                        "cancelled",
+                        "expired"
+                      ],
+                      "description": "任务状态。pending 表示等待处理；queue 表示排队中；in_progress 表示生成或平台处理进行中；completed 表示视频和 OSS 资源均已处理完成；failed 表示失败；cancelled 表示已取消；expired 表示已过期。",
+                      "examples": [
+                        "in_progress"
+                      ]
                     },
-                    "updated_at": {
-                      "type": "integer",
-                      "description": "任务最后更新时间，Unix 时间戳（秒）。"
+                    "data": {
+                      "type": "array",
+                      "description": "视频任务结果。仅当 status 为 completed 时返回。",
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "required": [
+                              "type",
+                              "video_url"
+                            ],
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "video_url"
+                                ],
+                                "description": "平台 OSS 视频"
+                              },
+                              "video_url": {
+                                "type": "string",
+                                "format": "uri",
+                                "description": "平台 OSS 视频地址，有效期为24小时"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "required": [
+                              "type",
+                              "native_url"
+                            ],
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "native_url"
+                                ],
+                                "description": "供应商原始视频"
+                              },
+                              "native_url": {
+                                "type": "string",
+                                "format": "uri",
+                                "description": "供应商返回的原始视频地址"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "required": [
+                              "type",
+                              "first_url",
+                              "last_url"
+                            ],
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "frame"
+                                ],
+                                "description": "视频首尾帧"
+                              },
+                              "first_url": {
+                                "type": "string",
+                                "format": "uri",
+                                "description": "视频首帧地址，有效期为24小时"
+                              },
+                              "last_url": {
+                                "type": "string",
+                                "format": "uri",
+                                "description": "视频尾帧地址，有效期为24小时"
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
                     },
                     "usage": {
                       "type": "object",
-                      "properties": {
-                        "video_seconds": {
-                          "type": "integer",
-                          "description": "生成视频的实际时长，单位为秒。"
-                        }
-                      },
+                      "description": "视频任务的使用量信息。",
                       "required": [
                         "video_seconds"
-                      ]
+                      ],
+                      "properties": {
+                        "video_seconds": {
+                          "description": "生成视频的时长，单位为秒。暂时无法确定时可能为 null。",
+                          "oneOf": [
+                            {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "examples": [
+                            4
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "error": {
+                      "type": "object",
+                      "description": "任务失败信息。通常仅在 status 为 failed 时返回。",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "description": "供应商或平台返回的错误码。",
+                          "examples": [
+                            "video_generation_failed"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "任务失败的具体原因。",
+                          "examples": [
+                            "Video generation failed."
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
                     }
                   },
-                  "required": [
-                    "created_at",
-                    "id",
-                    "mirror_urls",
-                    "model",
-                    "native_urls",
-                    "prompt",
-                    "status",
-                    "updated_at",
-                    "usage"
-                  ]
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "status": {
+                            "const": "completed"
+                          }
+                        },
+                        "required": [
+                          "status"
+                        ]
+                      },
+                      "then": {
+                        "required": [
+                          "data"
+                        ]
+                      },
+                      "else": {
+                        "not": {
+                          "required": [
+                            "data"
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "additionalProperties": false
                 },
-                "example": {
-                  "created_at": 1788861000,
-                  "id": "8f7c2e41-5a93-4b16-9d72-3c84e1a6f205",
-                  "model": "bytedance/seedance-2.5",
-                  "prompt": "一只金毛寻回犬在日落海滩上自然奔跑，金色夕阳映照着沙滩与海面，狗狗的毛发随奔跑和海风自然摆动。镜头平稳跟随狗狗移动，画面光影柔和、色彩自然，整体呈现真实细腻的电影感，并配合自然的环境音效。",
-                  "status": "completed",
-                  "mirror_urls": [
-                    "https://example.com/media/videos/8f7c2e41-5a93-4b16-9d72-3c84e1a6f205.mp4"
-                  ],
-                  "native_urls": [
-                    "https://example.com/media/videos/8f7c2e41-5a93-4b16-9d72-3c84e1a6f205-native.mp4"
-                  ],
-                  "usage": {
-                    "video_seconds": 10
+                "examples": {
+                  "进行中": {
+                    "summary": "进行中",
+                    "value": {
+                      "created": 1789108566,
+                      "id": "9552de3d-171f-4cca-b492-7baa56523239",
+                      "model": "seedance-2.5",
+                      "prompt": "一只金毛犬在日落时分的海滩上奔跑，镜头平稳跟随，海风吹动毛发，画面呈现自然细腻的电影质感",
+                      "status": "in_progress",
+                      "usage": {
+                        "video_seconds": 4
+                      }
+                    }
                   },
-                  "updated_at": 1788861068
+                  "已完成": {
+                    "summary": "已完成",
+                    "value": {
+                      "created": 1789108566,
+                      "id": "9552de3d-171f-4cca-b492-7baa56523239",
+                      "model": "seedance-2.5",
+                      "prompt": "一只金毛犬在日落时分的海滩上奔跑，镜头平稳跟随，海风吹动毛发，画面呈现自然细腻的电影质感",
+                      "status": "completed",
+                      "data": [
+                        {
+                          "type": "video_url",
+                          "video_url": "https://oss.example.com/temp/2026/09/11/video.mp4?expires=86400"
+                        },
+                        {
+                          "type": "native_url",
+                          "native_url": "https://provider.example.com/videos/video.mp4?expires=86400"
+                        },
+                        {
+                          "type": "frame",
+                          "first_url": "https://oss.example.com/temp/2026/09/11/video.mp4?x-oss-process=video%2Fsnapshot%2Ct_0%2Cf_jpg%2Cw_0%2Ch_0",
+                          "last_url": "https://oss.example.com/temp/2026/09/11/video.mp4?x-oss-process=video%2Fsnapshot%2Ct_3999%2Cf_jpg%2Cw_0%2Ch_0"
+                        }
+                      ],
+                      "usage": {
+                        "video_seconds": 4
+                      }
+                    }
+                  }
                 }
               }
             },

@@ -211,6 +211,31 @@
                     "group": "Wan",
                     "openapi": "zh/apis/videos/wan-openapi.json",
                     "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                  },
+                  {
+                    "group": "HappyHorse",
+                    "openapi": "zh/apis/videos/happy-horse-openapi.json",
+                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                  },
+                  {
+                    "group": "MiniMax",
+                    "openapi": "zh/apis/videos/minimax-openapi.json",
+                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                  },
+                  {
+                    "group": "Veo",
+                    "openapi": "zh/apis/videos/veo-openapi.json",
+                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                  },
+                  {
+                    "group": "Grok",
+                    "openapi": "zh/apis/videos/grok-openapi.json",
+                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                  },
+                  {
+                    "group": "Flux",
+                    "openapi": "zh/apis/videos/flux-openapi.json",
+                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
                   }
                 ]
               },

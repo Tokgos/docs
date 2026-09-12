@@ -18,7 +18,7 @@
       "post": {
         "summary": "生成图片",
         "deprecated": false,
-        "description": "",
+        "description": "`microsoft/mai-image-2.5-pro` 支持文生图。当前网关暴露 `model`、`prompt`、`size` 和兼容 `response_format`；模型只生成 1 张 PNG。尺寸的宽、高均至少 768，总像素不超过 1,048,576。",
         "tags": [
           "图片生成/MAI Image"
         ],
@@ -33,49 +33,33 @@
                 "additionalProperties": false,
                 "required": [
                   "model",
-                  "prompt",
-                  "response_format"
+                  "prompt"
                 ],
                 "properties": {
                   "model": {
                     "type": "string",
-                    "const": "volcengine/doubao-seedream-5.0-pro",
-                    "description": "模型 ID。对应火山引擎原生模型 doubao-seedream-5-0-pro-260628。"
+                    "description": "必填。MAI Image 2.5 Pro 的 Forward 模型 ID。",
+                    "enum": [
+                      "microsoft/mai-image-2.5-pro"
+                    ]
                   },
                   "prompt": {
                     "type": "string",
                     "minLength": 1,
-                    "description": "图片生成提示词。官方建议不超过约 300 个中文字符或 600 个英文单词。",
+                    "description": "必填。图片提示词，原生模型上下文上限 32,000 tokens。",
                     "examples": [
                       "一座漂浮在云海上的未来城市，日出时分，电影级光影，建筑细节丰富"
                     ]
                   },
                   "size": {
-                    "description": "输出尺寸。可传 auto、1K、1.5K、2K，或 WIDTHxHEIGHT。自定义尺寸总像素应在 921600 到 4624220 之间，宽高比应在 1:16 到 16:1 之间。",
-                    "oneOf": [
-                      {
-                        "type": "string",
-                        "enum": [
-                          "auto",
-                          "1K",
-                          "1.5K",
-                          "2K"
-                        ]
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
-                        "examples": [
-                          "1024x1024",
-                          "2048x2048",
-                          "2816x1584"
-                        ]
-                      }
-                    ]
+                    "type": "string",
+                    "default": "1024x1024",
+                    "pattern": "^[1-9]\\d*x[1-9]\\d*$",
+                    "description": "OFOX 兼容尺寸 WIDTHxHEIGHT。MAI Image 2.5 Pro 的宽、高均至少 768，且总像素不超过 1,048,576。"
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "固定返回 Base64 图片，使响应符合本接口的 Response Schema。",
+                    "description": "OFOX 兼容响应格式。MAI 原生输出始终为单张 PNG Base64；建议使用 b64_json。",
                     "default": "b64_json",
                     "enum": [
                       "b64_json",
@@ -109,15 +93,10 @@
                 ],
                 "examples": [
                   {
-                    "model": "volcengine/doubao-seedream-5.0-pro",
-                    "prompt": "一座漂浮在云海上的未来城市，日出时分，电影级光影",
-                    "size": "2K",
-                    "output_format": "png",
-                    "response_format": "b64_json",
-                    "watermark": false,
-                    "optimize_prompt_options": {
-                      "mode": "standard"
-                    }
+                    "model": "microsoft/mai-image-2.5-pro",
+                    "prompt": "A cinematic mountain landscape at sunset.",
+                    "size": "1024x1024",
+                    "response_format": "b64_json"
                   }
                 ]
               },
@@ -151,12 +130,34 @@
                         "type": "object",
                         "properties": {
                           "index": {
-                            "type": "integer"
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "结果索引。"
+                          },
+                          "b64_json": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Base64 编码图片；response_format=b64_json 时返回。"
                           },
                           "url": {
-                            "type": "string"
+                            "type": "string",
+                            "format": "uri",
+                            "description": "临时图片链接；response_format=url 时返回。"
                           }
-                        }
+                        },
+                        "additionalProperties": false,
+                        "oneOf": [
+                          {
+                            "required": [
+                              "b64_json"
+                            ]
+                          },
+                          {
+                            "required": [
+                              "url"
+                            ]
+                          }
+                        ]
                       },
                       "description": "生成结果列表。"
                     },
@@ -235,25 +236,25 @@
                 },
                 "example": {
                   "created": 1788923928,
-                  "model": "microsoft/mai-image-2.5-pro",
                   "data": [
                     {
                       "index": 0,
-                      "url": "https://example.com/generated-image.png"
+                      "b64_json": "iVBORw0KGgoAAAANSUhEUgAA..."
                     }
                   ],
+                  "model": "microsoft/mai-image-2.5-pro",
                   "output_format": "png",
                   "size": "1024x1024",
                   "usage": {
                     "input_tokens": 36,
-                    "output_tokens": 1024,
-                    "total_tokens": 1060,
                     "input_tokens_details": {
                       "text_tokens": 36
                     },
+                    "output_tokens": 1024,
                     "output_tokens_details": {
                       "image_tokens": 1024
-                    }
+                    },
+                    "total_tokens": 1060
                   }
                 }
               }
@@ -265,14 +266,21 @@
           {
             "bearer": []
           }
-        ]
+        ],
+        "x-model-capabilities": {
+          "microsoft/mai-image-2.5-pro": [
+            "prompt",
+            "size",
+            "response_format"
+          ]
+        }
       }
     },
     "/v1/images/edits": {
       "post": {
         "summary": "图片编辑",
         "deprecated": false,
-        "description": "",
+        "description": "`microsoft/mai-image-2.5-pro` 支持单张 JPEG/PNG 图片编辑。`model`、`images` 和 `prompt` 必填；输出固定为单张 PNG。",
         "tags": [
           "图片生成/MAI Image"
         ],
@@ -283,20 +291,23 @@
               "schema": {
                 "type": "object",
                 "required": [
+                  "model",
                   "images",
                   "prompt"
                 ],
                 "properties": {
                   "model": {
                     "type": "string",
-                    "const": "volcengine/doubao-seedream-5.0-pro",
-                    "description": "模型 ID。microsoft/mai-image-2.5-pro"
+                    "description": "必填。MAI Image 2.5 Pro 的 Forward 模型 ID。",
+                    "enum": [
+                      "microsoft/mai-image-2.5-pro"
+                    ]
                   },
                   "images": {
                     "type": "array",
                     "minItems": 1,
-                    "maxItems": 16,
-                    "description": "必填。待编辑的源图列表。GPT Image 模型最多 16 张；每项需提供 file_id 或 image_url 之一。若直接上传文件，使用 multipart 字段 image[]（或你的网关定义的 images）。",
+                    "maxItems": 1,
+                    "description": "必填。单张 JPEG 或 PNG 源图。Forward JSON 兼容形式使用一项 file_id/image_url 对象。",
                     "items": {
                       "type": "object",
                       "properties": {
@@ -328,11 +339,11 @@
                       "1024x1536",
                       null
                     ],
-                    "description": "请求的输出图片尺寸。"
+                    "description": "兼容输出尺寸。MAI 原生编辑接口不提供独立尺寸参数，是否生效取决于 OFOX 上游。"
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "固定返回 Base64 图片，使响应符合本接口的 Response Schema。",
+                    "description": "OFOX 兼容响应格式。MAI 原生输出固定为单张 PNG Base64；建议使用 b64_json。",
                     "default": "b64_json",
                     "enum": [
                       "b64_json",
@@ -342,15 +353,15 @@
                 },
                 "examples": [
                   {
+                    "model": "microsoft/mai-image-2.5-pro",
                     "images": [
                       {
                         "image_url": "https://example.com/source-image.png"
                       }
                     ],
-                    "prompt": "为这张图添加水彩效果",
-                    "model": "gpt-image-1.5",
-                    "quality": "high",
-                    "size": "1024x1024"
+                    "prompt": "Turn this image into a clean futuristic product shot.",
+                    "size": "1024x1024",
+                    "response_format": "b64_json"
                   }
                 ]
               },
@@ -527,7 +538,15 @@
           {
             "bearer": []
           }
-        ]
+        ],
+        "x-model-capabilities": {
+          "microsoft/mai-image-2.5-pro": [
+            "images",
+            "prompt",
+            "size",
+            "response_format"
+          ]
+        }
       }
     }
   },
