@@ -1,0 +1,38 @@
+---
+title: "Streaming Responses"
+sidebarTitle: "Streaming"
+description: "Read incremental Responses events over server-sent events."
+---
+
+Set `stream: true` to receive named Responses events over SSE. Unlike Chat Completions, a Responses stream does not rely on `[DONE]`; stop when you receive a terminal event such as `response.completed`, `response.failed`, or `response.incomplete`.
+
+```bash
+curl --no-buffer https://api.tikway.ai/v1/responses \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"openai/gpt-5.6-terra","input":"Describe a city after the rain in three sentences.","stream":true}'
+```
+
+## Common events
+
+| Event | Meaning |
+| --- | --- |
+| `response.created`, `response.in_progress` | The response has started and is being processed. |
+| `response.output_item.added` | A new output item was created. |
+| `response.content_part.added` | An item gained a content part. |
+| `response.output_text.delta` | Append the `delta` text. |
+| `response.output_text.done` | A text content part is complete. |
+| `response.function_call_arguments.delta` | Append a function-arguments fragment. |
+| `response.function_call_arguments.done` | Function arguments are complete and can be parsed. |
+| `response.completed` | The response completed successfully. |
+| `response.failed`, `response.incomplete` | The response did not complete successfully. |
+
+```text
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":0,"content_index":0,"delta":"The rain has stopped."}
+
+event: response.completed
+data: {"type":"response.completed","response":{"id":"resp_01J...","status":"completed"}}
+```
+
+Reasoning, tools, and function calls can add other event types. Do not assume every event contains user-visible text.

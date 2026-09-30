@@ -1,0 +1,119 @@
+---
+title: "Status codes and responses"
+sidebarTitle: "Status codes and responses"
+description: "Handle Tikway gateway errors, rate limits, request IDs, and retries."
+---
+
+Tikway uses HTTP status codes to report the outcome of a request. Successful responses follow the API you called. Gateway-generated errors follow an OpenAI, Anthropic, or Gemini shape based on the incoming protocol. Errors returned directly by an upstream model may have different fields, so inspect both the status code and response body.
+
+## Common HTTP status codes
+
+| Status | Common cause | What to do |
+| --- | --- | --- |
+| `2xx` | The request succeeded or an asynchronous task was accepted | Read the response body, task ID, or stream events as documented by the endpoint. |
+| `400` | Invalid or missing parameters, or a content policy rejection | Correct the request; do not retry it unchanged. |
+| `401` | Missing or invalid API key | Check the [authentication header](/en/develop-guide/gateway-auth) and key status. |
+| `403` | The key cannot access this resource | Check access to the model or resource. |
+| `404` | Unknown endpoint, model, or resource | Check the URL, model ID, and resource ID. |
+| `409` | Resource state conflict | Read the current state before resubmitting. |
+| `413` | Request body is too large | Reduce the file or body size. |
+| `422` | Valid request, unsupported operation for this model | Check the model's capabilities and parameter combination. |
+| `429` | Request quota exhausted or insufficient account balance | Inspect `error.code`; retry only rate limit errors. |
+| `500` | Internal gateway error | Save `x-request-id` and retry later. |
+| `503` | Queue, billing service, or upstream provider unavailable | Retry later or try another model. |
+| `504` | Upstream timeout | Check whether a task was accepted before retrying. |
+
+The same HTTP status can have different causes. In particular, `429` can mean rate limiting **or** insufficient balance. Branch on the machine-readable `error.code`, not the wording in `error.message`.
+
+## Error response formats
+
+The following are examples of **gateway-generated** errors. The IDs are illustrative; use the actual `x-request-id` response header for debugging.
+
+### OpenAI-compatible
+
+```json
+{
+  "error": {
+    "message": "Incorrect API key provided.",
+    "type": "authentication_error",
+    "code": "invalid_api_key",
+    "param": null
+  },
+  "request_id": "9b1bbbd5-0d55-4b52-9240-8490c1ab47a6"
+}
+```
+
+`error.type` is the broad category, `error.code` is the specific cause, and `error.param` may name an invalid request field.
+
+### Anthropic Messages
+
+```json
+{
+  "type": "error",
+  "error": {
+    "message": "Incorrect API key provided.",
+    "type": "authentication_error",
+    "code": "invalid_api_key",
+    "param": null
+  },
+  "request_id": "9b1bbbd5-0d55-4b52-9240-8490c1ab47a6"
+}
+```
+
+### Native Gemini
+
+```json
+{
+  "error": {
+    "code": 401,
+    "message": "Incorrect API key provided.",
+    "status": "UNAUTHENTICATED",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.RequestInfo",
+        "requestId": "9b1bbbd5-0d55-4b52-9240-8490c1ab47a6"
+      }
+    ]
+  }
+}
+```
+
+In a Gemini error, `error.code` is the numeric HTTP status and `error.status` is its canonical name. For invalid fields, `details` may also include a `google.rpc.BadRequest` entry.
+
+## Common gateway error codes
+
+| HTTP | `error.code` in OpenAI / Anthropic responses | Meaning |
+| --- | --- | --- |
+| `400` | `invalid_request`, `invalid_parameter`, `content_policy_violation` | Invalid request or policy rejection. |
+| `401` | `invalid_api_key` | Missing or unrecognized API key. |
+| `403` | `resource_access_denied` | Access to the resource was denied. |
+| `404` | `resource_not_found` | Resource not found. |
+| `413` | `request_body_too_large` | Request body exceeds the limit. |
+| `422` | `unsupported_operation` | The model does not support this operation. |
+| `429` | `requests_per_minute_exceeded`, `insufficient_balance` | Request limit exhausted or insufficient balance. |
+| `503` | `queue_exhausted`, `billing_service_unavailable`, `upstream_unavailable` | Temporary service outage. |
+| `504` | `upstream_timeout` | Upstream provider timed out. |
+
+Some validation, billing, and provider failures have more specific codes. Do not assume a directly forwarded upstream error uses one of the codes above.
+
+## Request IDs and rate limit headers
+
+The `x-request-id` response header helps identify a request. Keep the request time, endpoint, model, HTTP status, and request ID in your logs. Never log the full API key.
+
+After authentication, a response may include these rate limit headers:
+
+| Header | Meaning |
+| --- | --- |
+| `x-ratelimit-limit` | Request limit for the current API key and window. |
+| `x-ratelimit-remaining` | Requests remaining in the current window. |
+| `x-ratelimit-reset` | Seconds until the current window resets. |
+
+Limits depend on the key's configuration. Responses rejected during authentication or rate limiting may omit these headers, so provide a fallback retry delay.
+
+## Retries and streaming errors
+
+Retry only temporary failures, such as a rate limit `429`, `500`, `503`, or `504`. If `429` has `error.code: "insufficient_balance"`, resolve the balance issue instead. Fix `400`, `401`, `403`, `404`, `413`, or `422` requests before trying again. Cap retry attempts and increase the delay between them. Before resubmitting a paid task creation request, check whether the task was already accepted.
+
+A stream can fail after the initial HTTP `200`. Continue reading events: Anthropic may emit `event: error`, Responses may emit `event: response.failed`, and Chat Completions or Gemini streams may carry an error object in a data frame.
+
+For successful response fields, consult the endpoint's API Reference. For asynchronous video jobs, use the task ID to retrieve the final result.

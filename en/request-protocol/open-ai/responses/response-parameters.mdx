@@ -1,0 +1,57 @@
+---
+title: "Responses response fields"
+sidebarTitle: "Response fields"
+description: "Read Responses output items, status, usage, and function calls."
+---
+
+A non-streaming request returns an object with `object: "response"`. `output` is a heterogeneous array: it may contain messages, reasoning, function calls, and platform tool calls. The first item is not necessarily the final text.
+
+## Top-level fields
+
+| Field | Meaning |
+| --- | --- |
+| `id` | Response ID; pass it as `previous_response_id` to continue a chain. |
+| `object` | `response`. |
+| `created_at`, `completed_at` | Unix timestamps in seconds. |
+| `status` | `queued`, `in_progress`, `completed`, `failed`, `cancelled`, or `incomplete`. |
+| `error` | Error details for a failed response. |
+| `incomplete_details` | Reason for an incomplete response, such as an output limit or content filter. |
+| `output[]` | Generated message, reasoning, function, or tool items. |
+| `usage` | Input, output, and total token counts. |
+
+The response may also echo fields such as `model`, `instructions`, `tools`, `tool_choice`, `text`, `reasoning`, `metadata`, `store`, `truncation`, and `service_tier`.
+
+## Message items
+
+```json
+{
+  "type": "message",
+  "id": "msg_01J...",
+  "status": "completed",
+  "role": "assistant",
+  "content": [{
+    "type": "output_text",
+    "text": "Find your next chapter after the city falls asleep.",
+    "annotations": []
+  }]
+}
+```
+
+Content can include `output_text`, a refusal, audio, or other model-specific blocks. `output_text.annotations` may carry URL or file citations. Requesting `include: ["message.output_text.logprobs"]` may add token log probabilities.
+
+## Function-call items
+
+```json
+{
+  "type": "function_call",
+  "id": "fc_01J...",
+  "call_id": "call_weather_01",
+  "name": "get_weather",
+  "arguments": "{\"city\":\"Shanghai\"}",
+  "status": "completed"
+}
+```
+
+This item is an intention to call a function, not proof it ran. Parse and validate `arguments`, execute the function in your application, and send a `function_call_output` with the same `call_id`.
+
+`usage.input_tokens_details` may include cached and cache-write counts. `usage.output_tokens_details` may include reasoning tokens.

@@ -1,0 +1,66 @@
+---
+title: "Chat Completions function calling"
+sidebarTitle: "Function calling"
+description: "Let the model request a function, then execute it safely in your application."
+---
+
+The model does not run your function. It returns a structured call request. Your server validates the arguments, executes an allowed function, and sends the result back to the model.
+
+## 1. Declare a tool
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "messages": [{"role": "user", "content": "Should I carry an umbrella in Shanghai today?"}],
+  "tools": [{
+    "type": "function",
+    "function": {
+      "name": "get_weather",
+      "description": "Get current weather and precipitation probability for a city.",
+      "parameters": {
+        "type": "object",
+        "properties": {"city": {"type": "string"}},
+        "required": ["city"],
+        "additionalProperties": false
+      }
+    }
+  }],
+  "tool_choice": "auto"
+}
+```
+
+`tool_choice` can be `auto`, `none`, `required`, or an object selecting a specific function.
+
+## 2. Read the tool call
+
+When the model requests a function, `finish_reason` is usually `tool_calls`. Parse `function.arguments` as a JSON **string**, then validate it.
+
+```json
+{
+  "role": "assistant",
+  "content": null,
+  "tool_calls": [{
+    "id": "call_weather_01",
+    "type": "function",
+    "function": {"name": "get_weather", "arguments": "{\"city\":\"Shanghai\"}"}
+  }]
+}
+```
+
+## 3. Return the result
+
+Execute the approved function on your server. Keep the assistant message with its `tool_calls`, then append a `tool` message whose `tool_call_id` exactly matches the call ID:
+
+```json
+{
+  "role": "tool",
+  "tool_call_id": "call_weather_01",
+  "content": "{\"city\":\"Shanghai\",\"condition\":\"light rain\",\"precipitation_probability\":70}"
+}
+```
+
+Send the resulting `messages` array in another Chat Completions request to get the final answer.
+
+## Security
+
+Allow only server-approved function names. Treat arguments as untrusted input; validate them before use. Do not execute model-generated SQL, shell commands, paths, or URLs without strict controls. Avoid returning secrets or unnecessary personal data in tool results, and cap tool-call turns, timeouts, and concurrency.

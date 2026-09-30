@@ -1,5 +1,44 @@
 ---
-title: "Quick Starter"
+title: "Quickstart"
+sidebarTitle: "Quickstart"
+description: "Send your first request to the Tikway API."
 ---
 
-Start
+## 1. Create an API key
+
+Visit [Tikway](https://tikway.ai), sign in, and create an API key in the console. Keep the key on your server. Do not put it in browser code, a public repository, or a screenshot.
+
+## 2. Send a request
+
+Replace `YOUR_API_KEY` with your key and choose a model available to your account:
+
+```bash
+curl https://api.tikway.ai/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/gpt-5.6-terra",
+    "messages": [
+      {"role": "user", "content": "Which animal would you interview first, and why?"}
+    ]
+  }'
+```
+
+## 3. Read the response
+
+For Chat Completions, the generated text is usually in `choices[0].message.content`. You can change `model` to use another compatible model and pass earlier turns in `messages`.
+
+<Note>
+  Keep API keys in server-side environment variables. See [Gateway and authentication](/en/develop-guide/gateway-auth) for the OpenAI, Anthropic, and Gemini headers.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Request protocols" icon="code" href="/en/request-protocol/open-ai">
+    Choose an OpenAI, Anthropic, or Gemini request format.
+  </Card>
+  <Card title="Errors and retries" icon="circle-exclamation" href="/en/develop-guide/status-code-response">
+    Learn how to handle status codes, rate limits, and stream errors.
+  </Card>
+</CardGroup>

@@ -1,0 +1,26 @@
+---
+title: "Streaming Chat Completions"
+sidebarTitle: "Streaming"
+description: "Read incremental Chat Completions output over server-sent events."
+---
+
+Set `stream: true` to receive `chat.completion.chunk` events over server-sent events (SSE). Each chunk may contain a fragment in `choices[0].delta.content`.
+
+```bash
+curl --no-buffer https://api.tikway.ai/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"openai/gpt-5.6-terra","stream":true,"messages":[{"role":"user","content":"Describe a city after the rain in three sentences."}]}'
+```
+
+```text
+data: {"object":"chat.completion.chunk","choices":[{"index":0,"delta":{"role":"assistant","content":"The rain"},"finish_reason":null}]}
+
+data: {"object":"chat.completion.chunk","choices":[{"index":0,"delta":{"content":" has stopped."},"finish_reason":null}]}
+
+data: {"object":"chat.completion.chunk","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}
+
+data: [DONE]
+```
+
+Append non-empty `delta.content` values until `[DONE]`. A chunk may contain only a role or finish reason. For usage near the end of the stream, add `"stream_options": {"include_usage": true}`. A stream can fail after the initial HTTP `200`, so inspect subsequent data frames for error objects.

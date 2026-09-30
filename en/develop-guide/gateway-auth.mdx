@@ -1,0 +1,82 @@
+---
+title: "Gateway and authentication"
+sidebarTitle: "Gateway and authentication"
+description: "Choose a Tikway API endpoint and authenticate OpenAI, Anthropic, or Gemini requests."
+---
+
+The public Tikway API gateway is `https://api.tikway.ai`. One Tikway API key works across supported protocols. The request path selects the incoming protocol; the model ID selects the model.
+
+## Choose an endpoint
+
+| Protocol | SDK base URL | Common endpoint |
+| --- | --- | --- |
+| OpenAI-compatible | `https://api.tikway.ai/v1` | `POST https://api.tikway.ai/v1/chat/completions` or `POST https://api.tikway.ai/v1/responses` |
+| Anthropic Messages | `https://api.tikway.ai` | `POST https://api.tikway.ai/v1/messages` |
+| Native Gemini | `https://api.tikway.ai`, API version `v1beta` | `POST https://api.tikway.ai/v1beta/models/{model}:generateContent` |
+
+Use HTTPS. Set `Content-Type: application/json` for JSON requests. For file uploads, follow the endpoint's `multipart/form-data` specification. In Gemini requests, `{model}` is part of the path; other APIs usually take `model` in the JSON body. Use an available model ID from your Tikway model list.
+
+<Note>
+  Tikway's native Anthropic and Gemini paths are `/v1/messages` and `/v1beta/models/...`. Do not append `/anthropic` or `/gemini` to the gateway URL.
+</Note>
+
+## Create and store an API key
+
+Sign in to the [Tikway console](https://tikway.ai) to create an API key. Store it in a server-side environment variable such as `TIKWAY_API_KEY`. Do not put it in browser code, mobile app bundles, repositories, or logs. Revoke and replace an exposed key.
+
+The examples below use a shell environment variable. Set `TIKWAY_API_KEY` first and replace each example model with one available to your account.
+
+## Pass the key for each protocol
+
+| Request protocol | Recommended authentication header | Other headers |
+| --- | --- | --- |
+| OpenAI-compatible, images, videos, and other `/v1` APIs | `Authorization: Bearer $TIKWAY_API_KEY` | `Content-Type: application/json` for JSON requests |
+| Anthropic Messages | `x-api-key: $TIKWAY_API_KEY` | `anthropic-version: 2023-06-01`, `Content-Type: application/json` |
+| Native Gemini | `x-goog-api-key: $TIKWAY_API_KEY` | `Content-Type: application/json` |
+
+The gateway also accepts `X-API-Key`. For new integrations, use the protocol-native header shown above so your requests match the SDKs and API Reference. Send Gemini keys in the request header.
+
+### OpenAI-compatible example
+
+```bash
+curl https://api.tikway.ai/v1/chat/completions \
+  -H "Authorization: Bearer $TIKWAY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/gpt-5.6-terra",
+    "messages": [{"role": "user", "content": "Hello"}]
+  }'
+```
+
+For an OpenAI SDK, set `base_url` to `https://api.tikway.ai/v1` and `api_key` to your Tikway key. The SDK adds the Bearer header.
+
+### Anthropic Messages example
+
+```bash
+curl https://api.tikway.ai/v1/messages \
+  -H "x-api-key: $TIKWAY_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "claude-sonnet-4-6",
+    "max_tokens": 1024,
+    "messages": [{"role": "user", "content": "Hello"}]
+  }'
+```
+
+### Native Gemini example
+
+```bash
+curl 'https://api.tikway.ai/v1beta/models/gemini-2.5-flash:generateContent' \
+  -H "x-goog-api-key: $TIKWAY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{"role": "user", "parts": [{"text": "Hello"}]}]
+  }'
+```
+
+## Troubleshoot authentication
+
+The gateway returns `401` when it cannot identify or validate the key. It may return `403` when a valid key lacks access to a resource. Check the URL, the complete key, the header for your protocol, and access to the target model.
+
+The `x-request-id` response header identifies a request for support and debugging. See [Status codes and responses](/en/develop-guide/status-code-response) for error bodies, rate limit headers, and retries.

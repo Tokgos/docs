@@ -1,0 +1,390 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway Seedream API",
+    "description": "OpenAI-compatible image generation with Seedream models.",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "Image generation"
+    },
+    {
+      "name": "Image generation/Seedream"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "Image generation",
+        "deprecated": false,
+        "description": "Seedream uses `/v1/images/generations`. `model` and `prompt` are required, `response_format` is optional.\n\n| Model | Dimensions | Other parameters |\n| --- | --- | --- |\n| `volcengine/doubao-seedream-5.0-pro` | 2K, 3K or compliant `WIDTHxHEIGHT` | `output_format`, `background`, `response_format`, `watermark`, `optimize_prompt_options` |\n| `volcengine/doubao-seedream-4.5` | 2K, 4K or compliance `WIDTHxHEIGHT` | `response_format`, `watermark`, `optimize_prompt_options`; transparent background capability is subject to the account upstream |\n\nTransparent backgrounds must also be used with `output_format=png`. The current specification does not expose group diagram control and reference diagram fields.",
+        "tags": [
+          "Image generation/Seedream"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "DoubaoSeedream50ProGenerationRequest",
+                "description": "Use Doubao Seedream 5.0 Pro to generate images from text.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "Required. Forward exposes the model ID. The gateway forwards to the OFOX OpenAI Images compatible interface according to the doubao/seedream model family.",
+                    "enum": [
+                      "volcengine/doubao-seedream-5.0-pro",
+                      "volcengine/doubao-seedream-4.5"
+                    ]
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Pictures generate prompt words. Official recommendations are no more than about 300 Chinese characters or 600 English words.",
+                    "examples": [
+                      "A future city floating on the sea of clouds, with movie-level light and shadow and rich architectural details at sunrise"
+                    ]
+                  },
+                  "size": {
+                    "description": "doubao-seedream-5.0: Supports 2K, 3K or specified width and height pixel values; default 2048x2048; total pixel range [2560x1440, 3072x3072x1.1025]; aspect ratio range [1/16, 16].\ndoubao-seedream-4.5: Supports 2K, 4K or specified width and height pixel values; default 2048x2048; total pixel range [2560x1440, 4096x4096]; aspect ratio range [1/16, 16].\ndoubao-seedream-4.0: Supports 1K, 2K, 4K or specified width and height pixel values; default 2048x2048; total pixel range [1280x720, 4096x4096]; aspect ratio range [1/16, 16].",
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "1K",
+                          "1.5K",
+                          "2K"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
+                        "examples": [
+                          "1024x1024",
+                          "2048x2048",
+                          "2816x1584"
+                        ]
+                      }
+                    ]
+                  },
+                  "output_format": {
+                    "type": "string",
+                    "enum": [
+                      "png",
+                      "jpeg"
+                    ],
+                    "default": "jpeg",
+                    "description": "Output picture format. Transparent backgrounds must use png."
+                  },
+                  "background": {
+                    "type": "string",
+                    "enum": [
+                      "opaque",
+                      "transparent"
+                    ],
+                    "default": "opaque",
+                    "description": "Output background. transparent can only be used with output_format=png."
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "Response format. b64_json returns Base64; url returns a temporary image link; the default is b64_json.",
+                    "default": "b64_json",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
+                  },
+                  "watermark": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to add a watermark to the generated image."
+                  },
+                  "optimize_prompt_options": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "mode"
+                    ],
+                    "properties": {
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "standard",
+                          "fast"
+                        ],
+                        "description": "Prompt word optimization mode. Standard gives priority to effect, and fast gives priority to speed."
+                      }
+                    },
+                    "description": "Volcano engine prompt word optimization settings."
+                  }
+                },
+                "allOf": [
+                  {
+                    "if": {
+                      "required": [
+                        "background"
+                      ],
+                      "properties": {
+                        "background": {
+                          "const": "transparent"
+                        }
+                      }
+                    },
+                    "then": {
+                      "required": [
+                        "output_format"
+                      ],
+                      "properties": {
+                        "output_format": {
+                          "const": "png"
+                        }
+                      }
+                    }
+                  }
+                ],
+                "examples": [
+                  {
+                    "model": "volcengine/doubao-seedream-5.0-pro",
+                    "prompt": "A future city floating on the sea of clouds, with movie-level light and shadow at sunrise",
+                    "size": "2K",
+                    "output_format": "png",
+                    "response_format": "b64_json",
+                    "watermark": false,
+                    "optimize_prompt_options": {
+                      "mode": "standard"
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "model": "volcengine/doubao-seedream-4.5",
+                "prompt": "The scenery of the mountains at sunset, the setting sun reflects the mountains and the sky, the light and shadow are soft, the picture is natural and delicate, and has a cinematic feel.",
+                "size": "1024x1024"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "DoubaoSeedream50ProGenerationResponse",
+                  "description": "Doubao Seedream 5.0 Pro image generation successful response.",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "format": "int64",
+                      "minimum": 0,
+                      "description": "Image creation time, Unix timestamp, unit is seconds."
+                    },
+                    "data": {
+                      "type": "array",
+                      "minItems": 1,
+                      "maxItems": 1,
+                      "description": "Generate results. The model returns one image at a time.",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "index": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Results index."
+                          },
+                          "b64_json": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Base64 encoded image; returned when response_format=b64_json."
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "Temporary image link; returned when response_format=url."
+                          }
+                        },
+                        "oneOf": [
+                          {
+                            "required": [
+                              "b64_json"
+                            ]
+                          },
+                          {
+                            "required": [
+                              "url"
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "The model ID that actually executes the request."
+                    },
+                    "size": {
+                      "type": "string",
+                      "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
+                      "description": "actual generated size."
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "jpeg"
+                      ],
+                      "description": "Actual output format."
+                    },
+                    "background": {
+                      "type": "string",
+                      "enum": [
+                        "opaque",
+                        "transparent"
+                      ],
+                      "description": "The actual background type used."
+                    },
+                    "usage": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "The usage information generated this time.",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "Enter the number of tokens."
+                        },
+                        "input_tokens_details": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "text_tokens": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "description": "The number of tokens consumed by the prompt word."
+                            },
+                            "image_tokens": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "description": "Enter the number of tokens consumed by the image."
+                            }
+                          }
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "Output the number of tokens."
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "Total number of tokens."
+                        },
+                        "generated_images": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "Number of images generated."
+                        }
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "created": 1784696685,
+                      "data": [
+                        {
+                          "b64_json": "iVBORw0KGgoAAAANSUhEUgAA...",
+                          "index": 0
+                        }
+                      ],
+                      "model": "volcengine/doubao-seedream-5.0-pro",
+                      "size": "2048x2048",
+                      "output_format": "png",
+                      "usage": {
+                        "input_tokens": 42,
+                        "output_tokens": 2048,
+                        "total_tokens": 2090,
+                        "generated_images": 1
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "created": 1788920400,
+                  "data": [
+                    {
+                      "index": 0,
+                      "b64_json": "iVBORw0KGgoAAAANSUhEUgAA..."
+                    }
+                  ],
+                  "model": "volcengine/doubao-seedream-5.0-pro",
+                  "size": "2048x2048"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-model-capabilities": {
+          "volcengine/doubao-seedream-5.0-pro": [
+            "prompt",
+            "size",
+            "output_format",
+            "background",
+            "response_format",
+            "watermark",
+            "optimize_prompt_options"
+          ],
+          "volcengine/doubao-seedream-4.5": [
+            "prompt",
+            "size",
+            "response_format",
+            "watermark",
+            "optimize_prompt_options"
+          ]
+        }
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "production environment"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

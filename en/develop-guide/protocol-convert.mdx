@@ -1,0 +1,44 @@
+---
+title: "Protocol conversion"
+sidebarTitle: "Protocol conversion"
+description: "Choose an incoming request protocol and call supported models through Tikway."
+---
+
+Model providers use different request fields, authentication headers, and response structures. Tikway adapts supported protocol differences behind one gateway.
+
+Choose a request protocol first, then call its path. The path determines the request and response format; `model` selects the model. Parameter, tool, and multimodal support still vary by model.
+
+| Request protocol | Path | Authentication |
+| --- | --- | --- |
+| OpenAI Chat Completions | `/v1/chat/completions` | `Authorization: Bearer` |
+| OpenAI Responses | `/v1/responses` | `Authorization: Bearer` |
+| Anthropic Messages | `/v1/messages` | `x-api-key` |
+| Gemini Generate Content | `/v1beta/models/{model}:generateContent` | `x-goog-api-key` |
+
+See [Gateway and authentication](/en/develop-guide/gateway-auth) for full URLs and examples.
+
+## One request format for compatible models
+
+For models that support Chat Completions, you can use the same basic request structure:
+
+```bash
+curl https://api.tikway.ai/v1/chat/completions \
+  -H "Authorization: Bearer $TIKWAY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/gpt-5.6-terra",
+    "messages": [{"role": "user", "content": "Write a tagline for an independent coffee shop."}]
+  }'
+```
+
+When switching models within the same protocol, change `model` first. Then check whether the new model supports the tools, images, audio, and sampling parameters in your request.
+
+## What Tikway adapts
+
+Tikway routes requests to the selected model service, applies supported field conversions, authenticates the API key, and normalizes supported responses. This lets applications reuse an integration as new models become available.
+
+Protocol adaptation does not give every model the same capabilities. A model that does not support a tool or output format may reject the request. Gateway-generated errors follow the incoming protocol; see [Status codes and responses](/en/develop-guide/status-code-response) for handling advice.
+
+## When to use it
+
+Use a common request protocol to compare compatible models, build an application with several models, and reduce the number of provider-specific integrations you maintain. Before adopting a model, check its supported inputs, parameters, and output format in the API Reference.

@@ -1,0 +1,33 @@
+---
+title: "Multi-turn Responses"
+sidebarTitle: "Multi-turn conversations"
+description: "Continue a Responses conversation with previous_response_id or conversation."
+---
+
+Use `previous_response_id` to continue a stored response chain. The next request only needs the new input and the prior response ID.
+
+## First turn
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "instructions": "You are a concise, practical travel planner.",
+  "input": "How should I spend my first day in Hangzhou?",
+  "store": true
+}
+```
+
+Suppose the response ID is `resp_01Jfirst`.
+
+## Second turn
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "previous_response_id": "resp_01Jfirst",
+  "instructions": "You are a concise, practical travel planner.",
+  "input": "Make the afternoon quieter."
+}
+```
+
+`previous_response_id` continues conversation state but does **not** automatically inherit the previous `instructions`. Repeat instructions that must remain in effect. Do not use `previous_response_id` and `conversation` in the same request. For longer-lived conversation resources, use a `conversation` ID instead.

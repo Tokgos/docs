@@ -1,0 +1,881 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway GPT Image API",
+    "description": "OpenAI-compatible image generation and editing with GPT Image models.",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "Image generation"
+    },
+    {
+      "name": "Image generation/GPT Image"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "Image generation",
+        "deprecated": false,
+        "description": "The gateway requires `model` to be passed in explicitly. Different models only support parameter combinations in the table below.\n\n| Model | Dimensions | Quality | Model-specific parameters |\n| --- | --- | --- | --- |\n| `gpt-image-2.5-sunburst` / `flare` (including snapshots) | Any `WIDTHxHEIGHT` (16 multiples, 1:3~3:1, up to 3840x2160) | `auto/low/medium/high/xhigh/max` | `background`, `moderation`, `output_format`, `output_compression`, `stream`, `partial_images` |\n| `gpt-image-2` (including snapshots) | Same as above | `auto/low/medium/high` | Same as above; transparent background is still a preview capability |\n| `gpt-image-1` / `1.5` / `1-mini` | `auto`, 1024×1024, 1536×1024, 1024×1536 | `auto/low/medium/high` | `background`, `moderation`, `output_format`, `output_compression`, `stream`, `partial_images` |\n| `dall-e-3` | 1024×1024, 1792×1024, 1024×1792 | `standard/hd` | `n` can only be 1; supports `style`, `response_format` |\n| `dall-e-2` | 256×256, 512×512, 1024×1024 | `standard` | Support `n=1..10`, `response_format` |",
+        "tags": [
+          "Image generation/GPT Image"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32000,
+                    "description": "Required. To generate a text description of the image; GPT Image model has a maximum length of 32,000 characters, dall-e-2 has a maximum length of 1,000 characters, and dall-e-3 has a maximum length of 4,000 characters."
+                  },
+                  "background": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "transparent",
+                      "opaque",
+                      "auto",
+                      null
+                    ],
+                    "description": "Background settings, only supported by GPT Image model. When using transparent output_format must be png or webp."
+                  },
+                  "model": {
+                    "type": "string",
+                    "enum": [
+                      "gpt-image-2.5-sunburst",
+                      "gpt-image-2.5-sunburst-2026-09-08",
+                      "gpt-image-2.5-flare",
+                      "gpt-image-2.5-flare-2026-09-08",
+                      "gpt-image-2",
+                      "gpt-image-2-2026-04-21",
+                      "gpt-image-1.5",
+                      "gpt-image-1",
+                      "gpt-image-1-mini",
+                      "dall-e-2",
+                      "dall-e-3"
+                    ],
+                    "description": "Required. Image generation model. The gateway will not adopt OpenAI's dall-e-2 default value, and the model must be passed explicitly."
+                  },
+                  "moderation": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "low",
+                      "auto",
+                      null
+                    ],
+                    "description": "Content moderation level, only supported by the GPT Image model. auto is the default value."
+                  },
+                  "n": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 1,
+                    "maximum": 10,
+                    "description": "The number of images generated. dall-e-3 only supports 1."
+                  },
+                  "output_compression": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 100,
+                    "description": "Image compression ratio (0–100), only supported by webp or jpeg output of GPT Image, default 100."
+                  },
+                  "output_format": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "png",
+                      "jpeg",
+                      "webp",
+                      null
+                    ],
+                    "description": "Output image format, only supported by GPT Image model."
+                  },
+                  "partial_images": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 3,
+                    "description": "The number of intermediate images returned in the streaming response, only supported by the GPT Image model."
+                  },
+                  "quality": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "auto",
+                      "low",
+                      "medium",
+                      "high",
+                      "xhigh",
+                      "max",
+                      "standard",
+                      "hd",
+                      null
+                    ],
+                    "description": "Image quality. GPT Image supports auto/low/medium/high; GPT Image 2.5 additionally supports xhigh/max; dall-e-3 supports standard/hd; dall-e-2 only supports standard."
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "Only dall-e-2 and dall-e-3 support url or b64_json. The GPT Image model always returns Base64 and this upstream parameter is not supported.",
+                    "default": "b64_json",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
+                  },
+                  "size": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "auto",
+                      "256x256",
+                      "512x512",
+                      "1024x1024",
+                      "1536x1024",
+                      "1024x1536",
+                      "1792x1024",
+                      "1024x1792",
+                      null
+                    ],
+                    "description": "Image size. GPT Image 2/2.5 supports WIDTHxHEIGHT: width and height are multiples of 16, ratio 1:3~3:1, up to 3840x2160; other GPT Images use auto, 1024x1024, 1536x1024 or 1024x1536; supported by dall-e-2 256x256, 512x512, 1024x1024; dall-e-3 supports 1024x1024, 1792x1024, 1024x1792."
+                  },
+                  "stream": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ],
+                    "description": "Whether to use SSE streaming generation, only supported by GPT Image model, default false."
+                  },
+                  "style": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "vivid",
+                      "natural",
+                      null
+                    ],
+                    "description": "Generate style, only supported by dall-e-3."
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "The unique identifier of the end user, used for abuse monitoring and detection."
+                  }
+                },
+                "examples": [
+                  {
+                    "model": "gpt-image-1.5",
+                    "prompt": "A cute baby sea otter, watercolor illustration style",
+                    "n": 1,
+                    "size": "1024x1024",
+                    "output_format": "png",
+                    "quality": "medium"
+                  }
+                ]
+              },
+              "examples": {
+                "Default": {
+                  "value": {
+                    "model": "gpt-image-2",
+                    "prompt": "Generate a photorealistic red apple resting on a rustic wooden table, soft window light, shallow depth of field.",
+                    "size": "1024x1024",
+                    "quality": "high",
+                    "output_format": "png"
+                  },
+                  "summary": "Default"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "Unix timestamp in seconds when the image was created."
+                    },
+                    "background": {
+                      "type": "string",
+                      "enum": [
+                        "transparent",
+                        "opaque"
+                      ],
+                      "description": "The actual background settings used."
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Generate a list of results.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "description": "Base64 encoded image data. GPT Image is returned by default; DALL·E is returned when response_format=b64_json."
+                          },
+                          "revised_prompt": {
+                            "type": "string",
+                            "description": "DALL·E 3 Revision prompt words actually used."
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "Generate image URL. Returned only when DALL·E and response_format=url; valid for 60 minutes."
+                          }
+                        }
+                      }
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "webp",
+                        "jpeg"
+                      ],
+                      "description": "Actual output image format."
+                    },
+                    "quality": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "description": "Actual build quality."
+                    },
+                    "size": {
+                      "type": "string",
+                      "description": "The actual resulting image size."
+                    },
+                    "usage": {
+                      "type": "object",
+                      "description": "The token usage of the GPT Image model.",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "description": "Number of tokens for input (text and image)."
+                        },
+                        "input_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "Enter the number of image tokens."
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "Enter the text token number."
+                            }
+                          }
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "description": "Output the number of tokens."
+                        },
+                        "output_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "Output the number of image tokens."
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "Output text token number."
+                            }
+                          }
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "description": "The total number of input and output tokens."
+                        }
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "created": 1713833628,
+                      "data": [
+                        {
+                          "b64_json": "..."
+                        }
+                      ],
+                      "usage": {
+                        "total_tokens": 100,
+                        "input_tokens": 50,
+                        "output_tokens": 50,
+                        "input_tokens_details": {
+                          "text_tokens": 10,
+                          "image_tokens": 40
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "created": 1713833628,
+                  "data": [
+                    {
+                      "b64_json": "..."
+                    }
+                  ],
+                  "usage": {
+                    "total_tokens": 100,
+                    "input_tokens": 50,
+                    "output_tokens": 50,
+                    "input_tokens_details": {
+                      "text_tokens": 10,
+                      "image_tokens": 40
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-model-capabilities": {
+          "gpt-image-2.5-*": [
+            "background",
+            "moderation",
+            "n",
+            "output_compression",
+            "output_format",
+            "partial_images",
+            "quality",
+            "size",
+            "stream",
+            "user"
+          ],
+          "gpt-image-2*": [
+            "background",
+            "moderation",
+            "n",
+            "output_compression",
+            "output_format",
+            "partial_images",
+            "quality",
+            "size",
+            "stream",
+            "user"
+          ],
+          "gpt-image-1*": [
+            "background",
+            "moderation",
+            "n",
+            "output_compression",
+            "output_format",
+            "partial_images",
+            "quality",
+            "size",
+            "stream",
+            "user"
+          ],
+          "dall-e-3": [
+            "n",
+            "quality",
+            "response_format",
+            "size",
+            "style",
+            "user"
+          ],
+          "dall-e-2": [
+            "n",
+            "quality",
+            "response_format",
+            "size",
+            "user"
+          ]
+        }
+      }
+    },
+    "/v1/images/edits": {
+      "post": {
+        "summary": "Picture editing",
+        "deprecated": false,
+        "description": "The gateway requires `model`, `images` and `prompt` to be passed in explicitly. GPT Image accepts up to 16 reference images; `dall-e-2` only accepts a single PNG input; `dall-e-3` does not support editing.\n\nGPT Image 2/2.5 supports any compliance `WIDTHxHEIGHT`, other GPT Images use the standard three sizes. `input_fidelity`, `background`, `moderation`, `output_format`, `output_compression`, `stream` and `partial_images` are only used for GPT Image series.",
+        "tags": [
+          "Image generation/GPT Image"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "images",
+                  "prompt"
+                ],
+                "properties": {
+                  "images": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 16,
+                    "description": "Required. List of source images to be edited. The maximum number of GPT Image models is 16; each item must provide one of file_id or image_url. If uploading files directly, use the multipart field image[] (or images defined by your gateway).",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "file_id": {
+                          "type": "string",
+                          "description": "The ID of the source image file uploaded to the Files API."
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "description": "Full image URL, or Base64 data URL."
+                        }
+                      }
+                    }
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Required. Text description of how you wish to edit or expand the image."
+                  },
+                  "background": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "transparent",
+                      "opaque",
+                      "auto",
+                      null
+                    ],
+                    "description": "Output background, only supported by GPT Image model. When transparent, output_format must be png or webp."
+                  },
+                  "input_fidelity": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "high",
+                      "low",
+                      null
+                    ],
+                    "description": "The degree of consistency with the original input image, only supported GPT Image models apply."
+                  },
+                  "mask": {
+                    "type": "object",
+                    "description": "Mask used for local redrawing. Choose one of file_id and image_url.",
+                    "properties": {
+                      "file_id": {
+                        "type": "string",
+                        "description": "File ID of the uploaded mask file."
+                      },
+                      "image_url": {
+                        "type": "string",
+                        "description": "Mask image URL or Base64 data URL."
+                      }
+                    }
+                  },
+                  "model": {
+                    "type": "string",
+                    "enum": [
+                      "gpt-image-2.5-sunburst",
+                      "gpt-image-2.5-sunburst-2026-09-08",
+                      "gpt-image-2.5-flare",
+                      "gpt-image-2.5-flare-2026-09-08",
+                      "gpt-image-2",
+                      "gpt-image-2-2026-04-21",
+                      "gpt-image-1.5",
+                      "gpt-image-1",
+                      "gpt-image-1-mini",
+                      "chatgpt-image-latest",
+                      "dall-e-2"
+                    ],
+                    "description": "Required. Mockup for picture editing. dall-e-3 does not support image editing."
+                  },
+                  "moderation": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "low",
+                      "auto",
+                      null
+                    ],
+                    "description": "Content moderation level, only supported by the GPT Image model."
+                  },
+                  "n": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 1,
+                    "maximum": 10,
+                    "description": "The number of edited images to generate."
+                  },
+                  "output_compression": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 100,
+                    "description": "Compression ratio (0–100) for jpeg or webp output, supported only by GPT Image model."
+                  },
+                  "output_format": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "png",
+                      "jpeg",
+                      "webp",
+                      null
+                    ],
+                    "description": "Output image format, only supported by GPT Image model."
+                  },
+                  "partial_images": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 3,
+                    "description": "The number of intermediate graphs generated in the streaming response."
+                  },
+                  "quality": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high",
+                      "xhigh",
+                      "max",
+                      "auto",
+                      null
+                    ],
+                    "description": "Output quality. GPT Image supports low/medium/high/auto; GPT Image 2.5 additionally supports xhigh/max."
+                  },
+                  "size": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "auto",
+                      "1024x1024",
+                      "1536x1024",
+                      "1024x1536",
+                      null
+                    ],
+                    "description": "Image size. GPT Image 2/2.5 supports WIDTHxHEIGHT: width and height are multiples of 16, ratio 1:3~3:1, up to 3840x2160; other GPT Images use auto, 1024x1024, 1536x1024 or 1024x1536; supported by dall-e-2 256x256, 512x512, 1024x1024; dall-e-3 supports 1024x1024, 1792x1024, 1024x1792."
+                  },
+                  "stream": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ],
+                    "description": "Whether to return intermediate and final results as an SSE event stream."
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "A unique identifier for the end user, used for abuse monitoring and detection."
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "dall-e-2 is available as url or b64_json. GPT Image model fixedly returns Base64.",
+                    "default": "b64_json",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
+                  }
+                },
+                "examples": [
+                  {
+                    "images": [
+                      {
+                        "image_url": "https://example.com/source-image.png"
+                      }
+                    ],
+                    "prompt": "Add a watercolor effect to this image",
+                    "model": "gpt-image-1.5",
+                    "quality": "high",
+                    "size": "1024x1024"
+                  }
+                ]
+              },
+              "example": {
+                "model": "gpt-image-2",
+                "prompt": "Keep the apple unchanged and replace only its background with a misty enchanted forest under soft cinematic lighting.",
+                "size": "1024x1024",
+                "quality": "high",
+                "output_format": "png",
+                "images": [
+                  {
+                    "image_url": "https://gd-hbimg.huaban.com/cb36fdfc6ee4707de3ec666d6bc202fb99d9bef326a10d-oQHn3b_fw658"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "The Unix timestamp in seconds when the edit result was created."
+                    },
+                    "background": {
+                      "type": "string",
+                      "enum": [
+                        "transparent",
+                        "opaque"
+                      ],
+                      "description": "The actual output context used."
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Edited image list.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "description": "Base64 encoded image content. The GPT Image model is returned by default."
+                          },
+                          "revised_prompt": {
+                            "type": "string",
+                            "description": "The actual revision prompt word of DALL·E 3; this editing interface usually does not return this field."
+                          },
+                          "url": {
+                            "type": "string",
+                            "description": "Generate image URL. DALL·E is provided when using the URL return format and is usually valid for 60 minutes."
+                          }
+                        }
+                      }
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "webp",
+                        "jpeg"
+                      ],
+                      "description": "Actual output format."
+                    },
+                    "quality": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "auto"
+                      ],
+                      "description": "Output quality for actual use."
+                    },
+                    "size": {
+                      "type": "string",
+                      "description": "The actual generated image size."
+                    },
+                    "usage": {
+                      "type": "object",
+                      "description": "The token usage of the GPT Image model.",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "description": "Enter the number of tokens for text and images."
+                        },
+                        "input_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "Enter the number of image tokens."
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "Enter the text token number."
+                            }
+                          }
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "description": "Output the number of tokens."
+                        },
+                        "output_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "Output the number of image tokens."
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "Output text token number."
+                            }
+                          }
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "description": "The total number of input and output tokens."
+                        }
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "created": 1713833628,
+                      "data": [
+                        {
+                          "b64_json": "..."
+                        }
+                      ],
+                      "usage": {
+                        "total_tokens": 100,
+                        "input_tokens": 50,
+                        "output_tokens": 50,
+                        "input_tokens_details": {
+                          "text_tokens": 10,
+                          "image_tokens": 40
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "created": 1713833628,
+                  "data": [
+                    {
+                      "b64_json": "..."
+                    }
+                  ],
+                  "usage": {
+                    "total_tokens": 100,
+                    "input_tokens": 50,
+                    "output_tokens": 50,
+                    "input_tokens_details": {
+                      "text_tokens": 10,
+                      "image_tokens": 40
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-model-capabilities": {
+          "gpt-image-*": [
+            "images",
+            "prompt",
+            "background",
+            "input_fidelity",
+            "mask",
+            "moderation",
+            "n",
+            "output_compression",
+            "output_format",
+            "partial_images",
+            "quality",
+            "size",
+            "stream",
+            "user"
+          ],
+          "dall-e-2": [
+            "images",
+            "prompt",
+            "mask",
+            "n",
+            "response_format",
+            "size",
+            "user"
+          ],
+          "dall-e-3": []
+        }
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "production environment"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

@@ -8,7 +8,7 @@ description: "通过 Server-Sent Events 接收 Chat Completions 的增量输出�
 
 ```bash
 curl --no-buffer https://api.tikway.ai/v1/chat/completions \
-  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "openai/gpt-5.6-terra",

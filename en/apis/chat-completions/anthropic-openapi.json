@@ -1,16 +1,16 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Mintlify",
-    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "title": "Tikway Anthropic Messages API",
+    "description": "Anthropic Messages-compatible chat API through the Tikway gateway.",
     "version": "1.0.0"
   },
   "tags": [
     {
-      "name": "对话补全"
+      "name": "Chat completions"
     },
     {
-      "name": "对话补全/Anthropic协议"
+      "name": "Chat completions/Anthropic protocol"
     }
   ],
   "paths": {
@@ -20,7 +20,7 @@
         "deprecated": false,
         "description": "",
         "tags": [
-          "对话补全/Anthropic协议"
+          "Chat completions/Anthropic protocol"
         ],
         "parameters": [],
         "requestBody": {
@@ -36,17 +36,17 @@
                 "properties": {
                   "model": {
                     "type": "string",
-                    "description": "用于生成消息的 Claude 模型 ID，例如 claude-opus-5。"
+                    "description": "The Claude model ID used to generate the message, for example claude-opus-5."
                   },
                   "max_tokens": {
                     "type": "integer",
                     "minimum": 0,
-                    "description": "生成内容的最大词元数。模型可在达到上限前停止；设为 0 可仅预热提示词缓存而不生成回复。"
+                    "description": "The maximum number of tokens to generate content. The model can be stopped before reaching the upper limit; set to 0 to only warm up the prompt cache without generating a reply."
                   },
                   "messages": {
                     "type": "array",
                     "maxItems": 100000,
-                    "description": "输入对话消息。模型按 user 与 assistant 轮次工作；连续同角色消息会合并。没有 system 角色，系统提示词请使用顶层 system。",
+                    "description": "Enter the conversation message. The model works in user and assistant turns; consecutive messages with the same role will be merged. If there is no system role, please use the top-level system for system prompt words.",
                     "items": {
                       "type": "object",
                       "required": [
@@ -60,10 +60,10 @@
                             "user",
                             "assistant"
                           ],
-                          "description": "消息角色。最后一条为 assistant 时，模型会从其内容继续生成。"
+                          "description": "Message role. When the last item is assistant , the model will continue to be generated from its content."
                         },
                         "content": {
-                          "description": "消息内容。字符串等价于只含一个 text 内容块的数组。",
+                          "description": "Message content. A string is equivalent to an array containing only one text block.",
                           "oneOf": [
                             {
                               "type": "string"
@@ -88,20 +88,20 @@
                                       "redacted_thinking",
                                       "search_result"
                                     ],
-                                    "description": "内容块类型。"
+                                    "description": "Content block type."
                                   },
                                   "text": {
                                     "type": "string",
                                     "minLength": 1,
-                                    "description": "text 内容块的文本。"
+                                    "description": "text The text of the content block."
                                   },
                                   "source": {
                                     "type": "string",
-                                    "description": "search_result 来源标识。"
+                                    "description": "search_result source identifier."
                                   },
                                   "cache_control": {
                                     "type": "object",
-                                    "description": "提示词缓存断点配置。",
+                                    "description": "Prompt word cache breakpoint configuration.",
                                     "properties": {
                                       "type": {
                                         "type": "string",
@@ -115,63 +115,63 @@
                                           "5m",
                                           "1h"
                                         ],
-                                        "description": "缓存有效期。"
+                                        "description": "Cache validity period."
                                       }
                                     }
                                   },
                                   "citations": {
                                     "type": "object",
-                                    "description": "文档引用配置。",
+                                    "description": "Document reference configuration.",
                                     "properties": {
                                       "enabled": {
                                         "type": "boolean",
-                                        "description": "是否启用引用。"
+                                        "description": "Whether to enable citations."
                                       }
                                     }
                                   },
                                   "title": {
                                     "type": "string",
-                                    "description": "search_result 标题。"
+                                    "description": "search_result title."
                                   },
                                   "context": {
                                     "type": "string",
-                                    "description": "文档补充上下文。"
+                                    "description": "Documentation adds context."
                                   },
                                   "id": {
                                     "type": "string",
-                                    "description": "tool_use 内容块的唯一调用 ID。"
+                                    "description": "The unique call ID of the tool_use content block."
                                   },
                                   "name": {
                                     "type": "string",
-                                    "description": "tool_use 调用的工具名称。"
+                                    "description": "tool_use The name of the tool called."
                                   },
                                   "input": {
                                     "type": "object",
-                                    "description": "tool_use 的 JSON 输入参数。",
+                                    "description": "JSON input parameters for tool_use.",
                                     "properties": {}
                                   },
                                   "tool_use_id": {
                                     "type": "string",
-                                    "description": "tool_result 所响应的 tool_use ID。"
+                                    "description": "The tool_use ID that tool_result responds to."
                                   },
                                   "content": {
-                                    "description": "tool_result 的结果内容，可为字符串或内容块数组。"
+                                    "description": "The result content of tool_result can be a string or an array of content blocks."
                                   },
                                   "is_error": {
                                     "type": "boolean",
-                                    "description": "tool_result 是否表示工具执行错误。"
+                                    "description": "Whether tool_result indicates a tool execution error."
                                   },
                                   "thinking": {
                                     "type": "string",
-                                    "description": "先前响应返回的 thinking 内容；回传时必须保持原样。"
+                                    "description": "The thinking content returned by the previous response; this must remain intact when passed back."
                                   },
                                   "signature": {
                                     "type": "string",
-                                    "description": "thinking 内容块的签名；回传时必须保持原样。"
+                                    "description": "Signature of the thinking content block; must remain intact on postback."
                                   },
                                   "data": {
                                     "type": "string",
-                                    "description": "redacted_thinking 的加密数据；回传时必须保持原样。"
+                                    "description": "Encrypted data for redacted_thinking; must be returned intact."
                                   }
                                 }
                               }
@@ -182,7 +182,7 @@
                     }
                   },
                   "system": {
-                    "description": "系统提示词。Messages API 不支持 system 角色消息，应使用此字段。",
+                    "description": "System prompt word. The Messages API does not support system role messages, this field should be used.",
                     "oneOf": [
                       {
                         "type": "string"
@@ -204,7 +204,7 @@
                             },
                             "text": {
                               "type": "string",
-                              "description": "系统提示词文本。"
+                              "description": "System prompt word text."
                             },
                             "cache_control": {
                               "type": "object",
@@ -231,11 +231,11 @@
                   },
                   "stream": {
                     "type": "boolean",
-                    "description": "是否以 Server-Sent Events 流式返回消息事件。"
+                    "description": "Whether to stream message events as Server-Sent Events."
                   },
                   "stop_sequences": {
                     "type": "array",
-                    "description": "自定义停止序列；模型生成到任一序列时停止。",
+                    "description": "Customize stop sequence; model generation stops when it reaches any sequence.",
                     "items": {
                       "type": "string"
                     }
@@ -244,21 +244,21 @@
                     "type": "number",
                     "minimum": 0,
                     "maximum": 1,
-                    "description": "采样温度。较高值使输出更随机；通常与 top_p、top_k 二选一调整。"
+                    "description": "Sampling temperature. Higher values ​​make the output more random; usually adjusted with top_p, top_k."
                   },
                   "top_p": {
                     "type": "number",
                     "minimum": 0,
                     "maximum": 1,
-                    "description": "核采样阈值。"
+                    "description": "Kernel sampling threshold."
                   },
                   "top_k": {
                     "type": "integer",
                     "minimum": 0,
-                    "description": "每步采样时保留的最高概率候选词元数。"
+                    "description": "The number of candidate tokens with the highest probability retained during each sampling step."
                   },
                   "thinking": {
-                    "description": "扩展思考配置。可选 enabled、adaptive、disabled，或传入 null。启用思考时，思考词元计入 max_tokens。",
+                    "description": "Extended thinking configuration. Optional enabled, adaptive, disabled, or passed in null. When think is enabled, think tokens count toward max_tokens.",
                     "oneOf": [
                       {
                         "title": "Enabled thinking",
@@ -270,70 +270,116 @@
                         "properties": {
                           "type": {
                             "type": "string",
-                            "enum": ["enabled"]
+                            "enum": [
+                              "enabled"
+                            ]
                           },
                           "budget_tokens": {
                             "type": "integer",
                             "minimum": 1024,
-                            "description": "思考词元预算，必须小于 max_tokens。"
+                            "description": "Think about the token budget, which must be less than max_tokens."
                           },
                           "block_binding": {
-                            "description": "回传的思考块未通过对话前缀校验时的处理方式；省略、null 或空对象均使用默认行为。",
-                            "type": ["object", "null"],
+                            "description": "How to handle when the returned thought block does not pass the dialog prefix check; omitted, null or empty objects use the default behavior.",
+                            "type": [
+                              "object",
+                              "null"
+                            ],
                             "properties": {
                               "prefix_mismatch_behavior": {
-                                "type": ["string", "null"],
-                                "enum": ["error", "drop_block", null],
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "error",
+                                  "drop_block",
+                                  null
+                                ],
                                 "default": "error",
-                                "description": "error 会返回 400；drop_block 会移除不匹配的思考块。"
+                                "description": "error will return 400; drop_block will remove unmatched think blocks."
                               }
                             }
                           },
                           "display": {
-                            "type": ["string", "null"],
-                            "enum": ["summarized", "omitted", "updates", null],
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "summarized",
+                              "omitted",
+                              "updates",
+                              null
+                            ],
                             "default": "summarized",
-                            "description": "思考内容的呈现方式；omitted 会隐藏内容但保留签名以供多轮对话使用。"
+                            "description": "Think about how the content is presented; omitted will hide the content but retain the signature for multiple rounds of conversation."
                           }
                         }
                       },
                       {
                         "title": "Adaptive thinking",
                         "type": "object",
-                        "required": ["type"],
+                        "required": [
+                          "type"
+                        ],
                         "properties": {
                           "type": {
                             "type": "string",
-                            "enum": ["adaptive"]
+                            "enum": [
+                              "adaptive"
+                            ]
                           },
                           "block_binding": {
-                            "description": "回传的思考块未通过对话前缀校验时的处理方式；省略、null 或空对象均使用默认行为。",
-                            "type": ["object", "null"],
+                            "description": "How to handle when the returned thought block does not pass the dialog prefix check; omitted, null or empty objects use the default behavior.",
+                            "type": [
+                              "object",
+                              "null"
+                            ],
                             "properties": {
                               "prefix_mismatch_behavior": {
-                                "type": ["string", "null"],
-                                "enum": ["error", "drop_block", null],
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "error",
+                                  "drop_block",
+                                  null
+                                ],
                                 "default": "error",
-                                "description": "error 会返回 400；drop_block 会移除不匹配的思考块。"
+                                "description": "error will return 400; drop_block will remove unmatched think blocks."
                               }
                             }
                           },
                           "display": {
-                            "type": ["string", "null"],
-                            "enum": ["summarized", "omitted", "updates", null],
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "summarized",
+                              "omitted",
+                              "updates",
+                              null
+                            ],
                             "default": "summarized",
-                            "description": "思考内容的呈现方式；omitted 会隐藏内容但保留签名以供多轮对话使用。"
+                            "description": "Think about how the content is presented; omitted will hide the content but retain the signature for multiple rounds of conversation."
                           }
                         }
                       },
                       {
                         "title": "Disabled thinking",
                         "type": "object",
-                        "required": ["type"],
+                        "required": [
+                          "type"
+                        ],
                         "properties": {
                           "type": {
                             "type": "string",
-                            "enum": ["disabled"]
+                            "enum": [
+                              "disabled"
+                            ]
                           }
                         }
                       },
@@ -345,26 +391,26 @@
                   },
                   "tools": {
                     "type": "array",
-                    "description": "可供 Claude 调用的工具定义。",
+                    "description": "A tool definition that can be called by Claude.",
                     "items": {
                       "type": "object",
                       "properties": {
                         "name": {
                           "type": "string",
-                          "description": "工具名称。"
+                          "description": "Tool name."
                         },
                         "description": {
                           "type": "string",
-                          "description": "工具用途说明。"
+                          "description": "Description of tool usage."
                         },
                         "input_schema": {
                           "type": "object",
-                          "description": "工具输入参数的 JSON Schema。",
+                          "description": "JSON Schema of tool input parameters.",
                           "properties": {}
                         },
                         "type": {
                           "type": "string",
-                          "description": "工具类型；自定义工具通常为 custom 或省略。"
+                          "description": "Tool type; custom tools are usually custom or omitted."
                         },
                         "cache_control": {
                           "type": "object",
@@ -389,7 +435,7 @@
                   },
                   "tool_choice": {
                     "type": "object",
-                    "description": "控制 Claude 是否及如何选择工具。",
+                    "description": "Controls whether and how Claude selects tools.",
                     "properties": {
                       "type": {
                         "type": "string",
@@ -399,21 +445,21 @@
                           "tool",
                           "none"
                         ],
-                        "description": "工具选择模式。"
+                        "description": "Tool selection mode."
                       },
                       "name": {
                         "type": "string",
-                        "description": "type 为 tool 时强制调用的工具名称。"
+                        "description": "The name of the tool that is forced to be called when type is tool."
                       },
                       "disable_parallel_tool_use": {
                         "type": "boolean",
-                        "description": "是否禁止并行工具调用。"
+                        "description": "Whether to disable parallel tool calls."
                       }
                     }
                   },
                   "output_config": {
                     "type": "object",
-                    "description": "输出配置。",
+                    "description": "Output configuration.",
                     "properties": {
                       "effort": {
                         "type": "string",
@@ -422,11 +468,11 @@
                           "medium",
                           "high"
                         ],
-                        "description": "输出推理/质量投入级别。"
+                        "description": "Output reasoning/quality input level."
                       },
                       "format": {
                         "type": "object",
-                        "description": "结构化输出格式。",
+                        "description": "Structured output format.",
                         "properties": {
                           "type": {
                             "type": "string",
@@ -436,7 +482,7 @@
                           },
                           "schema": {
                             "type": "object",
-                            "description": "目标 JSON Schema。",
+                            "description": "Target JSON Schema.",
                             "properties": {}
                           }
                         }
@@ -445,7 +491,7 @@
                   },
                   "output_format": {
                     "type": "object",
-                    "description": "JSON 输出格式配置。",
+                    "description": "JSON output format configuration.",
                     "properties": {
                       "type": {
                         "type": "string",
@@ -455,18 +501,18 @@
                       },
                       "schema": {
                         "type": "object",
-                        "description": "目标 JSON Schema。",
+                        "description": "Target JSON Schema.",
                         "properties": {}
                       }
                     }
                   },
                   "metadata": {
                     "type": "object",
-                    "description": "请求元数据。",
+                    "description": "Request metadata.",
                     "properties": {
                       "user_id": {
                         "type": "string",
-                        "description": "终端用户标识。"
+                        "description": "End user identification."
                       }
                     }
                   },
@@ -476,7 +522,7 @@
                       "auto",
                       "standard_only"
                     ],
-                    "description": "服务层级选择。"
+                    "description": "Service level selection."
                   },
                   "speed": {
                     "type": "string",
@@ -484,10 +530,10 @@
                       "standard",
                       "fast"
                     ],
-                    "description": "推理速度模式。"
+                    "description": "Inference speed mode."
                   },
                   "container": {
-                    "description": "代码执行容器配置或容器 ID。",
+                    "description": "Code execution container configuration or container ID.",
                     "oneOf": [
                       {
                         "type": "string"
@@ -510,12 +556,12 @@
                   },
                   "context_management": {
                     "type": "object",
-                    "description": "上下文管理配置。",
+                    "description": "Context management configuration.",
                     "properties": {}
                   },
                   "mcp_servers": {
                     "type": "array",
-                    "description": "MCP 服务器定义。",
+                    "description": "MCP server definition.",
                     "items": {
                       "type": "object",
                       "properties": {
@@ -533,7 +579,7 @@
                   },
                   "cache_control": {
                     "type": "object",
-                    "description": "请求级提示词缓存控制。",
+                    "description": "Request-level prompt word cache control.",
                     "properties": {
                       "type": {
                         "type": "string",
@@ -552,11 +598,11 @@
                   },
                   "diagnostics": {
                     "type": "object",
-                    "description": "诊断信息配置。",
+                    "description": "Diagnostic information configuration.",
                     "properties": {}
                   },
                   "fallback_credit_token": {
-                    "description": "回退服务抵扣令牌。",
+                    "description": "Fallback service deduction token.",
                     "oneOf": [
                       {
                         "type": "string"
@@ -569,12 +615,12 @@
                   },
                   "fallbacks": {
                     "type": "object",
-                    "description": "模型回退配置。",
+                    "description": "Model fallback configuration.",
                     "properties": {}
                   },
                   "inference_geo": {
                     "type": "string",
-                    "description": "推理地域偏好。"
+                    "description": "Reasoning about geographic preferences."
                   }
                 },
                 "examples": [
@@ -592,7 +638,7 @@
                 ]
               },
               "examples": {
-                "文本输入": {
+                "Text input": {
                   "value": {
                     "model": "claude-sonnet-4-6",
                     "max_tokens": 1024,
@@ -604,9 +650,9 @@
                       }
                     ]
                   },
-                  "summary": "文本输入"
+                  "summary": "Text input"
                 },
-                "流式输出": {
+                "Streaming output": {
                   "value": {
                     "model": "claude-sonnet-4-6",
                     "max_tokens": 1024,
@@ -619,9 +665,9 @@
                     ],
                     "stream": true
                   },
-                  "summary": "流式输出"
+                  "summary": "Streaming output"
                 },
-                "图片输入": {
+                "Image input": {
                   "value": {
                     "model": "claude-sonnet-4-6",
                     "max_tokens": 1024,
@@ -645,9 +691,9 @@
                       }
                     ]
                   },
-                  "summary": "图片输入"
+                  "summary": "Image input"
                 },
-                "函数调用": {
+                "Function calling": {
                   "value": {
                     "model": "claude-sonnet-4-6",
                     "max_tokens": 1024,
@@ -676,7 +722,7 @@
                       }
                     ]
                   },
-                  "summary": "函数调用"
+                  "summary": "function call"
                 }
               }
             }
@@ -702,29 +748,29 @@
                   "properties": {
                     "id": {
                       "type": "string",
-                      "description": "消息唯一 ID。"
+                      "description": "Message unique ID."
                     },
                     "type": {
                       "type": "string",
                       "enum": [
                         "message"
                       ],
-                      "description": "对象类型，固定为 message。"
+                      "description": "Object type, fixed to message."
                     },
                     "role": {
                       "type": "string",
                       "enum": [
                         "assistant"
                       ],
-                      "description": "消息角色，固定为 assistant。"
+                      "description": "Message role, fixed to assistant."
                     },
                     "model": {
                       "type": "string",
-                      "description": "实际使用的 Claude 模型 ID。"
+                      "description": "The actual Claude model ID used."
                     },
                     "content": {
                       "type": "array",
-                      "description": "Claude 生成的内容块列表。",
+                      "description": "List of content blocks generated by Claude.",
                       "items": {
                         "type": "object",
                         "required": [
@@ -743,33 +789,33 @@
                               "web_fetch_tool_result",
                               "code_execution_tool_result"
                             ],
-                            "description": "输出内容块类型。"
+                            "description": "Output content block type."
                           },
                           "text": {
                             "type": "string",
-                            "description": "text 内容块的生成文本。"
+                            "description": "text Generated text for the content block."
                           },
                           "citations": {
                             "type": "array",
-                            "description": "文本引用列表。",
+                            "description": "List of textual references.",
                             "items": {
                               "type": "object",
                               "properties": {
                                 "type": {
                                   "type": "string",
-                                  "description": "引用类型。"
+                                  "description": "Reference type."
                                 },
                                 "cited_text": {
                                   "type": "string",
-                                  "description": "被引用文本。"
+                                  "description": "Quoted text."
                                 },
                                 "document_index": {
                                   "type": "integer",
-                                  "description": "源文档索引。"
+                                  "description": "Source document index."
                                 },
                                 "document_title": {
                                   "type": "string",
-                                  "description": "源文档标题。"
+                                  "description": "Source document title."
                                 },
                                 "start_char_index": {
                                   "type": "integer"
@@ -788,39 +834,39 @@
                           },
                           "thinking": {
                             "type": "string",
-                            "description": "扩展思考文本。"
+                            "description": "Extended reflection text."
                           },
                           "signature": {
                             "type": "string",
-                            "description": "思考内容签名；下轮回传时必须保持原样。"
+                            "description": "Think about the content signature; it must remain the same the next time you pass it around."
                           },
                           "data": {
                             "type": "string",
-                            "description": "redacted_thinking 的加密数据。"
+                            "description": "Encrypted data for redacted_thinking."
                           },
                           "id": {
                             "type": "string",
-                            "description": "工具调用 ID。"
+                            "description": "Tool call ID."
                           },
                           "name": {
                             "type": "string",
-                            "description": "被调用工具名称。"
+                            "description": "The name of the called tool."
                           },
                           "input": {
                             "type": "object",
-                            "description": "工具调用输入参数。",
+                            "description": "Tool call input parameters.",
                             "properties": {}
                           },
                           "content": {
-                            "description": "服务器工具调用结果内容。"
+                            "description": "Server tool call result content."
                           },
                           "tool_use_id": {
                             "type": "string",
-                            "description": "关联的工具调用 ID。"
+                            "description": "The associated tool call ID."
                           },
                           "is_error": {
                             "type": "boolean",
-                            "description": "服务器工具结果是否出错。"
+                            "description": "Whether the server tool results are in error."
                           }
                         }
                       }
@@ -836,15 +882,15 @@
                         "refusal",
                         "model_context_window_exceeded"
                       ],
-                      "description": "生成停止原因。"
+                      "description": "Generate a stop reason."
                     },
                     "stop_sequence": {
                       "type": "string",
-                      "description": "若因自定义停止序列结束，则为命中的序列。"
+                      "description": "If the sequence ends due to a custom stop, it is a hit sequence."
                     },
                     "stop_details": {
                       "type": "object",
-                      "description": "拒绝等停止情况的结构化信息。",
+                      "description": "Structured information for rejection and other stopping situations.",
                       "properties": {
                         "type": {
                           "type": "string"
@@ -862,7 +908,7 @@
                     },
                     "usage": {
                       "type": "object",
-                      "description": "计费与限流词元使用统计。",
+                      "description": "Billing and current limiting word usage statistics.",
                       "required": [
                         "input_tokens",
                         "output_tokens"
@@ -871,22 +917,22 @@
                         "input_tokens": {
                           "type": "integer",
                           "minimum": 0,
-                          "description": "输入词元数。"
+                          "description": "Enter the number of tokens."
                         },
                         "output_tokens": {
                           "type": "integer",
                           "minimum": 0,
-                          "description": "输出词元数。"
+                          "description": "Output the number of tokens."
                         },
                         "cache_creation_input_tokens": {
                           "type": "integer",
                           "minimum": 0,
-                          "description": "创建缓存所用输入词元数。"
+                          "description": "The number of input tokens used to create the cache."
                         },
                         "cache_read_input_tokens": {
                           "type": "integer",
                           "minimum": 0,
-                          "description": "从缓存读取的输入词元数。"
+                          "description": "The number of input tokens read from the cache."
                         },
                         "cache_creation": {
                           "type": "object",
@@ -904,7 +950,7 @@
                           "properties": {
                             "thinking_tokens": {
                               "type": "integer",
-                              "description": "思考词元数。"
+                              "description": "Think about word count."
                             }
                           }
                         },
@@ -926,7 +972,7 @@
                             "priority",
                             "batch"
                           ],
-                          "description": "实际服务层级。"
+                          "description": "Actual service level."
                         },
                         "speed": {
                           "type": "string",
@@ -934,20 +980,20 @@
                             "standard",
                             "fast"
                           ],
-                          "description": "实际推理速度。"
+                          "description": "Actual reasoning speed."
                         }
                       }
                     },
                     "container": {
                       "type": "object",
-                      "description": "代码执行容器信息。",
+                      "description": "Code execution container information.",
                       "properties": {
                         "id": {
                           "type": "string"
                         },
                         "expires_at": {
                           "type": "string",
-                          "description": "容器过期时间。"
+                          "description": "Container expiration time."
                         },
                         "skills": {
                           "type": "array",
@@ -959,17 +1005,17 @@
                     },
                     "context_management": {
                       "type": "object",
-                      "description": "服务端应用的上下文管理结果。",
+                      "description": "Context management results of server-side applications.",
                       "properties": {}
                     },
                     "diagnostics": {
                       "type": "object",
-                      "description": "诊断信息，例如缓存未命中原因。",
+                      "description": "Diagnostic information, such as cache miss reasons.",
                       "properties": {}
                     },
                     "input_transformations": {
                       "type": "array",
-                      "description": "API 对输入应用的变换，例如被丢弃的思考块。",
+                      "description": "Transformations applied by the API to the input, such as chunks of thought that are discarded.",
                       "items": {
                         "type": "object",
                         "properties": {
@@ -1144,14 +1190,14 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key",
-        "description": "Tikway API Key。按 Anthropic 原生协议通过 x-api-key 请求头传递。"
+        "description": "Tikway API Key. Passed through the x-api-key request header according to the Anthropic native protocol."
       }
     }
   },
   "servers": [
     {
       "url": "https://api.tikway.ai",
-      "description": "生产环境"
+      "description": "production environment"
     }
   ],
   "security": [

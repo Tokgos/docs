@@ -1,0 +1,756 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway Wan Video API",
+    "description": "OpenAI compatible asynchronous video generation interface of Alibaba Cloud Bailian Wan model.",
+    "version": "1.1.0"
+  },
+  "tags": [
+    {
+      "name": "video generation"
+    },
+    {
+      "name": "Video generation/Wan"
+    }
+  ],
+  "paths": {
+    "/v1/videos": {
+      "post": {
+        "summary": "Create Wan video",
+        "deprecated": false,
+        "description": "Create Wan video tasks via unified `POST /v1/videos`. Model capabilities are subject to the actual callable range of the current Tikway gateway.\n\n| Model | Resolution | Duration | Supported Modes | Audio | Reference Limitations |\n| --- | --- | --- | --- | --- | --- |\n| `wan-3.0` | 480p / 720p / 1080p | 2–30 seconds or -1 smart duration | Vincent, first frame, first and last frame, full-modal reference | Supported, enabled by default | 10 images / 5 videos / 5 audios; you can also upload 1 file or link |\n| `wan-2.7` | 720p / 1080p | Generate 2–15 seconds; reference/edit 2–10 seconds | Vincent, first frame, first and last frame, continuation, reference, edit | Support | Mode related |\n| `wan-2.6` | 720p / 1080p | Generate 2–15 seconds; reference 2–10 seconds | Vincent, first frame, reference; first and last frames/edit using compatible model | Supported; compatibility mode may be silent | Reference raw video 1–5 images/videos |\n\nSource: [Alibaba Cloud Video Generation Model Overview](https://help.aliyun.com/zh/model-studio/use-video-generation). The difference between the official website capabilities and the current unopened capabilities of the gateway can be found in this audit report.",
+        "tags": [
+          "Video generation/Wan"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "WanVideoCreateRequest",
+                "description": "Create a Wan video task. Parameters are narrowed according to the current Tikway gateway capabilities; for differences between models, see operation description and x-model-capabilities.",
+                "type": "object",
+                "required": [
+                  "model"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "enum": [
+                      "wan-3.0",
+                      "wan3.0-video",
+                      "wan-2.7",
+                      "wan-2.6"
+                    ],
+                    "description": "Wan model ID."
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Video generation or editing prompt words."
+                  },
+                  "negative_prompt": {
+                    "type": "string",
+                    "description": "Wan 2.6/2.7 available. Wan 3.0 does not support top-level negative_prompt; if the upstream extension supports it, please put extra_body."
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]*[x*][1-9][0-9]*$",
+                    "description": "Only wan-2.6 supports precise pixel dimensions; use resolution + aspect_ratio for other Wan models."
+                  },
+                  "duration": {
+                    "oneOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -1,
+                        "maximum": 30
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^(?:-1|[2-9]|[12][0-9]|30)$"
+                      }
+                    ],
+                    "description": "Video duration (seconds). Wan 3.0 is 2–30 or -1; the upper limit of Wan 2.7/2.6 changes with the generation mode, see the model capability table for details."
+                  },
+                  "aspect_ratio": {
+                    "type": "string",
+                    "enum": [
+                      "adaptive",
+                      "16:9",
+                      "9:16",
+                      "1:1",
+                      "4:3",
+                      "3:4"
+                    ],
+                    "description": "Video aspect ratio. When producing videos, some models will automatically determine the proportions based on the input material."
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "enum": [
+                      "480p",
+                      "720p",
+                      "1080p"
+                    ],
+                    "description": "Output resolution. Available values ​​for different models or modes are shown in the model capabilities table."
+                  },
+                  "frame_images": {
+                    "type": "array",
+                    "maxItems": 2,
+                    "description": "The first frame or the last frame reference picture; at most one of the same type.",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "image_url"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "first_frame",
+                            "last_frame"
+                          ],
+                          "description": "Reference frame position."
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "Reference image URL string."
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "input_references": {
+                    "type": "array",
+                    "maxItems": 21,
+                    "description": "Wan reference material. Different models and modes have different quantity limits; the reference material of Wan 3.0 cannot be mixed with the first and last frames, and file and link are mutually exclusive.",
+                    "items": {
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "required": [
+                            "image_url"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "video_url"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "audio_url"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "file_url"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "link_url"
+                          ]
+                        }
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "image_url",
+                            "video_url",
+                            "audio_url",
+                            "file_url",
+                            "link_url"
+                          ],
+                          "description": "Optional. Material type; if provided, must be consistent with the corresponding URL field."
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "reference_image",
+                            "reference_video",
+                            "reference_audio",
+                            "source_video",
+                            "first_clip",
+                            "driving_audio",
+                            "file",
+                            "link"
+                          ],
+                          "description": "Material usage. When omitted, normal reference material is inferred from the URL field."
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "Image URL string."
+                        },
+                        "video_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "Video URL string."
+                        },
+                        "audio_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "Audio URL string."
+                        },
+                        "file_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "File URL string."
+                        },
+                        "link_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "Web page URL string."
+                        },
+                        "reference_voice": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Preset patch ID; only used by some models that support patch references."
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "generate_audio": {
+                    "type": "boolean",
+                    "description": "Whether to generate audio. Wan 3.0 is enabled by default; the specific behavior of Wan 2.6/2.7 is determined by the mode."
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "minimum": -1,
+                    "maximum": 2147483647,
+                    "description": "Random seed. Fixed seeds can only improve reproducibility, but do not guarantee that the output will be completely consistent."
+                  },
+                  "callback_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "pattern": "^https://",
+                    "description": "User task callback address. Called by Tikway after the task status changes, it is not directly passed to the model upstream."
+                  },
+                  "extra_body": {
+                    "type": "object",
+                    "description": "Alibaba Cloud Bailian video model expansion parameters. Fields are merged into upstream parameters.",
+                    "properties": {
+                      "prompt_extend": {
+                        "type": "boolean",
+                        "description": "Whether to enable prompt word rewriting."
+                      },
+                      "shot_type": {
+                        "type": "string",
+                        "enum": [
+                          "single",
+                          "multi"
+                        ],
+                        "description": "Single lens or multiple lenses."
+                      },
+                      "watermark": {
+                        "type": "boolean",
+                        "description": "Whether to add watermark."
+                      },
+                      "audio_setting": {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "origin"
+                        ],
+                        "description": "Audio processing during video editing."
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false,
+                "x-model-capabilities": [
+                  {
+                    "model": "wan-3.0",
+                    "resolution": "480p / 720p / 1080p",
+                    "duration": "2–30 seconds or -1 smart duration",
+                    "modes": "Vincent, first frame, first and last frame, full-modal reference",
+                    "audio": "Supported, enabled by default",
+                    "references": "10 pictures / 5 videos / 5 audios; you can also upload 1 file or link"
+                  },
+                  {
+                    "model": "wan-2.7",
+                    "resolution": "720p / 1080p",
+                    "duration": "2–15 seconds to generate; 2–10 seconds to reference/edit",
+                    "modes": "Vincent, first frame, first and last frame, continuation, reference, editing",
+                    "audio": "support",
+                    "references": "Pattern related"
+                  },
+                  {
+                    "model": "wan-2.6",
+                    "resolution": "720p / 1080p",
+                    "duration": "Generate 2–15 seconds; reference 2–10 seconds",
+                    "modes": "Vincent, first frame, reference; first and last frames/editing uses compatible models",
+                    "audio": "Supported; compatibility mode may be silent",
+                    "references": "Reference student videos 1–5 pictures/videos"
+                  }
+                ]
+              },
+              "examples": {
+                "Text to video": {
+                  "summary": "Vincent Video",
+                  "value": {
+                    "model": "wan-3.0",
+                    "prompt": "A golden retriever runs on the beach at sunset. The camera follows smoothly, and the picture has a natural and delicate film quality.",
+                    "duration": 8,
+                    "resolution": "1080p",
+                    "aspect_ratio": "16:9",
+                    "generate_audio": true
+                  }
+                },
+                "First and last frame to video": {
+                  "summary": "First and last frame video",
+                  "value": {
+                    "model": "wan-3.0",
+                    "prompt": "Transition naturally from the first frame to the last frame, keeping the subject, composition and visual style coherent.",
+                    "duration": 8,
+                    "resolution": "720p",
+                    "aspect_ratio": "adaptive",
+                    "frame_images": [
+                      {
+                        "type": "first_frame",
+                        "image_url": "https://example.com/assets/first-frame.jpg"
+                      },
+                      {
+                        "type": "last_frame",
+                        "image_url": "https://example.com/assets/last-frame.jpg"
+                      }
+                    ]
+                  }
+                },
+                "Multimodal reference": {
+                  "summary": "Full modal reference",
+                  "value": {
+                    "model": "wan-3.0",
+                    "prompt": "Maintain the identity and visual style of the reference material to produce a coherent, cinematic short film.",
+                    "duration": 10,
+                    "resolution": "720p",
+                    "input_references": [
+                      {
+                        "image_url": "https://example.com/assets/character.jpg",
+                        "role": "reference_image"
+                      },
+                      {
+                        "video_url": "https://example.com/assets/style.mp4",
+                        "role": "reference_video"
+                      },
+                      {
+                        "audio_url": "https://example.com/assets/voice.mp3",
+                        "role": "reference_audio"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$id": "https://api.example.com/schemas/videos/create-response.json",
+                  "title": "Create a video task response",
+                  "description": "POST /v1/videos Response parameters after the video task is successfully created. The interface returns HTTP 202.",
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "status",
+                    "polling_url"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "The unique identifier of the video generation task, used for subsequent query of task status.",
+                      "examples": [
+                        "9552de3d-171f-4cca-b492-7baa56523239"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "queue"
+                      ],
+                      "description": "Task creation status. pending means that the task has been created and is waiting for submission; queue means that the task has entered the generation queue.",
+                      "examples": [
+                        "queue"
+                      ]
+                    },
+                    "polling_url": {
+                      "type": "string",
+                      "format": "uri",
+                      "pattern": "^https://",
+                      "description": "Video task query address, the client can poll the task status through GET request.",
+                      "examples": [
+                        "https://api.example.com/v1/videos/9552de3d-171f-4cca-b492-7baa56523239"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "example": {
+                  "id": "9552de3d-171f-4cca-b492-7baa56523239",
+                  "status": "pending",
+                  "polling_url": "https://api.tikway.ai/v1/videos/9552de3d-171f-4cca-b492-7baa56523239"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/videos/{id}": {
+      "get": {
+        "summary": "Query Wan video tasks",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "Video generation/Wan"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier for the video generation task.",
+            "required": true,
+            "example": "8f7c2e41-5a93-4b16-9d72-3c84e1a6f205",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-debugger-mode",
+            "in": "header",
+            "description": "",
+            "example": "true",
+            "schema": {
+              "type": "string",
+              "default": "true"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$id": "https://api.example.com/schemas/videos/retrieve-response.json",
+                  "title": "Query video task response",
+                  "description": "Response parameters for GET /v1/videos/{id}. Data is returned only when the task status is completed.",
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "id",
+                    "model",
+                    "prompt",
+                    "status",
+                    "usage"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Video task creation time, Unix timestamp, unit is seconds.",
+                      "examples": [
+                        1789108566
+                      ]
+                    },
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "The unique identifier of the video generation task.",
+                      "examples": [
+                        "9552de3d-171f-4cca-b492-7baa56523239"
+                      ]
+                    },
+                    "model": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "The model ID used when creating the video task.",
+                      "examples": [
+                        "bytedance/seedance-2.0-mini"
+                      ]
+                    },
+                    "prompt": {
+                      "type": "string",
+                      "description": "Prompt word submitted when creating a video task.",
+                      "examples": [
+                        "A golden retriever runs on the beach at sunset. The camera follows steadily, and the picture presents a natural and delicate film quality."
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "queue",
+                        "in_progress",
+                        "completed",
+                        "failed",
+                        "cancelled",
+                        "expired"
+                      ],
+                      "description": "Task status. pending means waiting for processing; queue means queuing; in_progress means generation or platform processing is in progress; completed means both video and OSS resources have been processed; failed means failure; cancelled means canceled; expired means expired.",
+                      "examples": [
+                        "in_progress"
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Video task results. Returned only if status is completed.",
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "required": [
+                              "type",
+                              "video_url"
+                            ],
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "video_url"
+                                ],
+                                "description": "Platform OSS video"
+                              },
+                              "video_url": {
+                                "type": "string",
+                                "format": "uri",
+                                "description": "Platform OSS video address, valid for 24 hours"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "required": [
+                              "type",
+                              "native_url"
+                            ],
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "native_url"
+                                ],
+                                "description": "Supplier original video"
+                              },
+                              "native_url": {
+                                "type": "string",
+                                "format": "uri",
+                                "description": "The original video address returned by the supplier"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "required": [
+                              "type",
+                              "first_url",
+                              "last_url"
+                            ],
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "frame"
+                                ],
+                                "description": "Video first and last frames"
+                              },
+                              "first_url": {
+                                "type": "string",
+                                "format": "uri",
+                                "description": "The address of the first frame of the video, valid for 24 hours"
+                              },
+                              "last_url": {
+                                "type": "string",
+                                "format": "uri",
+                                "description": "Video last frame address, valid for 24 hours"
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "usage": {
+                      "type": "object",
+                      "description": "Usage information for video tasks.",
+                      "required": [
+                        "video_seconds"
+                      ],
+                      "properties": {
+                        "video_seconds": {
+                          "description": "The duration of the generated video, in seconds. May be null if it cannot be determined at the moment.",
+                          "oneOf": [
+                            {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "examples": [
+                            4
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "error": {
+                      "type": "object",
+                      "description": "Task failure information. Usually only returned if status is failed.",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "description": "Error code returned by the vendor or platform.",
+                          "examples": [
+                            "video_generation_failed"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "The specific reason why the task failed.",
+                          "examples": [
+                            "Video generation failed."
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "status": {
+                            "const": "completed"
+                          }
+                        },
+                        "required": [
+                          "status"
+                        ]
+                      },
+                      "then": {
+                        "required": [
+                          "data"
+                        ]
+                      },
+                      "else": {
+                        "not": {
+                          "required": [
+                            "data"
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "additionalProperties": false
+                },
+                "examples": {
+                  "In progress": {
+                    "summary": "In progress",
+                    "value": {
+                      "created": 1789108566,
+                      "id": "9552de3d-171f-4cca-b492-7baa56523239",
+                      "model": "wan-3.0",
+                      "prompt": "A golden retriever runs on the beach at sunset. The camera follows steadily, and the sea breeze blows the hair. The picture presents a natural and delicate film texture.",
+                      "status": "in_progress",
+                      "usage": {
+                        "video_seconds": 4
+                      }
+                    }
+                  },
+                  "Completed": {
+                    "summary": "Completed",
+                    "value": {
+                      "created": 1789108566,
+                      "id": "9552de3d-171f-4cca-b492-7baa56523239",
+                      "model": "wan-3.0",
+                      "prompt": "A golden retriever runs on the beach at sunset. The camera follows steadily, and the sea breeze blows the hair. The picture presents a natural and delicate film texture.",
+                      "status": "completed",
+                      "data": [
+                        {
+                          "type": "video_url",
+                          "video_url": "https://oss.example.com/temp/2026/09/11/video.mp4?expires=86400"
+                        },
+                        {
+                          "type": "native_url",
+                          "native_url": "https://provider.example.com/videos/video.mp4?expires=86400"
+                        },
+                        {
+                          "type": "frame",
+                          "first_url": "https://oss.example.com/temp/2026/09/11/video.mp4?x-oss-process=video%2Fsnapshot%2Ct_0%2Cf_jpg%2Cw_0%2Ch_0",
+                          "last_url": "https://oss.example.com/temp/2026/09/11/video.mp4?x-oss-process=video%2Fsnapshot%2Ct_3999%2Cf_jpg%2Cw_0%2Ch_0"
+                        }
+                      ],
+                      "usage": {
+                        "video_seconds": 4
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "production environment"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

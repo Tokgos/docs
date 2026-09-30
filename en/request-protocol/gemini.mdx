@@ -1,0 +1,18 @@
+---
+title: "Gemini protocol"
+sidebarTitle: "Gemini protocol"
+description: "Send native Gemini generateContent requests through Tikway."
+---
+
+The Gemini API uses the `x-goog-api-key` header. The model ID appears in the URL, and messages use `contents[].parts[]`. Endpoints begin with `/v1beta/models/`.
+
+```bash
+curl 'https://api.tikway.ai/v1beta/models/gemini-2.5-flash:generateContent' \
+  -H "x-goog-api-key: $TIKWAY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{"role": "user", "parts": [{"text": "Hello"}]}]
+  }'
+```
+
+Use `:streamGenerateContent` for streaming and `/v1beta/cachedContents` for explicit caching. Request and response fields use Gemini REST camelCase names. For the full schema, open **API Reference → Chat completions → Gemini protocol**. See [Status codes and responses](/en/develop-guide/status-code-response) for errors and retry advice.

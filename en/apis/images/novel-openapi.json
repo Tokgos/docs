@@ -1,0 +1,449 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway Novel Image API",
+    "description": "OpenAI-compatible image generation and reference image editing with Novel models.",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "Image generation"
+    },
+    {
+      "name": "Image generation/Novel AI"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "Image generation",
+        "deprecated": false,
+        "description": "`diffusion-4-5-full` uses the same parameter set as `diffusion-4-5-curated`: `prompt`, `images`, `negative_prompt`, `n`, `size`, `seed`, `steps`, `scale`, `quality_toggle`, `sampler`, `noise_schedule`, `character_prompts`, `hook_url` and `response_format`.\n\n`n` is 1~4. A maximum of 1 ordinary image source image can be used; `vibe_transfer` and `character_reference` cannot be used at the same time. NovelAI does not have a standalone JSON editing endpoint, editing is still done through the `images` of this generated endpoint.",
+        "tags": [
+          "Image generation/Novel AI"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$id": "urn:tikway:schema:protocols:openai:images-generations:novelai-request:1",
+                "title": "NovelAIImageGenerationRequest",
+                "description": "NovelAI image generation Request Body. The unified reference image uses images; the gateway is responsible for converting to TTAPI NovelAI native parameters.",
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "examples": [
+                      "diffusion-4-5-full",
+                      "diffusion-4-5-curated"
+                    ],
+                    "enum": [
+                      "diffusion-4-5-full",
+                      "diffusion-4-5-curated"
+                    ],
+                    "description": "Required. The NovelAI Diffusion V4.5 model currently connected to TTAPI."
+                  },
+                  "images": {
+                    "type": "array",
+                    "description": "Optional. Unified reference map array. type=image (or omitted) is the source image of a single image; type=vibe_transfer is the atmosphere reference; type=character_reference is the precise character/style reference. There can only be one ordinary image source image, and vibe_transfer and character_reference cannot be mixed.",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "image_url"
+                      ],
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "image",
+                            "vibe_transfer",
+                            "character_reference",
+                            null
+                          ],
+                          "description": "image or null is the image source image; the remaining values represent the NovelAI reference image type."
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri"
+                        },
+                        "strength": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1,
+                          "description": "Reference strength. The maximum value of the plot is 0.99."
+                        },
+                        "fidelity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1,
+                          "description": "Fidelity. The graph is converted to noise = 1 - fidelity."
+                        },
+                        "ref_type": {
+                          "type": "string",
+                          "enum": [
+                            "character",
+                            "style",
+                            "character&style"
+                          ],
+                          "default": "character&style",
+                          "description": "Only used by character_reference."
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "maxItems": 16
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32000,
+                    "description": "Positive cue words."
+                  },
+                  "negative_prompt": {
+                    "type": "string",
+                    "description": "Negative cue words."
+                  },
+                  "n": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4,
+                    "default": 1,
+                    "description": "Number of images generated."
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
+                    "default": "1024x1024",
+                    "description": "Output dimensions, converted by gateway to width and height."
+                  },
+                  "seed": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      }
+                    ],
+                    "description": "Random seed."
+                  },
+                  "steps": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 23,
+                    "description": "Number of sampling steps."
+                  },
+                  "scale": {
+                    "type": "number",
+                    "default": 5,
+                    "description": "Cue words guide intensity."
+                  },
+                  "quality_toggle": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Quality switch."
+                  },
+                  "sampler": {
+                    "type": "string",
+                    "enum": [
+                      "Euler Ancestral",
+                      "Euler",
+                      "DPM++ 2S Ancestral",
+                      "DPM++ 2M SDE",
+                      "DPM++ 2M",
+                      "DPM++ SDE"
+                    ],
+                    "default": "Euler Ancestral"
+                  },
+                  "noise_schedule": {
+                    "type": "string",
+                    "enum": [
+                      "karras",
+                      "exponential",
+                      "polyexponential"
+                    ],
+                    "default": "karras"
+                  },
+                  "character_prompts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "prompt": {
+                          "type": "string"
+                        },
+                        "uc": {
+                          "type": "string"
+                        },
+                        "center": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "Fixed returning Base64 image so that the response conforms to the Response Schema of this interface.",
+                    "default": "b64_json",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
+                  },
+                  "hook_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Optional. The callback address when the TTAPI task completes or fails."
+                  }
+                },
+                "additionalProperties": false
+              },
+              "examples": {
+                "Text to image": {
+                  "value": {
+                    "model": "diffusion-4-5-full",
+                    "prompt": "A serene Japanese garden at dawn, mist above a koi pond, cinematic lighting, highly detailed",
+                    "negative_prompt": "lowres, blurry, text, watermark",
+                    "size": "1024x1536",
+                    "n": 1,
+                    "steps": 28,
+                    "scale": 5,
+                    "sampler": "Euler Ancestral",
+                    "noise_schedule": "karras"
+                  },
+                  "summary": "Vincentian picture"
+                },
+                "Image to image": {
+                  "value": {
+                    "model": "diffusion-4-5-full",
+                    "prompt": "Turn this scene into an evening watercolor painting, warm lantern light, delicate brush strokes",
+                    "negative_prompt": "text, watermark, distorted",
+                    "size": "1024x1024",
+                    "n": 1,
+                    "images": [
+                      {
+                        "type": "image",
+                        "image_url": "https://example.com/source.png",
+                        "strength": 0.65,
+                        "fidelity": 0.8
+                      }
+                    ]
+                  },
+                  "summary": "Tu Sheng Tu"
+                },
+                "Style reference": {
+                  "value": {
+                    "model": "diffusion-4-5-full",
+                    "prompt": "A futuristic city street in the rain, a lone traveler under an umbrella",
+                    "negative_prompt": "text, watermark, blurry",
+                    "size": "1024x1536",
+                    "n": 1,
+                    "images": [
+                      {
+                        "type": "vibe_transfer",
+                        "image_url": "https://example.com/style-reference.png",
+                        "strength": 0.7
+                      }
+                    ]
+                  },
+                  "summary": "style reference"
+                },
+                "Character reference": {
+                  "value": {
+                    "model": "diffusion-4-5-full",
+                    "prompt": "The referenced character reads a book in a quiet library, soft afternoon sunlight",
+                    "negative_prompt": "text, watermark, extra fingers, distorted face",
+                    "size": "1024x1536",
+                    "n": 1,
+                    "images": [
+                      {
+                        "type": "character_reference",
+                        "image_url": "https://example.com/character.png",
+                        "ref_type": "character&style",
+                        "strength": 0.8,
+                        "fidelity": 0.5
+                      }
+                    ]
+                  },
+                  "summary": "Character reference"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "The Unix timestamp (in seconds) when the gateway completed image conversion."
+                    },
+                    "background": {
+                      "type": "string",
+                      "enum": [
+                        "transparent",
+                        "opaque"
+                      ],
+                      "description": "Background settings inferred from unified inbound requests; NovelAI raw responses are typically not echoed."
+                    },
+                    "data": {
+                      "type": "array",
+                      "minItems": 1,
+                      "description": "Generated image list.",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "b64_json",
+                          "index"
+                        ],
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "description": "The gateway downloads and converts image data into Base64."
+                          },
+                          "index": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "The index of the image in the results list."
+                          }
+                        }
+                      }
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "jpeg",
+                        "webp"
+                      ],
+                      "description": "The format inferred from the downloaded image MIME type or request output_format."
+                    },
+                    "quality": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "description": "Unified quality field; if quality is requested, the gateway will map and echo it."
+                    },
+                    "size": {
+                      "type": "string",
+                      "description": "The size of the original request; NovelAI's original response is usually not echoed."
+                    }
+                  },
+                  "examples": [
+                    {
+                      "created": 1713833628,
+                      "background": "opaque",
+                      "data": [
+                        {
+                          "b64_json": "...",
+                          "index": 0
+                        }
+                      ],
+                      "output_format": "png",
+                      "size": "1024x768"
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-model-capabilities": {
+          "diffusion-4-5-full": [
+            "prompt",
+            "images",
+            "negative_prompt",
+            "n",
+            "size",
+            "seed",
+            "steps",
+            "scale",
+            "quality_toggle",
+            "sampler",
+            "noise_schedule",
+            "character_prompts",
+            "hook_url",
+            "response_format"
+          ],
+          "diffusion-4-5-curated": [
+            "prompt",
+            "images",
+            "negative_prompt",
+            "n",
+            "size",
+            "seed",
+            "steps",
+            "scale",
+            "quality_toggle",
+            "sampler",
+            "noise_schedule",
+            "character_prompts",
+            "hook_url",
+            "response_format"
+          ]
+        }
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "production environment"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

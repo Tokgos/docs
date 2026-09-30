@@ -1,0 +1,44 @@
+---
+title: "Chat Completions request field example"
+sidebarTitle: "Request field example"
+description: "See how common Chat Completions request fields fit together."
+---
+
+This JSON shows the shape of common request fields. It is a **reference**, not one request to submit unchanged. Audio, structured output, predicted output, sampling, and tool capabilities may be unavailable or incompatible for a particular model. Keep only fields your target model supports.
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "messages": [
+    {"role": "developer", "content": "You are a careful travel assistant."},
+    {"role": "user", "content": "Plan a short city walk."}
+  ],
+  "max_completion_tokens": 800,
+  "temperature": 0.7,
+  "top_p": 1,
+  "n": 1,
+  "stream": false,
+  "tools": [{
+    "type": "function",
+    "function": {
+      "name": "get_opening_hours",
+      "description": "Get opening hours for a place.",
+      "parameters": {
+        "type": "object",
+        "properties": {"place": {"type": "string"}},
+        "required": ["place"],
+        "additionalProperties": false
+      }
+    }
+  }],
+  "tool_choice": "auto",
+  "parallel_tool_calls": false,
+  "response_format": {"type": "text"},
+  "reasoning_effort": "medium",
+  "prompt_cache_key": "travel-assistant-v1",
+  "prompt_cache_options": {"mode": "implicit", "ttl": "30m"},
+  "metadata": {"request_source": "documentation_example"}
+}
+```
+
+The legacy `max_tokens`, `functions`, and `function_call` fields are deprecated for new integrations. See the API Reference for all fields and constraints.

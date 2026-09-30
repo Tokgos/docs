@@ -1,0 +1,31 @@
+---
+title: "Multi-turn Chat Completions"
+sidebarTitle: "Multi-turn conversations"
+description: "Keep conversation context in the Chat Completions messages array."
+---
+
+`messages` is an ordered array. Tikway does not store Chat Completions history for your application; send the relevant earlier turns on every request.
+
+| Role | Purpose |
+| --- | --- |
+| `developer` | Application instructions and business rules. Prefer this role with newer OpenAI models. |
+| `system` | System-level instructions retained for compatibility. |
+| `user` | User input. |
+| `assistant` | A previous model reply. |
+| `tool` | A result from a function executed by your application. |
+
+After the model answers, append its `assistant` message before sending the next user turn:
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "messages": [
+    {"role": "developer", "content": "You are a concise travel planner."},
+    {"role": "user", "content": "How should I spend my first day in Hangzhou?"},
+    {"role": "assistant", "content": "Start at West Lake, walk the Bai Causeway, and spend the afternoon near the Su Causeway."},
+    {"role": "user", "content": "Make the afternoon quieter."}
+  ]
+}
+```
+
+Keep long-lived application rules near the start of the conversation. Remove history that is no longer needed to reduce token usage and context noise.

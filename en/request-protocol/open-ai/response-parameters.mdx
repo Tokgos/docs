@@ -1,0 +1,43 @@
+---
+title: "Chat Completions response fields"
+sidebarTitle: "Response fields"
+description: "Read non-streaming completions, tool calls, usage, and streaming chunks."
+---
+
+Without `stream`, the API returns a `chat.completion` object. With `stream: true`, it emits `chat.completion.chunk` SSE events.
+
+## Non-streaming response
+
+| Field | Meaning |
+| --- | --- |
+| `id` | Completion identifier. |
+| `object` | `chat.completion`. |
+| `created` | Unix creation time in seconds. |
+| `model` | Model that handled the request. |
+| `choices[]` | Candidate completions. |
+| `usage` | Input, output, and total token counts, when available. |
+
+Each choice has an `index`, a `message`, a `finish_reason`, and possibly `logprobs`. The assistant message may have `content`, `refusal`, `annotations`, `audio`, or `tool_calls`. During a tool call, `content` may be `null`. `finish_reason` commonly includes `stop`, `length`, `tool_calls`, or `content_filter`.
+
+```json
+{
+  "id": "chatcmpl_01J...",
+  "object": "chat.completion",
+  "created": 1760000000,
+  "model": "openai/gpt-5.6-terra",
+  "choices": [{
+    "index": 0,
+    "message": {"role": "assistant", "content": "Find your next chapter after the city falls asleep."},
+    "finish_reason": "stop"
+  }],
+  "usage": {"prompt_tokens": 30, "completion_tokens": 18, "total_tokens": 48}
+}
+```
+
+For a function call, each `tool_calls[]` item has an `id`, `type`, and `function` containing `name` and JSON-string `arguments`. Return the `id` as `tool_call_id` in the next `tool` message.
+
+`usage.prompt_tokens_details` may include cached and modality-specific counts. `usage.completion_tokens_details` may include reasoning, audio, and predicted-output counts.
+
+## Streaming chunks
+
+Each chunk uses `choices[].delta` instead of `choices[].message`. Append `delta.content` fragments. Tool-call fragments may arrive across several chunks and must be assembled before parsing. Read `finish_reason` and the `[DONE]` sentinel to detect completion.

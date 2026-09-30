@@ -17,7 +17,7 @@ Tikway 使用标准 HTTP 接口。将下方的 `YOUR_API_KEY` 替换为你在控
 
 ```bash
 curl https://api.tikway.ai/v1/chat/completions \
-  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "openai/gpt-5.6-terra",
@@ -41,11 +41,11 @@ curl https://api.tikway.ai/v1/chat/completions \
 ## 下一步
 
 <CardGroup cols={2}>
-  <Card title="模型列表" icon="grid-2" href="/models">
-    浏览 Tikway 支持的语言、图像、视频与音乐模型。
+  <Card title="请求协议" icon="code" href="/zh/request-protocol/open-ai">
+    选择 OpenAI、Anthropic 或 Gemini 的请求格式。
   </Card>
 
-  <Card title="API Reference" icon="code" href="/api">
-    查看完整的请求参数、响应格式与接口说明。
+  <Card title="错误与重试" icon="circle-exclamation" href="/zh/develop-guide/status-code-response">
+    了解状态码、限流和流式错误的处理方法。
   </Card>
 </CardGroup>

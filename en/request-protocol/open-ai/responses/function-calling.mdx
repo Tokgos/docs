@@ -1,0 +1,62 @@
+---
+title: "Responses function calling"
+sidebarTitle: "Function calling"
+description: "Handle function_call and function_call_output items in the Responses API."
+---
+
+The model expresses a function request as a `function_call` item in `output`. Your application executes the function and sends a matching `function_call_output` item in the next request. Neither the model nor the gateway accesses your database or business service for you.
+
+## 1. Declare the function
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "input": "Should I carry an umbrella in Shanghai today?",
+  "tools": [{
+    "type": "function",
+    "name": "get_weather",
+    "description": "Get current weather for a city.",
+    "parameters": {
+      "type": "object",
+      "properties": {"city": {"type": "string"}},
+      "required": ["city"],
+      "additionalProperties": false
+    },
+    "strict": true
+  }],
+  "tool_choice": "auto",
+  "store": true
+}
+```
+
+## 2. Read the model's call
+
+```json
+{
+  "id": "resp_01Jweather",
+  "output": [{
+    "type": "function_call",
+    "call_id": "call_weather_01",
+    "name": "get_weather",
+    "arguments": "{\"city\":\"Shanghai\"}"
+  }]
+}
+```
+
+Parse and validate `arguments`, which is a JSON string. Run only a server-approved function.
+
+## 3. Return the result
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "previous_response_id": "resp_01Jweather",
+  "input": [{
+    "type": "function_call_output",
+    "call_id": "call_weather_01",
+    "output": "{\"city\":\"Shanghai\",\"condition\":\"light rain\",\"precipitation_probability\":70}"
+  }]
+}
+```
+
+The `call_id` must exactly match the model's call. Do not execute model-generated SQL, shell commands, arbitrary paths, or URLs without strict controls. Keep credentials out of tool results and cap tool-call turns, timeouts, and concurrency.

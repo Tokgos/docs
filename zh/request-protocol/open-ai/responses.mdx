@@ -11,7 +11,7 @@ Responses 是 OpenAI 新一代响应协议。它将输入、模型输出、工�
 
 ```http
 POST https://api.tikway.ai/v1/responses
-X-API-Key: YOUR_API_KEY
+Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
 ```
 
@@ -25,7 +25,7 @@ Content-Type: application/json
 
 ```bash
 curl https://api.tikway.ai/v1/responses \
-  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "openai/gpt-5.6-terra",

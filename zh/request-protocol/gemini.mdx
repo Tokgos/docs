@@ -1,0 +1,18 @@
+---
+title: "Gemini 协议"
+sidebarTitle: "Gemini 协议"
+description: "通过 Tikway 的 Gemini 原生 generateContent 接口发起请求。"
+---
+
+Gemini 原生协议使用 `x-goog-api-key` 请求头鉴权。模型名称位于 URL 路径，消息使用 `contents[].parts[]` 结构。路径以 `/v1beta/models/` 开头。
+
+```bash
+curl 'https://api.tikway.ai/v1beta/models/gemini-2.5-flash:generateContent' \
+  -H "x-goog-api-key: $TIKWAY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{"role": "user", "parts": [{"text": "你好"}]}]
+  }'
+```
+
+流式生成使用 `:streamGenerateContent`；显式缓存使用 `/v1beta/cachedContents`。请求与响应字段采用 Gemini REST 的 camelCase 命名。完整参数见 **API Reference → 对话补全 → Gemini 协议**。错误结构和重试建议见[状态码与响应](/zh/develop-guide/status-code-response)。

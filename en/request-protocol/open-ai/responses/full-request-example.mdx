@@ -1,0 +1,43 @@
+---
+title: "Responses request field example"
+sidebarTitle: "Request field example"
+description: "See the structure of commonly used Responses request fields."
+---
+
+This example combines major top-level fields for reference. It is **not** a request to send unchanged: background tasks, conversations, output formats, tools, reasoning, and sampling controls may be mutually exclusive or unavailable for a model.
+
+```json
+{
+  "model": "openai/gpt-5.6-terra",
+  "instructions": "You are a careful travel assistant.",
+  "input": [{
+    "role": "user",
+    "content": [{"type": "input_text", "text": "Plan a half-day city walk."}]
+  }],
+  "background": false,
+  "max_output_tokens": 800,
+  "max_tool_calls": 3,
+  "parallel_tool_calls": false,
+  "prompt_cache_key": "travel-assistant-v1",
+  "reasoning": {"effort": "medium", "summary": "auto"},
+  "store": true,
+  "stream": false,
+  "text": {"format": {"type": "text"}, "verbosity": "medium"},
+  "tool_choice": "auto",
+  "tools": [{
+    "type": "function",
+    "name": "get_opening_hours",
+    "description": "Get opening hours for a place.",
+    "parameters": {
+      "type": "object",
+      "properties": {"place": {"type": "string"}},
+      "required": ["place"],
+      "additionalProperties": false
+    }
+  }],
+  "truncation": "disabled",
+  "metadata": {"request_source": "documentation_example"}
+}
+```
+
+To continue an earlier response, add `previous_response_id` and new `input`. Do not combine it with `conversation` in the same request.

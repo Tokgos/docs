@@ -1,0 +1,21 @@
+---
+title: "Anthropic protocol"
+sidebarTitle: "Anthropic protocol"
+description: "Send native Anthropic Messages requests through Tikway."
+---
+
+Send Anthropic Messages requests to `POST https://api.tikway.ai/v1/messages`. Put your Tikway API key in `x-api-key`, add `anthropic-version: 2023-06-01`, and use Anthropic fields such as `model`, `max_tokens`, and `messages` in the JSON body.
+
+```bash
+curl https://api.tikway.ai/v1/messages \
+  -H "x-api-key: $TIKWAY_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "claude-sonnet-4-6",
+    "max_tokens": 1024,
+    "messages": [{"role": "user", "content": "Hello"}]
+  }'
+```
+
+Successful responses follow the Anthropic Messages format. For complete request and response fields, open **API Reference → Chat completions → Anthropic protocol**. Gateway-generated errors use an outer `type: "error"` field; see [Status codes and responses](/en/develop-guide/status-code-response).

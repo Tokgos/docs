@@ -1,0 +1,21 @@
+---
+title: "Anthropic 协议"
+sidebarTitle: "Anthropic 协议"
+description: "通过 Tikway 的 Anthropic Messages 原生接口发起请求。"
+---
+
+Anthropic Messages 请求发送到 `POST https://api.tikway.ai/v1/messages`，使用 `x-api-key` 请求头传递 Tikway API Key，并携带 `anthropic-version: 2023-06-01`。请求体使用 `model`、`max_tokens` 和 `messages` 等 Anthropic 字段。
+
+```bash
+curl https://api.tikway.ai/v1/messages \
+  -H "x-api-key: $TIKWAY_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "claude-sonnet-4-6",
+    "max_tokens": 1024,
+    "messages": [{"role": "user", "content": "你好"}]
+  }'
+```
+
+成功响应使用 Anthropic Messages 结构；具体请求参数和响应字段见 **API Reference → 对话补全 → Anthropic 协议**。网关生成的错误使用 Anthropic 风格的 `type: "error"` 外层结构，详见[状态码与响应](/zh/develop-guide/status-code-response)。

@@ -1,0 +1,332 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway Qwen Image API",
+    "description": "OpenAI-compatible image generation and reference image editing with Qwen Image models.",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "Image generation"
+    },
+    {
+      "name": "Image generation/Qwen"
+    },
+    {
+      "name": "Image generation/Qwen Image"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "Image generation",
+        "deprecated": false,
+        "description": "`qwen-image-3.0-pro` (as well as the `bailian/` alias) supports wensheng images and tsunimages of up to 3 reference images on the same endpoint.\n\nSupports: `model`, `prompt`, `size`, `images`, `prompt_extend`, `prompt_extend_mode`, `enable_thinking`, `negative_prompt`, `seed`, `watermark`, `response_format`.\n\nThe official compatible interface also supports `n=1..6`, but the current gateway will explicitly reject Qwen's `n`, so this specification does not expose this field. `prompt_extend_mode=agent` only supports Vincentian diagrams; `enable_thinking` only takes effect when `prompt_extend=true`.",
+        "tags": [
+          "Image generation/Qwen",
+          "Image generation/Qwen Image"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "Qwen-Image 3.0 Pro request body",
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "enum": [
+                      "bailian/qwen-image-3.0-pro",
+                      "qwen-image-3.0-pro"
+                    ],
+                    "description": "Required. It is recommended to use the public model ID bailian/qwen-image-3.0-pro; the short model name without the vendor prefix is ​​only available if the account alias is configured."
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Required. Image generation or editing instructions support Chinese and English. The official recommendation is no more than about 4,500 tokens."
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(auto|[1-9]\\d*x[1-9]\\d*)$",
+                    "default": "1024x1024",
+                    "examples": [
+                      "1024x1024",
+                      "2048x2048",
+                      "1536x1024"
+                    ],
+                    "description": "Optional. Output size in the format WIDTHxHEIGHT, for example 1024x1024. When auto is omitted or passed, the gateway sends 1024x1024 to the upstream; the official pixel area range is 512×512 to 2048×2048, and the aspect ratio is 1:8~8:1."
+                  },
+                  "images": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 3,
+                    "description": "Optional. Drawing/editing reference pictures, up to 3 pictures. Each item provides a file_id or image_url; when omitted, a Vincentian image.",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "file_id": {
+                          "type": "string",
+                          "description": "The ID of the source image file uploaded to the Files API."
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "description": "Full image URL, or Base64 data URL."
+                        }
+                      }
+                    }
+                  },
+                  "prompt_extend": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Optional. Whether to enable intelligent prompt word rewriting."
+                  },
+                  "prompt_extend_mode": {
+                    "type": "string",
+                    "enum": [
+                      "direct",
+                      "agent"
+                    ],
+                    "default": "direct",
+                    "description": "Optional. Prompt word rewriting mode. Direct supports Vincentian diagrams and Tusheng diagrams; agent only supports Vincentian diagrams."
+                  },
+                  "enable_thinking": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Optional. Whether to enable thinking mode. When set to true prompt_extend cannot be turned off explicitly."
+                  },
+                  "negative_prompt": {
+                    "type": "string",
+                    "description": "Optional. Describe what you don't want to appear in the results."
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647,
+                    "description": "Optional. Random seed. Fixed seeds improve result reproducibility but do not guarantee pixel-level consistency."
+                  },
+                  "watermark": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Optional. Whether to add Qwen-Image watermark in the lower right corner of the generated image."
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "Fixed returning Base64 image so that the response conforms to the Response Schema of this interface.",
+                    "default": "b64_json",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
+                  }
+                },
+                "allOf": [
+                  {
+                    "not": {
+                      "required": [
+                        "prompt_extend_mode"
+                      ],
+                      "properties": {
+                        "prompt_extend_mode": {
+                          "const": "agent"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "not": {
+                      "required": [
+                        "enable_thinking",
+                        "prompt_extend"
+                      ],
+                      "properties": {
+                        "enable_thinking": {
+                          "const": true
+                        },
+                        "prompt_extend": {
+                          "const": false
+                        }
+                      }
+                    }
+                  }
+                ],
+                "additionalProperties": false
+              },
+              "examples": {
+                "Text to image": {
+                  "value": {
+                    "model": "bailian/qwen-image-3.0-pro",
+                    "prompt": "A cinematic street scene in Shanghai on a rainy night, with neon lights reflected on the wet road, realistic photography",
+                    "size": "1024x1024",
+                    "prompt_extend": true,
+                    "watermark": false
+                  },
+                  "summary": "Vincentian picture"
+                },
+                "Reference image editing": {
+                  "value": {
+                    "model": "bailian/qwen-image-3.0-pro",
+                    "prompt": "Change the apples to blue and leave the rest unchanged",
+                    "size": "1024x1024",
+                    "images": [
+                      {
+                        "image_url": "https://example.com/ref-apple.png"
+                      }
+                    ],
+                    "prompt_extend": true,
+                    "watermark": false
+                  },
+                  "summary": "Reference picture editing"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The image was generated successfully. The gateway has downloaded the upstream temporary image and converted it to Base64 without the data URL prefix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Qwen image generation response",
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "background",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "format": "int64",
+                      "minimum": 0,
+                      "description": "The Unix timestamp (in seconds) when the gateway completed response conversion."
+                    },
+                    "background": {
+                      "type": "string",
+                      "const": "opaque",
+                      "description": "The current Qwen path is fixed to return opaque."
+                    },
+                    "data": {
+                      "type": "array",
+                      "minItems": 1,
+                      "description": "Generate a list of results.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "minLength": 1,
+                            "contentEncoding": "base64",
+                            "description": "Base64 image downloaded and converted by the gateway."
+                          },
+                          "index": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Results index."
+                          }
+                        },
+                        "additionalProperties": false,
+                        "required": [
+                          "b64_json",
+                          "index"
+                        ]
+                      }
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "jpeg",
+                        "webp"
+                      ],
+                      "description": "The format inferred by the gateway based on the Content-Type of the downloaded image. Omitted when no recognized type is provided by the upstream."
+                    },
+                    "size": {
+                      "type": "string",
+                      "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
+                      "description": "Actual or requested output size. Omitted when neither the request nor the upstream response provides a size."
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "example": {
+                  "created": 1788451200,
+                  "background": "opaque",
+                  "data": [
+                    {
+                      "b64_json": "iVBORw0KGgoAAAANSUhEUgAA...",
+                      "index": 0
+                    }
+                  ],
+                  "output_format": "png",
+                  "size": "1024x1024"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-model-capabilities": {
+          "bailian/qwen-image-3.0-pro": [
+            "prompt",
+            "size",
+            "images",
+            "prompt_extend",
+            "prompt_extend_mode",
+            "enable_thinking",
+            "negative_prompt",
+            "seed",
+            "watermark",
+            "response_format"
+          ],
+          "qwen-image-3.0-pro": [
+            "prompt",
+            "size",
+            "images",
+            "prompt_extend",
+            "prompt_extend_mode",
+            "enable_thinking",
+            "negative_prompt",
+            "seed",
+            "watermark",
+            "response_format"
+          ]
+        }
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "production environment"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

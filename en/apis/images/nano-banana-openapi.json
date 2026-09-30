@@ -1,0 +1,644 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway Nano Banana API",
+    "description": "OpenAI- and Gemini-compatible image generation with Nano Banana models.",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "Image generation"
+    },
+    {
+      "name": "Image generation/Nano Banana"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "Image generation",
+        "deprecated": false,
+        "description": "Unified OpenAI compatible portal. `size` represents the aspect ratio, and `quality` maps to Gemini's image resolution.\n\n| Model | Output resolution | Reference image | Search and thinking |\n| --- | --- | --- | --- |\n| `gemini-3.1-flash-image` | 512px, 1K, 2K, 4K; supports 1:4/4:1/1:8/8:1 extreme ratios | Up to 14 images (max 10 objects + 4 characters) | `google_search`, `image_search`, `thinking_level` |\n| `gemini-3-pro-image` | 1K, 2K, 4K | Up to 14 images (up to 6 objects + 5 characters + 3 styles) | `google_search`, `thinking_level`; image search is not supported |\n| `gemini-2.5-flash-image` | Fixed 1K | Recommended maximum 3 images | Does not support Google Search, image search and thinking |\n\nThis entry does not accept native `generationConfig`, `aspect_ratio` or `image_size`, please use `size` and `quality`.",
+        "tags": [
+          "Image generation/Nano Banana"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Required. Gemini picture model. See the interface description for the resolution, search, thinking and reference map limitations of different models. ",
+                    "enum": [
+                      "gemini-3.1-flash-image",
+                      "gemini-3-pro-image",
+                      "gemini-2.5-flash-image"
+                    ]
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32000,
+                    "description": "Required. Generate prompt words for pictures."
+                  },
+                  "images": {
+                    "type": "array",
+                    "maxItems": 14,
+                    "description": "Optional. Reference image array; at least 1 image is used for image editing. URL/data URL string or object containing image_url can be passed; file_id is not supported. See the interface description for the upper limit of the model.",
+                    "items": {
+                      "type": [
+                        "string",
+                        "object"
+                      ]
+                    },
+                    "minItems": 1
+                  },
+                  "size": {
+                    "type": "string",
+                    "enum": [
+                      "1:1",
+                      "1:4",
+                      "1:8",
+                      "2:3",
+                      "3:2",
+                      "3:4",
+                      "4:1",
+                      "4:3",
+                      "4:5",
+                      "5:4",
+                      "8:1",
+                      "9:16",
+                      "16:9",
+                      "21:9"
+                    ],
+                    "description": "Output aspect ratio. The gateway reduces and maps this field to Gemini aspectRatio; it is not a pixel dimension. Extreme ratios 1:4, 4:1, 1:8, 8:1 are only supported by gemini-3.1-flash-image."
+                  },
+                  "quality": {
+                    "type": "string",
+                    "enum": [
+                      "standard",
+                      "hd",
+                      "low",
+                      "medium",
+                      "high",
+                      "auto"
+                    ],
+                    "description": "Output resolution mapping: low→512px, standard→1K, medium→2K, high/hd→4K, auto/omitted→not specified. gemini-2.5-flash-image only supports 1K."
+                  },
+                  "google_search": {
+                    "type": "boolean",
+                    "description": "Gemini native extension, whether to enable Google Search grounding; only available for models that support this capability."
+                  },
+                  "image_search": {
+                    "type": "boolean",
+                    "description": "Gemini native extension, whether to enable image search grounding; only available for models that support this capability."
+                  },
+                  "thinking_level": {
+                    "type": "string",
+                    "enum": [
+                      "Minimal",
+                      "High"
+                    ],
+                    "description": "Gemini native extension, model thinking intensity; only models that support this capability are available."
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "Fixed returning Base64 image so that the response conforms to the Response Schema of this interface.",
+                    "default": "b64_json",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
+                  }
+                },
+                "examples": [
+                  {
+                    "model": "gemini-3.1-flash-image",
+                    "prompt": "Cinematic Shanghai rainy night street scene, neon light reflection, realistic photography",
+                    "size": "16:9",
+                    "quality": "medium"
+                  }
+                ]
+              },
+              "example": {
+                "model": "gemini-3-pro-image",
+                "prompt": "Generate a photorealistic red apple on a rustic wooden table.",
+                "size": "1:1",
+                "quality": "standard"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "Unix timestamp in seconds when the image was created."
+                    },
+                    "background": {
+                      "type": "string",
+                      "enum": [
+                        "transparent",
+                        "opaque"
+                      ],
+                      "description": "The actual background settings used."
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Generate a list of results.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "description": "Base64 encoded image data. GPT Image is returned by default; DALL·E is returned when response_format=b64_json."
+                          },
+                          "revised_prompt": {
+                            "type": "string",
+                            "description": "DALL·E 3 Revision prompt words actually used."
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "Generate image URL. Returned only when DALL·E and response_format=url; valid for 60 minutes."
+                          }
+                        }
+                      }
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "webp",
+                        "jpeg"
+                      ],
+                      "description": "Actual output image format."
+                    },
+                    "quality": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "description": "Actual build quality."
+                    },
+                    "size": {
+                      "type": "string",
+                      "description": "The actual resulting image size."
+                    },
+                    "usage": {
+                      "type": "object",
+                      "description": "The token usage of the GPT Image model.",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "description": "Number of tokens for input (text and image)."
+                        },
+                        "input_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "Enter the number of image tokens."
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "Enter the text token number."
+                            }
+                          }
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "description": "Output the number of tokens."
+                        },
+                        "output_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "Output the number of image tokens."
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "Output text token number."
+                            }
+                          }
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "description": "The total number of input and output tokens."
+                        }
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "created": 1713833628,
+                      "data": [
+                        {
+                          "b64_json": "..."
+                        }
+                      ],
+                      "usage": {
+                        "total_tokens": 100,
+                        "input_tokens": 50,
+                        "output_tokens": 50,
+                        "input_tokens_details": {
+                          "text_tokens": 10,
+                          "image_tokens": 40
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "created": 1713833628,
+                  "data": [
+                    {
+                      "b64_json": "..."
+                    }
+                  ],
+                  "usage": {
+                    "total_tokens": 100,
+                    "input_tokens": 50,
+                    "output_tokens": 50,
+                    "input_tokens_details": {
+                      "text_tokens": 10,
+                      "image_tokens": 40
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-model-capabilities": {
+          "gemini-3.1-flash-image": [
+            "prompt",
+            "images",
+            "size",
+            "quality",
+            "google_search",
+            "image_search",
+            "thinking_level",
+            "response_format"
+          ],
+          "gemini-3-pro-image": [
+            "prompt",
+            "images",
+            "size",
+            "quality",
+            "google_search",
+            "thinking_level",
+            "response_format"
+          ],
+          "gemini-2.5-flash-image": [
+            "prompt",
+            "images",
+            "size",
+            "quality",
+            "response_format"
+          ]
+        }
+      }
+    },
+    "/v1beta/models/{model}:generateContent": {
+      "post": {
+        "summary": "Gemini protocol - image generation",
+        "deprecated": false,
+        "description": "Gemini native entrance. gemini-2.5-flash-image only supports aspectRatio; the Gemini 3 image model also supports imageSize. Reference diagrams and search/think ability limits are consistent with the Unified Portal's model sheet.",
+        "tags": [
+          "Image generation/Nano Banana"
+        ],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "contents"
+                ],
+                "properties": {
+                  "contents": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "Required. Plain text is for image editing; text plus inlineData is for image editing.",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "parts"
+                      ],
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "model"
+                          ],
+                          "description": "Usually user or omitted."
+                        },
+                        "parts": {
+                          "type": "array",
+                          "minItems": 1,
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "description": "Prompt words for generating or editing images."
+                              },
+                              "inlineData": {
+                                "type": "object",
+                                "description": "Base64 reference image used when editing.",
+                                "required": [
+                                  "mimeType",
+                                  "data"
+                                ],
+                                "properties": {
+                                  "mimeType": {
+                                    "type": "string",
+                                    "description": "Image MIME type, such as image/png."
+                                  },
+                                  "data": {
+                                    "type": "string",
+                                    "description": "Base64 image content without the data URL prefix."
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "generationConfig": {
+                    "type": "object",
+                    "description": "Nano Banana image output configuration.",
+                    "properties": {
+                      "responseModalities": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "TEXT",
+                            "IMAGE"
+                          ]
+                        },
+                        "description": "Set to [\"IMAGE\"] when returning only images."
+                      },
+                      "responseFormat": {
+                        "type": "object",
+                        "properties": {
+                          "image": {
+                            "type": "object",
+                            "properties": {
+                              "aspectRatio": {
+                                "type": "string",
+                                "enum": [
+                                  "1:1",
+                                  "1:4",
+                                  "1:8",
+                                  "2:3",
+                                  "3:2",
+                                  "3:4",
+                                  "4:1",
+                                  "4:3",
+                                  "4:5",
+                                  "5:4",
+                                  "8:1",
+                                  "9:16",
+                                  "16:9",
+                                  "21:9"
+                                ],
+                                "description": "Target aspect ratio; available range varies by model."
+                              },
+                              "imageSize": {
+                                "type": "string",
+                                "enum": [
+                                  "0.5K",
+                                  "1K",
+                                  "2K",
+                                  "4K"
+                                ],
+                                "description": "Target resolution; available range varies by model."
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": [
+                  {
+                    "contents": [
+                      {
+                        "parts": [
+                          {
+                            "text": "Place the cat in a restaurant under the stars and keep the original look."
+                          },
+                          {
+                            "inlineData": {
+                              "mimeType": "image/png",
+                              "data": "<base64-image-data>"
+                            }
+                          }
+                        ]
+                      }
+                    ],
+                    "generationConfig": {
+                      "responseModalities": [
+                        "IMAGE"
+                      ],
+                      "responseFormat": {
+                        "image": {
+                          "aspectRatio": "16:9",
+                          "imageSize": "2K"
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "contents": [
+                  {
+                    "role": "user",
+                    "parts": [
+                      {
+                        "text": "Generate a photorealistic red apple resting on a rustic wooden table, soft window light, shallow depth of field."
+                      }
+                    ]
+                  }
+                ],
+                "generationConfig": {
+                  "responseModalities": [
+                    "IMAGE"
+                  ],
+                  "responseFormat": {
+                    "image": {
+                      "aspectRatio": "1:1",
+                      "imageSize": "1K"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "candidates"
+                  ],
+                  "properties": {
+                    "candidates": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "content"
+                        ],
+                        "properties": {
+                          "content": {
+                            "type": "object",
+                            "required": [
+                              "parts"
+                            ],
+                            "properties": {
+                              "parts": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "text": {
+                                      "type": "string"
+                                    },
+                                    "inlineData": {
+                                      "type": "object",
+                                      "required": [
+                                        "mimeType",
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "mimeType": {
+                                          "type": "string"
+                                        },
+                                        "data": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "finishReason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "usageMetadata": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  }
+                },
+                "example": {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "inlineData": {
+                              "mimeType": "image/png",
+                              "data": "<Base64 string of generated image>"
+                            }
+                          }
+                        ]
+                      },
+                      "finishReason": "STOP"
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "production environment"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

@@ -1,0 +1,575 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway MAI Image API",
+    "description": "OpenAI-compatible image generation and editing with MAI Image models.",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "Image generation"
+    },
+    {
+      "name": "Image generation/MAI Image"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "Generate pictures",
+        "deprecated": false,
+        "description": "`microsoft/mai-image-2.5-pro` supports Vincent images. The current gateway exposes `model`, `prompt`, `size` and is compatible with `response_format`; the model only generates 1 PNG. The dimensions must be at least 768 in both width and height, and the total pixels must not exceed 1,048,576.",
+        "tags": [
+          "Image generation/MAI Image"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "DoubaoSeedream50ProGenerationRequest",
+                "description": "Use Doubao Seedream 5.0 Pro to generate images from text.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "Required. Forward model ID for MAI Image 2.5 Pro.",
+                    "enum": [
+                      "microsoft/mai-image-2.5-pro"
+                    ]
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Required. Picture prompt words, the native model context limit is 32,000 tokens.",
+                    "examples": [
+                      "A future city floating on the sea of clouds, with movie-level light and shadow and rich architectural details at sunrise"
+                    ]
+                  },
+                  "size": {
+                    "type": "string",
+                    "default": "1024x1024",
+                    "pattern": "^[1-9]\\d*x[1-9]\\d*$",
+                    "description": "OFOX compatible sizes WIDTHxHEIGHT. The width and height of MAI Image 2.5 Pro are at least 768, and the total pixels do not exceed 1,048,576."
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "OFOX compatible response format. MAI native output is always a single PNG Base64; b64_json is recommended.",
+                    "default": "b64_json",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
+                  }
+                },
+                "allOf": [
+                  {
+                    "if": {
+                      "required": [
+                        "background"
+                      ],
+                      "properties": {
+                        "background": {
+                          "const": "transparent"
+                        }
+                      }
+                    },
+                    "then": {
+                      "required": [
+                        "output_format"
+                      ],
+                      "properties": {
+                        "output_format": {
+                          "const": "png"
+                        }
+                      }
+                    }
+                  }
+                ],
+                "examples": [
+                  {
+                    "model": "microsoft/mai-image-2.5-pro",
+                    "prompt": "A cinematic mountain landscape at sunset.",
+                    "size": "1024x1024",
+                    "response_format": "b64_json"
+                  }
+                ]
+              },
+              "example": {
+                "model": "microsoft/mai-image-2.5-pro",
+                "prompt": "The scenery of the mountains at sunset, the setting sun reflects the mountains and the sky, the light and shadow are soft, the picture is natural and delicate, and has a cinematic feel.",
+                "size": "1024x1024"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "Unix timestamp of the image creation time, in seconds.",
+                      "examples": [
+                        1788480000
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "index": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Results index."
+                          },
+                          "b64_json": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Base64 encoded image; returned when response_format=b64_json."
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "Temporary image link; returned when response_format=url."
+                          }
+                        },
+                        "additionalProperties": false,
+                        "oneOf": [
+                          {
+                            "required": [
+                              "b64_json"
+                            ]
+                          },
+                          {
+                            "required": [
+                              "url"
+                            ]
+                          }
+                        ]
+                      },
+                      "description": "Generate a list of results."
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "The model ID that actually executes the request."
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "description": "Actual output format."
+                    },
+                    "size": {
+                      "type": "string",
+                      "description": "actual generated size."
+                    },
+                    "usage": {
+                      "type": "object",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "description": "Enter the number of tokens."
+                        },
+                        "input_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "The number of tokens consumed by the prompt word."
+                            }
+                          },
+                          "required": [
+                            "text_tokens"
+                          ]
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "description": "Output the number of tokens."
+                        },
+                        "output_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "The number of tokens consumed by the output image."
+                            }
+                          },
+                          "required": [
+                            "image_tokens"
+                          ]
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "description": "Total number of tokens."
+                        }
+                      },
+                      "required": [
+                        "input_tokens",
+                        "input_tokens_details",
+                        "output_tokens",
+                        "output_tokens_details",
+                        "total_tokens"
+                      ],
+                      "description": "The usage information generated this time."
+                    }
+                  },
+                  "required": [
+                    "created",
+                    "data",
+                    "model",
+                    "output_format",
+                    "size",
+                    "usage"
+                  ],
+                  "title": "Microsoft MAI Image 2.5 image generation response",
+                  "description": "Unify transformed OpenAI Images responses."
+                },
+                "example": {
+                  "created": 1788923928,
+                  "data": [
+                    {
+                      "index": 0,
+                      "b64_json": "iVBORw0KGgoAAAANSUhEUgAA..."
+                    }
+                  ],
+                  "model": "microsoft/mai-image-2.5-pro",
+                  "output_format": "png",
+                  "size": "1024x1024",
+                  "usage": {
+                    "input_tokens": 36,
+                    "input_tokens_details": {
+                      "text_tokens": 36
+                    },
+                    "output_tokens": 1024,
+                    "output_tokens_details": {
+                      "image_tokens": 1024
+                    },
+                    "total_tokens": 1060
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-model-capabilities": {
+          "microsoft/mai-image-2.5-pro": [
+            "prompt",
+            "size",
+            "response_format"
+          ]
+        }
+      }
+    },
+    "/v1/images/edits": {
+      "post": {
+        "summary": "Picture editing",
+        "deprecated": false,
+        "description": "`microsoft/mai-image-2.5-pro` supports single JPEG/PNG image editing. `model`, `images` and `prompt` are required; output is fixed to a single PNG.",
+        "tags": [
+          "Image generation/MAI Image"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "images",
+                  "prompt"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "Required. Forward model ID for MAI Image 2.5 Pro.",
+                    "enum": [
+                      "microsoft/mai-image-2.5-pro"
+                    ]
+                  },
+                  "images": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 1,
+                    "description": "Required. A single JPEG or PNG source image. Forward JSON compatible form uses a file_id/image_url object.",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "file_id": {
+                          "type": "string",
+                          "description": "The ID of the source image file uploaded to the Files API."
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "description": "Full image URL, or Base64 data URL."
+                        }
+                      }
+                    }
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Required. Text description of how you wish to edit or expand the image."
+                  },
+                  "size": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "auto",
+                      "1024x1024",
+                      "1536x1024",
+                      "1024x1536",
+                      null
+                    ],
+                    "description": "Compatible output sizes. The MAI native editing interface does not provide independent size parameters, and whether it takes effect depends on the OFOX upstream."
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "OFOX compatible response format. MAI native output is fixed to a single PNG Base64; it is recommended to use b64_json.",
+                    "default": "b64_json",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
+                  }
+                },
+                "examples": [
+                  {
+                    "model": "microsoft/mai-image-2.5-pro",
+                    "images": [
+                      {
+                        "image_url": "https://example.com/source-image.png"
+                      }
+                    ],
+                    "prompt": "Turn this image into a clean futuristic product shot.",
+                    "size": "1024x1024",
+                    "response_format": "b64_json"
+                  }
+                ]
+              },
+              "example": {
+                "model": "microsoft/mai-image-2.5-pro",
+                "prompt": "Keep the apple unchanged and replace only its background with a misty enchanted forest under soft cinematic lighting.",
+                "size": "1024x1024",
+                "images": [
+                  {
+                    "image_url": "https://gd-hbimg.huaban.com/cb36fdfc6ee4707de3ec666d6bc202fb99d9bef326a10d-oQHn3b_fw658"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "The Unix timestamp in seconds when the edit result was created."
+                    },
+                    "background": {
+                      "type": "string",
+                      "enum": [
+                        "transparent",
+                        "opaque"
+                      ],
+                      "description": "The actual output context used."
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "Edited image list.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "description": "Base64 encoded image content. The GPT Image model is returned by default."
+                          },
+                          "revised_prompt": {
+                            "type": "string",
+                            "description": "The actual revision prompt word of DALL·E 3; this editing interface usually does not return this field."
+                          },
+                          "url": {
+                            "type": "string",
+                            "description": "Generate image URL. DALL·E is provided when using the URL return format and is usually valid for 60 minutes."
+                          }
+                        }
+                      }
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "webp",
+                        "jpeg"
+                      ],
+                      "description": "Actual output format."
+                    },
+                    "quality": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "auto"
+                      ],
+                      "description": "Output quality for actual use."
+                    },
+                    "size": {
+                      "type": "string",
+                      "description": "The actual generated image size."
+                    },
+                    "usage": {
+                      "type": "object",
+                      "description": "The token usage of the GPT Image model.",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "description": "Enter the number of tokens for text and images."
+                        },
+                        "input_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "Enter the number of image tokens."
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "Enter the text token number."
+                            }
+                          }
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "description": "Output the number of tokens."
+                        },
+                        "output_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "Output the number of image tokens."
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "Output text token number."
+                            }
+                          }
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "description": "The total number of input and output tokens."
+                        }
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "created": 1713833628,
+                      "data": [
+                        {
+                          "b64_json": "..."
+                        }
+                      ],
+                      "usage": {
+                        "total_tokens": 100,
+                        "input_tokens": 50,
+                        "output_tokens": 50,
+                        "input_tokens_details": {
+                          "text_tokens": 10,
+                          "image_tokens": 40
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "created": 1713833628,
+                  "data": [
+                    {
+                      "b64_json": "..."
+                    }
+                  ],
+                  "usage": {
+                    "total_tokens": 100,
+                    "input_tokens": 50,
+                    "output_tokens": 50,
+                    "input_tokens_details": {
+                      "text_tokens": 10,
+                      "image_tokens": 40
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-model-capabilities": {
+          "microsoft/mai-image-2.5-pro": [
+            "images",
+            "prompt",
+            "size",
+            "response_format"
+          ]
+        }
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "production environment"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

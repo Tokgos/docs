@@ -1,0 +1,23 @@
+---
+title: "OpenAI protocol"
+sidebarTitle: "OpenAI protocol"
+description: "Call Chat Completions and Responses through Tikway's OpenAI-compatible API."
+---
+
+The OpenAI-compatible API uses `Authorization: Bearer <API Key>`. Set your SDK base URL to `https://api.tikway.ai/v1` and pass a Tikway model ID in the `model` field.
+
+| API | Path | Best for |
+| --- | --- | --- |
+| Chat Completions | `POST /v1/chat/completions` | Chat messages, tool calls, and streaming with the `messages` array. |
+| Responses | `POST /v1/responses` | Multi-turn, tool, and multimodal workflows built around `input` and response items. |
+
+<CardGroup cols={2}>
+  <Card title="Chat Completions" icon="message" href="/en/request-protocol/open-ai/chat-completions">
+    Learn the message format, tool calls, streaming, and request examples.
+  </Card>
+  <Card title="Responses" icon="code" href="/en/request-protocol/open-ai/responses">
+    Learn about input items, tools, conversation state, and response fields.
+  </Card>
+</CardGroup>
+
+Model capabilities vary. Check that the target model supports your parameters before switching models. See [Gateway and authentication](/en/develop-guide/gateway-auth) for credentials and [Status codes and responses](/en/develop-guide/status-code-response) for errors.

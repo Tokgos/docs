@@ -2,15 +2,15 @@
   "theme": "mint",
   "name": "Tikway",
   "colors": {
-    "primary": "#407FED",
-    "light": "#75A7F3",
-    "dark": "#2867D6"
+    "primary": "#3d3b3a",
+    "light": "#ffffff",
+    "dark": "#000000"
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "/logo/light.png",
+    "dark": "/logo/dark.png"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.png",
   "api": {
     "params": {
       "expanded": "all"
@@ -53,14 +53,9 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "icon": "book-open-cover",
-          "href": "https://mintlify.com/docs"
-        },
-        {
-          "anchor": "Blog",
-          "icon": "newspaper",
-          "href": "https://mintlify.com/blog"
+          "anchor": "Home",
+          "icon": "house",
+          "href": "https://tikway.ai"
         }
       ]
     },
@@ -76,15 +71,6 @@
                 "pages": ["zh/introduction", "zh/untitled-page"]
               },
               {
-                "group": "协议适配",
-                "pages": [
-                  {
-                    "group": "OpenAI协议",
-                    "pages": []
-                  }
-                ]
-              },
-              {
                 "group": "开发指南",
                 "pages": [
                   "zh/develop-guide/gateway-auth",
@@ -95,33 +81,9 @@
               {
                 "group": "请求协议",
                 "pages": [
-                  {
-                    "group": "OpenAI 协议",
-                    "pages": [
-                      {
-                        "group": "Chat Completions",
-                        "pages": [
-                          "zh/request-protocol/open-ai/chat-completions",
-                          "zh/request-protocol/open-ai/function-calling",
-                          "zh/request-protocol/open-ai/streaming",
-                          "zh/request-protocol/open-ai/multi-turn",
-                          "zh/request-protocol/open-ai/full-request-example",
-                          "zh/request-protocol/open-ai/response-parameters"
-                        ]
-                      },
-                      {
-                        "group": "Responses",
-                        "pages": [
-                          "zh/request-protocol/open-ai/responses",
-                          "zh/request-protocol/open-ai/responses/function-calling",
-                          "zh/request-protocol/open-ai/responses/streaming",
-                          "zh/request-protocol/open-ai/responses/multi-turn",
-                          "zh/request-protocol/open-ai/responses/full-request-example",
-                          "zh/request-protocol/open-ai/responses/response-parameters"
-                        ]
-                      }
-                    ]
-                  }
+                  "zh/request-protocol/open-ai",
+                  "zh/request-protocol/anthropic",
+                  "zh/request-protocol/gemini"
                 ]
               }
             ]
@@ -258,10 +220,147 @@
       },
       {
         "language": "en",
-        "groups": [
+        "tabs": [
           {
-            "group": "Getting Started",
-            "pages": ["en/introduction", "en/quick-starter"]
+            "tab": "Guides",
+            "groups": [
+              {
+                "group": "Getting started",
+                "pages": ["en/introduction", "en/quick-starter"]
+              },
+              {
+                "group": "Developer guides",
+                "pages": [
+                  "en/develop-guide/gateway-auth",
+                  "en/develop-guide/status-code-response",
+                  "en/develop-guide/protocol-convert"
+                ]
+              },
+              {
+                "group": "Request protocols",
+                "pages": [
+                  "en/request-protocol/open-ai",
+                  "en/request-protocol/anthropic",
+                  "en/request-protocol/gemini"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "API Reference",
+            "groups": [
+              {
+                "group": "Chat completions",
+                "pages": [
+                  {
+                    "group": "OpenAI protocol",
+                    "openapi": "en/apis/chat-completions/openai-openapi.json",
+                    "pages": ["POST /v1/chat/completions", "POST /v1/responses"]
+                  },
+                  {
+                    "group": "Anthropic protocol",
+                    "openapi": "en/apis/chat-completions/anthropic-openapi.json",
+                    "pages": ["POST /v1/messages"]
+                  },
+                  {
+                    "group": "Gemini protocol",
+                    "openapi": "en/apis/chat-completions/gemini-openapi.json",
+                    "pages": [
+                      "POST /v1beta/models/{model}:generateContent",
+                      "POST /v1beta/models/{model}:streamGenerateContent",
+                      "POST /v1beta/cachedContents",
+                      "GET /v1beta/cachedContents/{id}",
+                      "DELETE /v1beta/cachedContents/{id}"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Image generation",
+                "pages": [
+                  {
+                    "group": "GPT Image",
+                    "openapi": "en/apis/images/gpt-openapi.json",
+                    "pages": ["POST /v1/images/generations", "POST /v1/images/edits"]
+                  },
+                  {
+                    "group": "Nano Banana",
+                    "openapi": "en/apis/images/nano-banana-openapi.json",
+                    "pages": ["POST /v1/images/generations", "POST /v1beta/models/{model}:generateContent"]
+                  },
+                  {
+                    "group": "Qwen Image",
+                    "openapi": "en/apis/images/qwen-openapi.json",
+                    "pages": ["POST /v1/images/generations"]
+                  },
+                  {
+                    "group": "Seedream",
+                    "openapi": "en/apis/images/seedream-openapi.json",
+                    "pages": ["POST /v1/images/generations"]
+                  },
+                  {
+                    "group": "MAI Image",
+                    "openapi": "en/apis/images/mai-openapi.json",
+                    "pages": ["POST /v1/images/generations", "POST /v1/images/edits"]
+                  },
+                  {
+                    "group": "Novel",
+                    "openapi": "en/apis/images/novel-openapi.json",
+                    "pages": ["POST /v1/images/generations"]
+                  }
+                ]
+              },
+              {
+                "group": "Video generation",
+                "pages": [
+                  {
+                    "group": "Seedance",
+                    "openapi": "en/apis/videos/seedance-openapi.json",
+                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                  },
+                  {
+                    "group": "Wan",
+                    "openapi": "en/apis/videos/wan-openapi.json",
+                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                  },
+                  {
+                    "group": "HappyHorse",
+                    "openapi": "en/apis/videos/happy-horse-openapi.json",
+                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                  },
+                  {
+                    "group": "MiniMax",
+                    "openapi": "en/apis/videos/minimax-openapi.json",
+                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                  },
+                  {
+                    "group": "Veo",
+                    "openapi": "en/apis/videos/veo-openapi.json",
+                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                  },
+                  {
+                    "group": "Grok",
+                    "openapi": "en/apis/videos/grok-openapi.json",
+                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                  },
+                  {
+                    "group": "Flux",
+                    "openapi": "en/apis/videos/flux-openapi.json",
+                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                  }
+                ]
+              },
+              {
+                "group": "Embeddings",
+                "openapi": "en/apis/embeddings/openapi.json",
+                "pages": ["POST /v1/embeddings", "POST /v1beta/models/google/{model}:embedContent"]
+              },
+              {
+                "group": "Transcriptions",
+                "openapi": "en/apis/transcriptions/openapi.json",
+                "pages": ["POST /v1/audio/transcriptions"]
+              }
+            ]
           }
         ]
       }

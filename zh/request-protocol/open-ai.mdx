@@ -1,0 +1,23 @@
+---
+title: "OpenAI 协议"
+sidebarTitle: "OpenAI 协议"
+description: "通过 Tikway 的 OpenAI 兼容接口调用 Chat Completions 和 Responses。"
+---
+
+OpenAI 兼容协议使用 `Authorization: Bearer <API Key>` 鉴权。SDK 的 Base URL 为 `https://api.tikway.ai/v1`。请求体中的 `model` 使用 Tikway 模型标识。
+
+| 接口 | 路径 | 适用场景 |
+| --- | --- | --- |
+| Chat Completions | `POST /v1/chat/completions` | 使用 `messages` 构建常见聊天、工具调用和流式输出。 |
+| Responses | `POST /v1/responses` | 使用 `input` 与响应 item 构建多轮、工具和多模态工作流。 |
+
+<CardGroup cols={2}>
+  <Card title="Chat Completions" icon="message" href="/zh/request-protocol/open-ai/chat-completions">
+    查看消息格式、函数调用、流式输出与完整请求示例。
+  </Card>
+  <Card title="Responses" icon="code" href="/zh/request-protocol/open-ai/responses">
+    查看输入 item、工具调用、会话延续与响应字段。
+  </Card>
+</CardGroup>
+
+模型能力不完全相同。更换模型时，请核对目标模型是否支持当前参数。鉴权方式见[网关与鉴权](/zh/develop-guide/gateway-auth)，错误处理见[状态码与响应](/zh/develop-guide/status-code-response)。

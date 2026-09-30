@@ -1,70 +1,82 @@
 ---
 title: "网关与鉴权"
 sidebarTitle: "网关与鉴权"
+description: "选择 Tikway API 入口，并按 OpenAI、Anthropic 或 Gemini 协议传入 API Key。"
 ---
 
-> 了解 Tikway API 的统一入口、身份认证与请求规范。
+Tikway 的公共 API 网关地址是 `https://api.tikway.ai`。同一把 Tikway API Key 可用于网关支持的不同协议；请求路径决定入站协议，请求中的模型标识决定调用哪个模型。
 
-## 概述
+## 选择请求地址
 
-Tikway AI 网关是所有 API 请求的统一入口，负责完成模型路由、身份认证与请求转发。
+| 协议 | SDK Base URL | 常用完整端点 |
+| --- | --- | --- |
+| OpenAI 兼容 | `https://api.tikway.ai/v1` | `POST https://api.tikway.ai/v1/chat/completions`、`POST https://api.tikway.ai/v1/responses` |
+| Anthropic Messages | `https://api.tikway.ai` | `POST https://api.tikway.ai/v1/messages` |
+| Gemini 原生 | `https://api.tikway.ai`，API 版本为 `v1beta` | `POST https://api.tikway.ai/v1beta/models/{model}:generateContent` |
 
-无论调用语言模型、图像、视频还是音乐能力，你都只需面向同一个网关进行集成。选择合适的模型标识，即可由 Tikway 将请求路由至对应的模型能力。
+使用 HTTPS。JSON 请求设置 `Content-Type: application/json`；上传文件的接口按对应 API 文档使用 `multipart/form-data`。`{model}` 是 Gemini 路径中的模型名称；其他接口通常在请求体的 `model` 字段中指定模型。模型标识以你在 Tikway 模型列表中看到的值为准。
 
-## 身份认证
+<Note>
+  Tikway 的 Anthropic 和 Gemini 原生端点分别位于 `/v1/messages` 与 `/v1beta/models/...`，无需在网关地址后加 `/anthropic` 或 `/gemini`。
+</Note>
 
-所有请求均需在 HTTP 请求头中携带 API Key。你可以登录 [Tikway AI](https://tikway.ai)，在控制台创建和管理密钥。
+## 创建并保存 API Key
 
-```http
-X-API-Key: YOUR_API_KEY
-```
+登录 [Tikway 控制台](https://tikway.ai)创建 API Key。将密钥放在服务端环境变量中，例如 `TIKWAY_API_KEY`，不要写入浏览器代码、移动端安装包、仓库或日志。密钥泄露后应停用并重新创建。
 
-以下是一个完整请求示例：
+以下示例使用 shell 环境变量。运行前先设置 `TIKWAY_API_KEY`，并将示例模型替换为你有权调用的模型。
+
+## 按协议传递密钥
+
+| 请求协议 | 推荐鉴权请求头 | 其他请求头 |
+| --- | --- | --- |
+| OpenAI 兼容、图像、视频等 `/v1` 接口 | `Authorization: Bearer $TIKWAY_API_KEY` | JSON 请求使用 `Content-Type: application/json` |
+| Anthropic Messages | `x-api-key: $TIKWAY_API_KEY` | `anthropic-version: 2023-06-01`、`Content-Type: application/json` |
+| Gemini 原生 | `x-goog-api-key: $TIKWAY_API_KEY` | `Content-Type: application/json` |
+
+网关也能识别 `X-API-Key` 请求头。新接入建议使用表中的原生写法，这样与各协议的 SDK 和本站 API Reference 一致。Gemini 密钥应放在请求头中。
+
+### OpenAI 兼容示例
 
 ```bash
 curl https://api.tikway.ai/v1/chat/completions \
-  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Authorization: Bearer $TIKWAY_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "openai/gpt-5.6-terra",
-    "messages": [
-      {
-        "role": "user",
-        "content": "请用一句话解释什么是人工智能。"
-      }
-    ]
+    "messages": [{"role": "user", "content": "你好"}]
   }'
 ```
 
-<Warning>
-  API Key 具有账户权限。请仅在服务端环境中使用，不要提交至 Git 仓库、嵌入前端代码或分享给他人。
-</Warning>
+OpenAI SDK 的 `base_url` 填 `https://api.tikway.ai/v1`，`api_key` 填 Tikway API Key。SDK 会添加 `Authorization: Bearer` 请求头。
 
-## 请求规范
+### Anthropic Messages 示例
 
-| 项目 | 说明 |
-| --- | --- |
-| 网关地址 | `https://api.tikway.ai` |
-| 请求协议 | HTTPS |
-| 字符编码 | UTF-8 |
-| 内容类型 | `application/json` |
-| 身份认证 | `X-API-Key` 请求头 |
-| 请求方法 | 以具体接口文档为准，通常为 `POST` 或 `GET` |
+```bash
+curl https://api.tikway.ai/v1/messages \
+  -H "x-api-key: $TIKWAY_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "claude-sonnet-4-6",
+    "max_tokens": 1024,
+    "messages": [{"role": "user", "content": "你好"}]
+  }'
+```
 
-## 鉴权失败
+### Gemini 原生示例
 
-当 API Key 缺失、无效或无权访问请求资源时，网关会返回 `401 Unauthorized`。
+```bash
+curl 'https://api.tikway.ai/v1beta/models/gemini-2.5-flash:generateContent' \
+  -H "x-goog-api-key: $TIKWAY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{"role": "user", "parts": [{"text": "你好"}]}]
+  }'
+```
 
-遇到鉴权错误时，请依次确认：
+## 鉴权失败时检查什么
 
-1. 请求头中是否包含 `X-API-Key`。
-2. API Key 是否填写完整且未包含多余空格。
-3. 使用的密钥是否仍处于有效状态。
-4. 请求是否发往 `https://api.tikway.ai`。
+网关无法识别或验证 API Key 时返回 `401`；密钥有效但无权访问目标资源时可能返回 `403`。检查请求是否发往正确的地址、密钥是否完整、请求头是否符合所选协议，以及目标模型是否对当前密钥开放。
 
-## 最佳实践
-
-- 为开发、测试与生产环境分别创建独立的 API Key。
-- 通过环境变量保存密钥，例如 `TIKWAY_API_KEY`。
-- 不要在日志、错误信息或客户端响应中输出完整密钥。
-- 上线前，为密钥配置最小必要的访问范围与使用策略。
+响应头 `x-request-id` 可用于定位一次请求。错误体、限流头和重试方法见[状态码与响应](/zh/develop-guide/status-code-response)。

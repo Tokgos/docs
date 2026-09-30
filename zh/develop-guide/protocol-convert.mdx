@@ -7,17 +7,26 @@ sidebarTitle: "协议转换"
 
 ## 概述
 
-不同模型提供商通常拥有不同的接口格式、字段命名、鉴权机制与响应结构。Tikway 在网关层处理这些差异，将多样化的底层能力整合为一致的调用体验。
+不同模型提供商通常拥有不同的接口格式、字段命名、鉴权机制与响应结构。Tikway 在网关层处理支持范围内的协议差异，将多种模型接入同一个 API 入口。
 
-你无需为每一个模型重复适配不同的 API 规范。只需使用 Tikway 支持的统一协议，并在请求中指定模型，即可完成调用。
+先选择应用使用的请求协议，再调用该协议对应的路径。路径决定请求和响应的结构；`model` 决定模型。不同模型对参数、工具和多模态输入的支持范围可能不同。
+
+| 请求协议 | 入口路径 | 鉴权请求头 |
+| --- | --- | --- |
+| OpenAI Chat Completions | `/v1/chat/completions` | `Authorization: Bearer` |
+| OpenAI Responses | `/v1/responses` | `Authorization: Bearer` |
+| Anthropic Messages | `/v1/messages` | `x-api-key` |
+| Gemini Generate Content | `/v1beta/models/{model}:generateContent` | `x-goog-api-key` |
+
+完整地址与示例见[网关与鉴权](/zh/develop-guide/gateway-auth)。
 
 ## 统一调用体验
 
-以对话模型为例，无论底层模型来自 OpenAI、Gemini、Claude、DeepSeek、Qwen、GLM、Grok 或豆包，都可以通过统一的 Chat Completions 形式发起请求：
+对支持 Chat Completions 的模型，可以使用同一种请求结构调用：
 
 ```bash
 curl https://api.tikway.ai/v1/chat/completions \
-  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "openai/gpt-5.6-terra",
@@ -30,7 +39,7 @@ curl https://api.tikway.ai/v1/chat/completions \
   }'
 ```
 
-切换模型时，通常只需调整 `model` 字段，其余请求结构保持不变：
+在同一协议内切换模型时，通常先调整 `model` 字段，再检查目标模型是否支持当前请求的工具、图片、音频和采样参数：
 
 ```json
 {
@@ -53,6 +62,8 @@ Tikway 在统一接口与底层模型之间完成必要的协议适配，包括�
 - 统一身份认证与访问控制方式。
 - 规范化接口响应，降低应用层的适配成本。
 - 将新模型接入纳入既有开发流程，减少迁移工作。
+
+协议适配不会让所有模型拥有相同能力。例如，一个模型不支持某个工具或输出格式时，网关可能拒绝该参数；网关生成的错误格式遵循你调用的入站协议。排错时查看[状态码与响应](/zh/develop-guide/status-code-response)。
 
 ## 适合的使用场景
 

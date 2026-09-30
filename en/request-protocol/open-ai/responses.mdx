@@ -1,0 +1,119 @@
+---
+title: "Responses"
+sidebarTitle: "Responses"
+description: "Create multimodal, multi-turn, and tool-enabled Responses through Tikway."
+---
+
+Responses models inputs, outputs, tool calls, and conversation state as separate items. It uses `input` instead of Chat Completions' `messages`, supports `instructions` for application guidance, and can continue a response chain with `previous_response_id`.
+
+## Endpoint and authentication
+
+```http
+POST https://api.tikway.ai/v1/responses
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+```
+
+## Minimal request
+
+For simple text, pass `input` as a string:
+
+```bash
+curl https://api.tikway.ai/v1/responses \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/gpt-5.6-terra",
+    "input": "Write a short tagline for a late-night bookstore."
+  }'
+```
+
+Text typically appears in a `type: "message"` item within `output`, then in that item's `content[].text`. Do not assume `output[0]` is a text message: it may be a reasoning or function-call item.
+
+## Input items
+
+For richer input, send an array of items with roles and typed content blocks. Common blocks include `input_text`, `input_image`, `input_file`, and `input_audio`.
+
+```json
+{
+  "input": [{
+    "role": "user",
+    "content": [
+      {"type": "input_text", "text": "What architectural styles are in this image?"},
+      {"type": "input_image", "image_url": "https://example.com/city.jpg", "detail": "high"}
+    ]
+  }]
+}
+```
+
+Use `instructions` for application-level behavior. When continuing with `previous_response_id`, send `instructions` again if they must remain in effect; previous instructions are not automatically inherited.
+
+## Conversation state
+
+`previous_response_id` points to an earlier Responses result and continues that response chain. `conversation` points to a Conversation resource that collects input and output items. Do not send both in the same request.
+
+```json
+{"previous_response_id": "resp_01J...", "input": "Make the afternoon more relaxed."}
+```
+
+## Tools
+
+`tools` can declare functions or supported platform tools. A Responses function tool places `name`, `description`, and `parameters` directly on the tool object, unlike Chat Completions.
+
+```json
+{
+  "tools": [{
+    "type": "function",
+    "name": "get_weather",
+    "description": "Get the weather for a city.",
+    "parameters": {
+      "type": "object",
+      "properties": {"city": {"type": "string"}},
+      "required": ["city"],
+      "additionalProperties": false
+    },
+    "strict": true
+  }],
+  "tool_choice": "auto",
+  "parallel_tool_calls": false
+}
+```
+
+The model returns a `function_call` item; your application executes the function and sends a `function_call_output` item with the matching `call_id` in the next request.
+
+## Output format and reasoning
+
+Use `text.format` for plain text, legacy JSON Object, or JSON Schema output. `text.verbosity` controls response detail on compatible models. `reasoning.effort` controls reasoning effort, and `reasoning.summary` can request a summary. Supported values depend on the model.
+
+```json
+{
+  "text": {
+    "format": {
+      "type": "json_schema",
+      "name": "travel_plan",
+      "schema": {
+        "type": "object",
+        "properties": {"title": {"type": "string"}},
+        "required": ["title"],
+        "additionalProperties": false
+      },
+      "strict": true
+    }
+  },
+  "reasoning": {"effort": "medium", "summary": "auto"}
+}
+```
+
+## Streaming and limits
+
+Set `stream: true` to receive Responses events over SSE. Handle event types such as `response.output_text.delta`, `response.completed`, and `response.failed`. `max_output_tokens` limits visible output and reasoning tokens together. Other controls include `max_tool_calls`, `temperature`, `top_p`, `store`, `metadata`, `service_tier`, and prompt caching fields.
+
+Consult the API Reference for the full schema and model-specific support. See [Status codes and responses](/en/develop-guide/status-code-response) for errors and retries.
+
+## Further reading
+
+- [Function calling](/en/request-protocol/open-ai/responses/function-calling)
+- [Streaming](/en/request-protocol/open-ai/responses/streaming)
+- [Multi-turn conversations](/en/request-protocol/open-ai/responses/multi-turn)
+- [Request field example](/en/request-protocol/open-ai/responses/full-request-example)
+- [Response fields](/en/request-protocol/open-ai/responses/response-parameters)

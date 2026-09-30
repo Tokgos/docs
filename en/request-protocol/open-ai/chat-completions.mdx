@@ -1,0 +1,108 @@
+---
+title: "Chat Completions"
+sidebarTitle: "Chat Completions"
+description: "Create chat completions through Tikway's OpenAI-compatible API."
+---
+
+Chat Completions accepts an ordered conversation in `messages` and returns the model's next response. Use it for chat, Q&A, summaries, content generation, and applications that call business tools.
+
+## Endpoint and authentication
+
+```http
+POST https://api.tikway.ai/v1/chat/completions
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+```
+
+## Minimal request
+
+`model` and `messages` are required. Use a model ID shown in your Tikway model list.
+
+```bash
+curl https://api.tikway.ai/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/gpt-5.6-terra",
+    "messages": [{"role": "user", "content": "Write a short tagline for a late-night bookstore."}]
+  }'
+```
+
+For a non-streaming response, the main text is usually in `choices[0].message.content`. Check `choices[0].finish_reason` to see why generation stopped, and `usage` for token counts.
+
+## Messages and conversation history
+
+Send messages in chronological order. The common roles are `developer`, `system`, `user`, `assistant`, and `tool`. Tikway does not automatically attach earlier Chat Completions turns to a new request; your application must send the history it wants the model to see. After a tool call, add a `tool` message with the matching `tool_call_id`.
+
+User content can be a string or an array of content blocks. For example:
+
+```json
+{
+  "role": "user",
+  "content": [
+    {"type": "text", "text": "What architectural styles are in this image?"},
+    {"type": "image_url", "image_url": {"url": "https://example.com/city.jpg", "detail": "high"}}
+  ]
+}
+```
+
+Image, audio, and file blocks work only with models that support them. Use text for `developer` and `system` messages.
+
+## Streaming
+
+Set `stream: true` for server-sent events. Append each `choices[].delta.content` fragment until `data: [DONE]` arrives. Set `stream_options.include_usage: true` if you need a final usage event.
+
+```json
+{"stream": true, "stream_options": {"include_usage": true}}
+```
+
+Use an SSE-capable client; a normal JSON parser cannot read a stream as one response. A stream can also fail after the initial HTTP `200`, so inspect later frames for errors.
+
+## Tools and structured output
+
+Declare callable functions in `tools`. The model returns a call request; your application validates the arguments, runs the function, and sends the result back as a `tool` message. `tool_choice` can be `auto`, `none`, `required`, or a specific tool. Set `parallel_tool_calls: false` to limit a turn to one tool call.
+
+```json
+{
+  "tools": [{
+    "type": "function",
+    "function": {
+      "name": "get_weather",
+      "description": "Get the weather for a city.",
+      "parameters": {
+        "type": "object",
+        "properties": {"city": {"type": "string"}},
+        "required": ["city"],
+        "additionalProperties": false
+      },
+      "strict": true
+    }
+  }],
+  "tool_choice": "auto"
+}
+```
+
+Use `response_format` to request text, legacy `json_object`, or `json_schema` output. Structured Outputs require a model that supports them. The older `functions` and `function_call` request fields are deprecated.
+
+## Other request controls
+
+| Field | Purpose |
+| --- | --- |
+| `max_completion_tokens` | Caps generated tokens, including reasoning tokens where applicable. |
+| `temperature`, `top_p` | Control sampling when supported by the model. |
+| `reasoning_effort` | Controls reasoning effort on compatible models. |
+| `modalities`, `audio` | Request audio output on compatible models. |
+| `logprobs`, `top_logprobs`, `logit_bias` | Inspect or influence token selection where supported. |
+| `prediction` | Supplies known output content to speed up matching responses. |
+| `prompt_cache_key`, `prompt_cache_options` | Configure supported prompt caching behavior. |
+| `store`, `metadata`, `service_tier`, `safety_identifier` | Control storage, tagging, service tier, and abuse tracking. |
+
+Check the API Reference for every field's type and constraints. A field accepted by the protocol may still be unavailable for a particular model. For status codes and retries, see [Status codes and responses](/en/develop-guide/status-code-response).
+
+## Further reading
+
+- [Function calling](/en/request-protocol/open-ai/function-calling)
+- [Streaming](/en/request-protocol/open-ai/streaming)
+- [Multi-turn conversations](/en/request-protocol/open-ai/multi-turn)
+- [Request field example](/en/request-protocol/open-ai/full-request-example)
+- [Response fields](/en/request-protocol/open-ai/response-parameters)
