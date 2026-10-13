@@ -1,0 +1,102 @@
+---
+title: "模型支持参数与 JSON Schema"
+description: "说明协议参数配置集如何使用完整 JSON Schema 描述请求体，以及 Responses input 的联合类型。"
+---
+
+模型支持参数描述的是**协议请求体**，不是一组只能填字符串的表单字段。配置集的 `jsonSchema` 保存完整的 JSON Schema，根节点固定为 `type: "object"`，请求参数位于 `properties`，必填字段位于 `required`。这样可以保留数组、嵌套对象、枚举、数值范围和联合类型等协议语义。
+
+## 配置集结构
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "model": { "type": "string", "description": "模型 ID" },
+    "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
+    "stream": { "type": "boolean" }
+  },
+  "required": ["model"]
+}
+```
+
+`jsonSchema` 只描述协议允许的形状，不把 `type`、`enum`、`minimum` 等信息转成自定义的 `dataType` 或 `valueKind`。管理端可以继续展示兼容字段，但它们都从 Schema 推导，不能反过来覆盖 Schema。
+
+## Responses 的 `input`
+
+Responses 的 `input` 不是固定字符串。官方文档允许直接传字符串，也允许传输入消息或先前响应项数组，因此应使用 `oneOf` 保留联合类型：
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "input": {
+      "description": "文本、图片、音频、文件或输入项列表",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["message", "function_call", "function_call_output", "reasoning", "item_reference"]
+              },
+              "role": { "type": "string", "enum": ["developer", "system", "user", "assistant"] },
+              "content": {
+                "oneOf": [
+                  { "type": "string" },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string", "enum": ["input_text", "input_image", "input_file", "input_audio"] },
+                        "text": { "type": "string" },
+                        "image_url": { "type": "string" },
+                        "file_id": { "type": "string" }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+不要把上述定义写成 `input: { dataType: "string", valueKind: "free" }`。这种写法会丢掉数组项结构，管理端也无法判断 `input` 是文本还是消息列表。`oneOf` 的每个分支都代表一种可接受的 JSON 值；如果协议允许 `null`，应增加 `{ "type": "null" }` 分支或使用 Draft 2020-12 的类型数组。
+
+## child 配置集
+
+root 配置集保存完整 Schema。child 配置集通过 `patchJson` 修改父 Schema 的 `properties`，不再复制一份字段元数据：
+
+```json
+{
+  "add": {
+    "reasoning": {
+      "type": "object",
+      "properties": {
+        "effort": { "type": "string", "enum": ["low", "medium", "high"] }
+      }
+    }
+  },
+  "replace": {
+    "max_output_tokens": { "type": "integer", "minimum": 1, "maximum": 128000 }
+  },
+  "remove": ["temperature"],
+  "required": ["model"]
+}
+```
+
+`add` 和 `replace` 的键是请求参数名，值是 JSON Schema；`remove` 删除父 Schema 的属性；`required` 在 child 中出现时替换必填列表。模型关联仍由 `ai_parameter_profile_model` 表维护，最终 Schema 按 root、父 child、当前模型 child 的优先级合并。
+
+## 导入来源与校验
+
+导入器优先读取仓库中 `docs/zh/apis` 的 OpenAPI Schema；这些文件引用了 `ai-docs` 中的协议说明，并包含 Responses `input` 的具体分支。没有结构化 OpenAPI 文件的供应商文档才使用 Markdown 兜底解析。保存配置集时会校验根节点是 object 且存在 `properties`，避免再次产生所有字段都是 string 的配置。
+
