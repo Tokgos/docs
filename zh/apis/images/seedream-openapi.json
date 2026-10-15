@@ -124,6 +124,34 @@
                       }
                     },
                     "description": "火山引擎提示词优化设置。"
+                  },
+                  "images": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 14,
+                    "description": "可选。图生图参考图；省略时为文生图。5.0 Pro 最多 10 张，4.5 最多 14 张；具体可用能力以所选模型为准。",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "image_url"
+                          ],
+                          "properties": {
+                            "image_url": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "图片 URL、data URL 或 Base64 字符串。"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
                   }
                 },
                 "allOf": [

@@ -1,0 +1,218 @@
+---
+title: "Google 语音音色与调用指南"
+description: "按 Gemini TTS 模型核对预置音色，使用平台标准字段生成语音，并使用统一接口测试。"
+sidebarTitle: "Google 音色列表"
+icon: "microphone"
+---
+
+通过 `POST /v1/audio/speech` 调用 Google TTS。你只需填写平台的 `model`、字符串 `input` 和顶层 `voice`；网关负责原生请求转换和音频处理。
+
+## 目录分析
+
+本页依据 2026-10-15 核对的 Google 模型目录快照及官方文档整理。目录同时包含文本、图像、Live 和 TTS 等模型；本文范围为 HTTP TTS，共有五个模型、**70 个不同的预置音色 ID**及 230 条模型与音色关联。
+
+官方页面展示 30 个精选预置音色，目录中的 3.8 系列还列出 40 个新增音色。下表保留两组清单及对应的模型范围。
+
+| 模型 | 快照音色数 | 使用清单 |
+| --- | --- | --- |
+| `gemini-3.8-flash-tts` | 70 | 30 个通用音色 + 40 个新增音色 |
+| `gemini-3.8-flash-lite-tts` | 70 | 与 3.8 Flash 的快照清单完全相同 |
+| `gemini-3.1-flash-tts-preview` | 30 | 仅下方通用音色 |
+| `gemini-2.5-pro-preview-tts` | 30 | 仅下方通用音色 |
+| `gemini-2.5-flash-preview-tts` | 30 | 快照仍有此模型，当前官方支持表未列出 |
+
+模型可用性以平台模型广场和实际账号为准。文件中的 `models/` 是 Google 目录前缀；调用平台时使用已配置的模型 ID 或别名，例如 `google/gemini-3.8-flash-tts`。
+
+<Note>
+  清单完整覆盖上述目录快照。3.8 还支持 Google 动态语音库及项目自定义音色，因此 Body Schema 保持 `voice` 为名称或 ID，不锁定为 30 或 70 个枚举值。选择时需核对模型和账号权限。
+</Note>
+
+## 如何读音色信息
+
+- `voice` 是调用时传入的准确名称，区分大小写，如 `Kore`、`Zephyr`、`Arlo`。
+- 声线、音高、口音和用途是音色元数据，用于选择音色；它们不是可直接传给本接口的调节参数。
+- 快照中的试听语言统一标为 `en-US`，不代表只能合成英语。语言覆盖范围取决于模型；官方说明 3.8 Flash 支持 130 多种语言，Flash-Lite 支持 100 多种。
+- 两代模型对同一音色的用途标签可能不同，不能把某个推荐场景解释为功能限制。下表声线和音高按快照整理，点击 ID 可打开官方试听音频。
+
+## 通用预置音色 · 30 个
+
+这 30 个音色出现在快照中的全部五个 TTS 模型里，也与官方预置音色列表一致。
+
+| `voice`（点击试听） | 声线 | 音高 |
+| --- | --- | --- |
+| [`Zephyr`](https://gstatic.com/aistudio/voices/samples/Zephyr.wav) | 女声 · 明亮 | 偏高 |
+| [`Puck`](https://gstatic.com/aistudio/voices/samples/Puck.wav) | 男声 · 欢快 | 中音 |
+| [`Charon`](https://gstatic.com/aistudio/voices/samples/Charon.wav) | 男声 · 解说感 | 偏低 |
+| [`Kore`](https://gstatic.com/aistudio/voices/samples/Kore.wav) | 女声 · 坚定 | 中音 |
+| [`Fenrir`](https://gstatic.com/aistudio/voices/samples/Fenrir.wav) | 男声 · 富有激情 | 中低音 |
+| [`Leda`](https://gstatic.com/aistudio/voices/samples/Leda.wav) | 女声 · 年轻 | 偏高 |
+| [`Orus`](https://gstatic.com/aistudio/voices/samples/Orus.wav) | 男声 · 坚定 | 中低音 |
+| [`Aoede`](https://gstatic.com/aistudio/voices/samples/Aoede.wav) | 女声 · 轻盈 | 中音 |
+| [`Callirrhoe`](https://gstatic.com/aistudio/voices/samples/Callirrhoe.wav) | 女声 · 随和 | 中音 |
+| [`Autonoe`](https://gstatic.com/aistudio/voices/samples/Autonoe.wav) | 女声 · 明亮 | 中音 |
+| [`Enceladus`](https://gstatic.com/aistudio/voices/samples/Enceladus.wav) | 男声 · 气声 | 偏低 |
+| [`Iapetus`](https://gstatic.com/aistudio/voices/samples/Iapetus.wav) | 男声 · 清晰 | 中低音 |
+| [`Umbriel`](https://gstatic.com/aistudio/voices/samples/Umbriel.wav) | 男声 · 随和 | 中低音 |
+| [`Algieba`](https://gstatic.com/aistudio/voices/samples/Algieba.wav) | 男声 · 顺滑 | 偏低 |
+| [`Despina`](https://gstatic.com/aistudio/voices/samples/Despina.wav) | 女声 · 顺滑 | 中音 |
+| [`Erinome`](https://gstatic.com/aistudio/voices/samples/Erinome.wav) | 女声 · 清晰 | 中音 |
+| [`Algenib`](https://gstatic.com/aistudio/voices/samples/Algenib.wav) | 男声 · 沙哑 | 偏低 |
+| [`Rasalgethi`](https://gstatic.com/aistudio/voices/samples/Rasalgethi.wav) | 男声 · 解说感 | 中音 |
+| [`Laomedeia`](https://gstatic.com/aistudio/voices/samples/Laomedeia.wav) | 女声 · 欢快 | 偏高 |
+| [`Achernar`](https://gstatic.com/aistudio/voices/samples/Achernar.wav) | 女声 · 柔和 | 偏高 |
+| [`Alnilam`](https://gstatic.com/aistudio/voices/samples/Alnilam.wav) | 男声 · 坚定 | 中低音 |
+| [`Schedar`](https://gstatic.com/aistudio/voices/samples/Schedar.wav) | 男声 · 平稳 | 中低音 |
+| [`Gacrux`](https://gstatic.com/aistudio/voices/samples/Gacrux.wav) | 女声 · 成熟 | 中音 |
+| [`Pulcherrima`](https://gstatic.com/aistudio/voices/samples/Pulcherrima.wav) | 女声 · 直接 | 中音 |
+| [`Achird`](https://gstatic.com/aistudio/voices/samples/Achird.wav) | 男声 · 亲切 | 中低音 |
+| [`Zubenelgenubi`](https://gstatic.com/aistudio/voices/samples/Zubenelgenubi.wav) | 男声 · 随性 | 中低音 |
+| [`Vindemiatrix`](https://gstatic.com/aistudio/voices/samples/Vindemiatrix.wav) | 女声 · 温和 | 中音 |
+| [`Sadachbia`](https://gstatic.com/aistudio/voices/samples/Sadachbia.wav) | 男声 · 活泼 | 偏低 |
+| [`Sadaltager`](https://gstatic.com/aistudio/voices/samples/Sadaltager.wav) | 男声 · 博学感 | 中音 |
+| [`Sulafat`](https://gstatic.com/aistudio/voices/samples/Sulafat.wav) | 女声 · 温暖 | 中音 |
+
+## Gemini 3.8 新增音色 · 40 个
+
+以下音色在本次快照中的适用范围为 3.8 Flash / Flash-Lite TTS。区域口音和音色试听请参阅各音色链接。
+
+<AccordionGroup>
+<Accordion title="查看 3.8 新增音色清单" defaultOpen>
+
+| `voice`（点击试听） | 声线 | 音高 |
+| --- | --- | --- |
+| [`Arlo`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-arlo.wav) | 男声 · 自信清楚 | 深低音 |
+| [`Bodi`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-bodi.wav) | 男声 · 轻声亲近 | 低音 |
+| [`Brio`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-brio.wav) | 男声 · 轻声亲近 | 中低音 |
+| [`Cleo`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-cleo.wav) | 女声 · 温暖生动 | 中高音 |
+| [`Cruz`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-cruz.wav) | 男声 · 稳重专业 | 深低音 |
+| [`Daro`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-daro.wav) | 男声 · 自信清楚 | 低音 |
+| [`Elio`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-elio.wav) | 男声 · 平静安抚 | 中音 |
+| [`Enya`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-enya.wav) | 女声 · 干练专业 | 中音 |
+| [`Enzo`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-enzo.wav) | 男声 · 利落积极 | 低音 |
+| [`Finn`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-finn.wav) | 男声 · 温暖易亲近 | 低音 |
+| [`Fola`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-fola.wav) | 女声 · 清晰亲切 | 中音 |
+| [`Gero`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-gero.wav) | 男声 · 清晰亲切 | 低音 |
+| [`Hali`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-hali.wav) | 女声 · 平静安抚 | 中高音 |
+| [`Jett`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-jett.wav) | 男声 · 温暖共情 | 深低音 |
+| [`Jori`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-jori.wav) | 女声 · 温暖易亲近 | 中低音 |
+| [`Kira`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-kira.wav) | 女声 · 从容自信 | 中音 |
+| [`Knox`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-knox.wav) | 男声 · 温暖对话感 | 低音 |
+| [`Koda`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-koda.wav) | 男声 · 直接友善 | 中低音 |
+| [`Lora`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-lora.wav) | 女声 · 清晰亲切 | 中音 |
+| [`Ludo`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-ludo.wav) | 男声 · 自信清楚 | 低音 |
+| [`Lumi`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-lumi.wav) | 女声 · 温暖易亲近 | 低音 |
+| [`Mako`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-mako.wav) | 男声 · 活力鲜明 | 低音 |
+| [`Milo`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-milo.wav) | 男声 · 轻声亲近 | 低音 |
+| [`Neno`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-neno.wav) | 男声 · 低沉柔润 | 深低音 |
+| [`Nika`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-nika.wav) | 女声 · 温暖易亲近 | 中音 |
+| [`Nyla`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-nyla.wav) | 女声 · 干练专业 | 中高音 |
+| [`Olin`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-olin.wav) | 男声 · 轻盈准确 | 低音 |
+| [`Rami`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-rami.wav) | 男声 · 温暖易亲近 | 低音 |
+| [`Riko`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-riko.wav) | 男声 · 自信清楚 | 深低音 |
+| [`Rina`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-rina.wav) | 女声 · 温和松弛 | 中音 |
+| [`Sami`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-sami.wav) | 女声 · 从容自信 | 低音 |
+| [`Sola`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-sola.wav) | 女声 · 温和松弛 | 很高 |
+| [`Tari`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-tari.wav) | 女声 · 自信清楚 | 中音 |
+| [`Tavi`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-tavi.wav) | 女声 · 轻声亲近 | 中高音 |
+| [`Tova`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-tova.wav) | 女声 · 共鸣舒缓 | 中低音 |
+| [`Varo`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-varo.wav) | 男声 · 放松随性 | 低音 |
+| [`Veda`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-veda.wav) | 女声 · 温暖易亲近 | 高音 |
+| [`Zali`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-zali.wav) | 女声 · 温暖共情 | 中音 |
+| [`Zeno`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-zeno.wav) | 男声 · 从容自信 | 中高音 |
+| [`Zuri`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-zuri.wav) | 女声 · 自然清晰 | 中音 |
+
+</Accordion>
+</AccordionGroup>
+
+## 标准请求
+
+```json
+{
+  "model": "google/gemini-3.8-flash-tts",
+  "input": "你好，欢迎使用语音合成。",
+  "voice": "Kore",
+  "instructions": "用温和、清晰的语气朗读。",
+  "response_format": "wav",
+  "extra_body": {
+    "language_code": "cmn-CN"
+  }
+}
+```
+
+| 字段 | 当前平台行为 |
+| --- | --- |
+| `model`、`input`、`voice` | 必填；`input` 为字符串，网关上限 4096 字符 |
+| `voice` | 名称或 ID 字符串，也接受 `{ "id": "Kore" }` |
+| `instructions` | 3.8 作为风格元数据；2.5/3.1 使用旧版提示文本 |
+| `speed` | 标准范围 0.25–4，默认 1；Google 通过风格提示近似控制，不保证精确倍速 |
+| `response_format` | 当前 Google 适配仅支持 `wav` / `pcm`，默认 `wav` |
+| `stream_format` | `audio` 返回音频字节；`sse` 返回平台统一事件 |
+| `extra_body` | Google 扩展；同名字段也可直接放在顶层，顶层优先，仅展开一层 |
+
+扩展包括 `language_code`、`speech_metadata`、`generation_config`、`multi_speaker_voice_config` 和文本 `contents`。其中 `generation_config` 本次只展示已核对的 `temperature` 配置，不照搬整套 Google 原生参数。
+
+<Note>
+  当前 Google 适配先接收完整合成结果，再封装成 `speech.audio.delta` / `speech.audio.done`。`stream_format=sse` 不能理解为上游已经启用低延迟流式合成。WAV 自带容器头，PCM 没有文件头；采样率沿用实际音频信息。
+</Note>
+
+## 3.8 与旧预览版的差异
+
+Gemini 3.8 把正文作为逐字朗读内容，风格指令应通过顶层 `instructions` 或扩展的 `speech_metadata.style` 传入。2.5/3.1 的网关适配仍使用旧版提示文本，不能承诺与 3.8 完全一致的指令效果。
+
+3.8 可以引用当前 Google 项目已有的 `voice_...` 或 `voicekey_...`，直接传入 `voice` 字符串或 `{ "id": "voice_..." }`。本接口只消费已有音色，不提供创建、复刻或语音目录查询接口；也不把这些音色 ID 作为 2.5/3.1 的可用参数。
+
+## 多说话人
+
+当前网关支持最多两名说话人，使用 `extra_body.multi_speaker_voice_config` 配置预置音色，并通过 `extra_body.contents[].parts[].speech_metadata.speaker` 对应每个轮次。
+
+```json
+{
+  "model": "google/gemini-3.8-flash-tts",
+  "input": "Joe 与 Jane 的问候对话。",
+  "voice": "Kore",
+  "response_format": "wav",
+  "extra_body": {
+    "multi_speaker_voice_config": {
+      "speakerVoiceConfigs": [
+        {
+          "speaker": "Joe",
+          "voiceConfig": {
+            "prebuiltVoiceConfig": {
+              "voiceName": "Puck"
+            }
+          }
+        },
+        {
+          "speaker": "Jane",
+          "voiceConfig": {
+            "prebuiltVoiceConfig": {
+              "voiceName": "Kore"
+            }
+          }
+        }
+      ]
+    },
+    "contents": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "你好，今天过得怎么样？",
+            "speech_metadata": {
+              "speaker": "Joe",
+              "style": "cheerful and friendly"
+            }
+          },
+          {
+            "text": "很好，谢谢你的关心。",
+            "speech_metadata": {
+              "speaker": "Jane",
+              "style": "calm and relaxed"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+```

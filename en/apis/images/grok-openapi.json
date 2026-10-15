@@ -1,0 +1,204 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway Grok image generation API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Image generation/Grok"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "Generate images",
+        "operationId": "createGrokImage",
+        "tags": [
+          "Image generation/Grok"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "TikwayImageResponse",
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer"
+                    },
+                    "model": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "object",
+                        "oneOf": [
+                          {
+                            "required": [
+                              "url"
+                            ]
+                          },
+                          {
+                            "required": [
+                              "b64_json"
+                            ]
+                          }
+                        ],
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "b64_json": {
+                            "type": "string"
+                          },
+                          "index": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "revised_prompt": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "size": {
+                      "type": "string"
+                    },
+                    "output_format": {
+                      "type": "string"
+                    },
+                    "quality": {
+                      "type": "string"
+                    },
+                    "background": {
+                      "type": "string"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            },
+            "description": "Successful response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Prompt for image generation."
+                  },
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Model ID or configured alias."
+                  },
+                  "enable_pro": {
+                    "type": "boolean"
+                  },
+                  "n": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4,
+                    "default": 1
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$"
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "enum": [
+                      "url",
+                      "b64_json"
+                    ],
+                    "default": "url",
+                    "description": "Output format."
+                  },
+                  "quality": {
+                    "type": "string",
+                    "enum": [
+                      "standard",
+                      "hd"
+                    ],
+                    "default": "standard"
+                  },
+                  "images": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 5,
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "image_url"
+                          ],
+                          "properties": {
+                            "image_url": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  }
+                },
+                "additionalProperties": false,
+                "title": "TikwayGrokImageGenerationRequest"
+              }
+            }
+          }
+        },
+        "description": "Grok image generation through the Tikway gateway."
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

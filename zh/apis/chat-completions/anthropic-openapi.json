@@ -270,7 +270,9 @@
                         "properties": {
                           "type": {
                             "type": "string",
-                            "enum": ["enabled"]
+                            "enum": [
+                              "enabled"
+                            ]
                           },
                           "budget_tokens": {
                             "type": "integer",
@@ -279,19 +281,37 @@
                           },
                           "block_binding": {
                             "description": "回传的思考块未通过对话前缀校验时的处理方式；省略、null 或空对象均使用默认行为。",
-                            "type": ["object", "null"],
+                            "type": [
+                              "object",
+                              "null"
+                            ],
                             "properties": {
                               "prefix_mismatch_behavior": {
-                                "type": ["string", "null"],
-                                "enum": ["error", "drop_block", null],
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "error",
+                                  "drop_block",
+                                  null
+                                ],
                                 "default": "error",
                                 "description": "error 会返回 400；drop_block 会移除不匹配的思考块。"
                               }
                             }
                           },
                           "display": {
-                            "type": ["string", "null"],
-                            "enum": ["summarized", "omitted", "updates", null],
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "summarized",
+                              "omitted",
+                              "updates",
+                              null
+                            ],
                             "default": "summarized",
                             "description": "思考内容的呈现方式；omitted 会隐藏内容但保留签名以供多轮对话使用。"
                           }
@@ -300,27 +320,49 @@
                       {
                         "title": "Adaptive thinking",
                         "type": "object",
-                        "required": ["type"],
+                        "required": [
+                          "type"
+                        ],
                         "properties": {
                           "type": {
                             "type": "string",
-                            "enum": ["adaptive"]
+                            "enum": [
+                              "adaptive"
+                            ]
                           },
                           "block_binding": {
                             "description": "回传的思考块未通过对话前缀校验时的处理方式；省略、null 或空对象均使用默认行为。",
-                            "type": ["object", "null"],
+                            "type": [
+                              "object",
+                              "null"
+                            ],
                             "properties": {
                               "prefix_mismatch_behavior": {
-                                "type": ["string", "null"],
-                                "enum": ["error", "drop_block", null],
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "error",
+                                  "drop_block",
+                                  null
+                                ],
                                 "default": "error",
                                 "description": "error 会返回 400；drop_block 会移除不匹配的思考块。"
                               }
                             }
                           },
                           "display": {
-                            "type": ["string", "null"],
-                            "enum": ["summarized", "omitted", "updates", null],
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "summarized",
+                              "omitted",
+                              "updates",
+                              null
+                            ],
                             "default": "summarized",
                             "description": "思考内容的呈现方式；omitted 会隐藏内容但保留签名以供多轮对话使用。"
                           }
@@ -329,11 +371,15 @@
                       {
                         "title": "Disabled thinking",
                         "type": "object",
-                        "required": ["type"],
+                        "required": [
+                          "type"
+                        ],
                         "properties": {
                           "type": {
                             "type": "string",
-                            "enum": ["disabled"]
+                            "enum": [
+                              "disabled"
+                            ]
                           }
                         }
                       },
@@ -575,6 +621,30 @@
                   "inference_geo": {
                     "type": "string",
                     "description": "推理地域偏好。"
+                  },
+                  "compaction": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "required": [
+                      "type"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "summarize"
+                      },
+                      "instructions": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "maxLength": 16384
+                      }
+                    },
+                    "additionalProperties": false,
+                    "description": "Anthropic 会话压缩请求。生成 compaction 内容块；非 null 时不能与 context_management 同时设置。"
                   }
                 },
                 "examples": [

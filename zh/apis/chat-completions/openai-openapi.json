@@ -1080,6 +1080,143 @@
                         }
                       }
                     }
+                  },
+                  "enable_thinking": {
+                    "type": "boolean",
+                    "description": "Qwen / 百炼扩展：是否启用思考。支持范围与默认值由模型决定。"
+                  },
+                  "thinking_budget": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Qwen / 百炼扩展：思考 token 预算。部分 Qwen 模型不能与 reasoning_effort 同时设置。"
+                  },
+                  "thinking": {
+                    "type": "object",
+                    "required": [
+                      "type"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "enabled",
+                          "disabled",
+                          "adaptive"
+                        ]
+                      },
+                      "clear_thinking": {
+                        "type": "boolean",
+                        "description": "GLM 扩展：是否清除历史思考内容。"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "description": "GLM / 百炼及 MiniMax 等模型的思考配置。type 的可用值随模型变化；GLM 使用 enabled/disabled，MiniMax M3 使用 adaptive/disabled。"
+                  },
+                  "preserve_thinking": {
+                    "type": "boolean",
+                    "description": "百炼扩展：是否保留历史思考内容，仅支持该能力的模型可用。"
+                  },
+                  "clear_thinking": {
+                    "type": "boolean",
+                    "description": "百炼扩展：是否清除对话历史中的思考内容。"
+                  },
+                  "top_k": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "description": "Qwen / 百炼扩展：采样候选集大小。null 或大于 100 时禁用 top_k，仅 top_p 生效。"
+                  },
+                  "repetition_penalty": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "Qwen / 百炼扩展：重复惩罚，1 表示不惩罚。",
+                    "minimum": 0
+                  },
+                  "do_sample": {
+                    "type": "boolean",
+                    "description": "GLM 扩展：是否启用采样；false 时忽略 temperature 和 top_p。"
+                  },
+                  "tool_stream": {
+                    "type": "boolean",
+                    "description": "Qwen / GLM 扩展：是否流式输出工具调用参数，需结合 stream=true 使用。"
+                  },
+                  "enable_search": {
+                    "type": "boolean",
+                    "description": "Qwen / 百炼扩展：是否允许联网搜索。"
+                  },
+                  "search_options": {
+                    "type": "object",
+                    "properties": {
+                      "forced_search": {
+                        "type": "boolean"
+                      },
+                      "search_strategy": {
+                        "type": "string",
+                        "enum": [
+                          "turbo",
+                          "max",
+                          "agent"
+                        ]
+                      },
+                      "enable_source": {
+                        "type": "boolean"
+                      },
+                      "enable_citation": {
+                        "type": "boolean"
+                      },
+                      "citation_format": {
+                        "type": "string"
+                      },
+                      "enable_search_extension": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "description": "Qwen / 百炼联网搜索设置，仅 enable_search=true 时生效。"
+                  },
+                  "enable_code_interpreter": {
+                    "type": "boolean",
+                    "description": "Qwen / 百炼扩展：是否启用代码解释器，取决于模型能力。"
+                  },
+                  "vl_high_resolution_images": {
+                    "type": "boolean",
+                    "description": "Qwen VL 扩展：启用高分辨率图片理解。"
+                  },
+                  "skill": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "ppt"
+                        },
+                        "mode": {
+                          "type": "string",
+                          "enum": [
+                            "general",
+                            "creative"
+                          ]
+                        },
+                        "template_id": {
+                          "type": "string",
+                          "enum": [
+                            "news_01",
+                            "summary_01",
+                            "internet_01",
+                            "thesis_01"
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
+                    },
+                    "description": "百炼 qwen-doc-turbo 的生成技能；使用时 stream 必须为 true。"
                   }
                 },
                 "examples": [
@@ -2367,6 +2504,15 @@
                         ]
                       }
                     }
+                  },
+                  "enable_thinking": {
+                    "type": "boolean",
+                    "description": "Qwen / 百炼兼容扩展，建议优先使用 reasoning.effort；两者同时设置时 reasoning.effort 优先。"
+                  },
+                  "ocr_options": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Qwen OCR 扩展，仅支持 OCR 定制任务的模型可用。"
                   }
                 },
                 "examples": [
@@ -2905,6 +3051,428 @@
             "bearer": []
           }
         ]
+      }
+    },
+    "/v1/models": {
+      "get": {
+        "summary": "Get Models",
+        "description": "获取当前网关具有可调用端点的模型目录。默认返回全部类型，可用 type 按 text、image、video、music、embedding 筛选；多个类型用逗号分隔，或重复传 type，结果取并集。\n\n响应兼容 OpenAI object=list/data 结构，并提供 aliases、architecture、capabilities 和视频模型的 video_attributes。capabilities.parameters.common 为所有可调用端点共有的参数，端点键下仅列该端点的额外参数；端点完整参数集为 common 与端点数组的并集。\n\n本条目描述普通 OpenAI 格式。携带 anthropic-version 请求头会切换为 Anthropic 模型列表格式，应使用对应协议客户端解析。",
+        "operationId": "getModels",
+        "tags": [
+          "对话补全/OpenAI 协议"
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "description": "按模型类型筛选，省略返回全部。支持 text/image/video/music/embedding，忽略大小写和周围空格。多个类型逗号分隔或重复 type，未知或空值返回 400。",
+            "example": "image,video",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "text",
+                "image",
+                "video",
+                "music",
+                "embedding",
+                "image,video"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "当前可调用模型目录；示例能力值仅用于展示结构，实际以返回值为准。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "GetModelsResponse",
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "name",
+                          "aliases",
+                          "context_length",
+                          "architecture",
+                          "capabilities",
+                          "object",
+                          "owned_by"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "请求中的模型 ID，保留供应商命名空间。"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "aliases": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "context_length": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "description": "上下文 token 上限，未配置时为 null。"
+                          },
+                          "max_output_tokens": {
+                            "type": "integer",
+                            "description": "配置时返回的最大输出 token 数。"
+                          },
+                          "architecture": {
+                            "type": "object",
+                            "required": [
+                              "input_modalities",
+                              "output_modalities"
+                            ],
+                            "properties": {
+                              "input_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "output_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          },
+                          "capabilities": {
+                            "type": "object",
+                            "required": [
+                              "reasoning_efforts",
+                              "endpoints",
+                              "parameters"
+                            ],
+                            "properties": {
+                              "reasoning_efforts": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "endpoints": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "parameters": {
+                                "type": "object",
+                                "required": [
+                                  "common"
+                                ],
+                                "properties": {
+                                  "common": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "additionalProperties": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "description": "common 与各端点额外参数，端点键为动态 API 路径。"
+                              }
+                            }
+                          },
+                          "object": {
+                            "type": "string",
+                            "const": "model"
+                          },
+                          "owned_by": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "description": "模型系列名称。"
+                          },
+                          "video_attributes": {
+                            "type": "object",
+                            "required": [
+                              "modes",
+                              "resolutions",
+                              "default_resolution",
+                              "min_duration_seconds",
+                              "max_duration_seconds",
+                              "supports_audio",
+                              "aspect_ratios"
+                            ],
+                            "properties": {
+                              "modes": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "resolutions": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "default_resolution": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "min_duration_seconds": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
+                              "max_duration_seconds": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
+                              "supports_audio": {
+                                "type": [
+                                  "boolean",
+                                  "null"
+                                ]
+                              },
+                              "aspect_ratios": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "description": "仅视频模型返回。未配置的标量为 null，列表可为空；具体输入组合仍须遵循模型 API 限制。"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "object": "list",
+                      "data": [
+                        {
+                          "id": "black-forest-labs/flux-3-video",
+                          "name": "FLUX 3 Video",
+                          "aliases": [
+                            "flux-3-video"
+                          ],
+                          "context_length": null,
+                          "architecture": {
+                            "input_modalities": [
+                              "text",
+                              "image",
+                              "video"
+                            ],
+                            "output_modalities": [
+                              "video"
+                            ]
+                          },
+                          "capabilities": {
+                            "reasoning_efforts": [],
+                            "endpoints": [
+                              "/v1/videos"
+                            ],
+                            "parameters": {
+                              "common": [
+                                "model",
+                                "prompt",
+                                "duration",
+                                "resolution",
+                                "aspect_ratio",
+                                "frame_images",
+                                "input_references",
+                                "generate_audio",
+                                "extra_body"
+                              ],
+                              "/v1/videos": []
+                            }
+                          },
+                          "object": "model",
+                          "owned_by": "Flux",
+                          "video_attributes": {
+                            "modes": [
+                              "t2v",
+                              "i2v",
+                              "v2v"
+                            ],
+                            "resolutions": [
+                              "480p",
+                              "720p",
+                              "1080p"
+                            ],
+                            "default_resolution": "720p",
+                            "min_duration_seconds": 5,
+                            "max_duration_seconds": 20,
+                            "supports_audio": true,
+                            "aspect_ratios": [
+                              "16:9",
+                              "9:16",
+                              "1:1"
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "视频模型目录示例",
+                    "value": {
+                      "object": "list",
+                      "data": [
+                        {
+                          "id": "black-forest-labs/flux-3-video",
+                          "name": "FLUX 3 Video",
+                          "aliases": [
+                            "flux-3-video"
+                          ],
+                          "context_length": null,
+                          "architecture": {
+                            "input_modalities": [
+                              "text",
+                              "image",
+                              "video"
+                            ],
+                            "output_modalities": [
+                              "video"
+                            ]
+                          },
+                          "capabilities": {
+                            "reasoning_efforts": [],
+                            "endpoints": [
+                              "/v1/videos"
+                            ],
+                            "parameters": {
+                              "common": [
+                                "model",
+                                "prompt",
+                                "duration",
+                                "resolution",
+                                "aspect_ratio",
+                                "frame_images",
+                                "input_references",
+                                "generate_audio",
+                                "extra_body"
+                              ],
+                              "/v1/videos": []
+                            }
+                          },
+                          "object": "model",
+                          "owned_by": "Flux",
+                          "video_attributes": {
+                            "modes": [
+                              "t2v",
+                              "i2v",
+                              "v2v"
+                            ],
+                            "resolutions": [
+                              "480p",
+                              "720p",
+                              "1080p"
+                            ],
+                            "default_resolution": "720p",
+                            "min_duration_seconds": 5,
+                            "max_duration_seconds": 20,
+                            "supports_audio": true,
+                            "aspect_ratios": [
+                              "16:9",
+                              "9:16",
+                              "1:1"
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "type 包含未知类型或空值。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "none": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        }
       }
     }
   },

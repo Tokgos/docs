@@ -621,6 +621,30 @@
                   "inference_geo": {
                     "type": "string",
                     "description": "Reasoning about geographic preferences."
+                  },
+                  "compaction": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "required": [
+                      "type"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "summarize"
+                      },
+                      "instructions": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "maxLength": 16384
+                      }
+                    },
+                    "additionalProperties": false,
+                    "description": "Anthropic conversation compaction. Non-null values cannot be combined with context_management."
                   }
                 },
                 "examples": [

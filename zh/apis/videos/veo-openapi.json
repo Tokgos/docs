@@ -18,7 +18,7 @@
       "post": {
         "summary": "创建 Veo 视频",
         "deprecated": false,
-        "description": "通过统一的 `POST /v1/videos` 创建 Veo 视频任务。模型能力以当前 Tikway 网关实际可调用范围为准。\n\n| 模型 | 分辨率 | 时长 | 支持模式 | 音频 | 参考限制 |\n| --- | --- | --- | --- | --- | --- |\n| `veo-3.1-fast` | 720p / 1080p | 当前网关固定 8 秒 | 文生、首帧、首尾帧、最多 3 图参考 | 始终生成，不能关闭 | 不支持视频输入/延长的统一入口 |\n| `veo-3.1-quality` | 720p / 1080p | 当前网关固定 8 秒 | 文生、首帧、首尾帧、最多 3 图参考 | 始终生成，不能关闭 | 不支持视频输入/延长的统一入口 |\n| `veo-3.1-lite` | 720p / 1080p | 当前网关固定 8 秒 | 文生、首帧、首尾帧；不支持普通参考图模式 | 始终生成，不能关闭 | 不支持视频输入/延长的统一入口 |\n\n来源：[Google Veo 3.1 API](https://ai.google.dev/gemini-api/docs/veo?hl=en)。官网能力与当前网关未开放能力之间的差异见本次审计报告。",
+        "description": "通过统一的 `POST /v1/videos` 创建 Veo 视频任务。模型能力以当前 Tikway 网关实际可调用范围为准。\n\n| 模型 | 分辨率 | 时长 | 支持模式 | 音频 | 参考限制 |\n| --- | --- | --- | --- | --- | --- |\n| `veo-3.1-fast` | 720p / 1080p | 支持 4、6、8 秒；4/6 秒仅限 720p | 文生、首帧、首尾帧、最多 3 图参考 | 始终生成，不能关闭 | 不支持视频输入/延长的统一入口 |\n| `veo-3.1-quality` | 720p / 1080p | 支持 4、6、8 秒；4/6 秒仅限 720p | 文生、首帧、首尾帧、最多 3 图参考 | 始终生成，不能关闭 | 不支持视频输入/延长的统一入口 |\n| `veo-3.1-lite` | 720p / 1080p | 支持 4、6、8 秒；4/6 秒仅限 720p | 文生、首帧、首尾帧；不支持普通参考图模式 | 始终生成，不能关闭 | 不支持视频输入/延长的统一入口 |\n\n来源：[Google Veo 3.1 API](https://ai.google.dev/gemini-api/docs/veo?hl=en)。官网能力与当前网关未开放能力之间的差异见本次审计报告。",
         "tags": [
           "视频生成/Veo"
         ],
@@ -53,14 +53,15 @@
                     "oneOf": [
                       {
                         "type": "integer",
-                        "const": 8
+                        "enum": [4, 6, 8]
                       },
                       {
                         "type": "string",
-                        "const": "8"
+                        "enum": ["4", "6", "8"]
                       }
                     ],
-                    "description": "当前 Tikway 路由固定生成 8 秒视频。Google 原生 Veo 3.1 还支持 4 秒和 6 秒，但当前网关尚未开放。"
+                    "default": 8,
+                    "description": "支持 4、6、8 秒，省略时默认 8 秒。4/6 秒仅支持 720p；1080p 或普通参考图请求必须使用 8 秒。"
                   },
                   "aspect_ratio": {
                     "type": "string",
@@ -167,11 +168,25 @@
                   }
                 },
                 "additionalProperties": false,
+                "allOf": [
+                  {
+                    "if": {
+                      "properties": { "duration": { "enum": [4, 6, "4", "6"] } },
+                      "required": ["duration"]
+                    },
+                    "then": {
+                      "properties": {
+                        "resolution": { "const": "720p" },
+                        "input_references": { "maxItems": 0 }
+                      }
+                    }
+                  }
+                ],
                 "x-model-capabilities": [
                   {
                     "model": "veo-3.1-fast",
                     "resolution": "720p / 1080p",
-                    "duration": "当前网关固定 8 秒",
+                    "duration": "支持 4、6、8 秒；4/6 秒仅限 720p",
                     "modes": "文生、首帧、首尾帧、最多 3 图参考",
                     "audio": "始终生成，不能关闭",
                     "references": "不支持视频输入/延长的统一入口"
@@ -179,7 +194,7 @@
                   {
                     "model": "veo-3.1-quality",
                     "resolution": "720p / 1080p",
-                    "duration": "当前网关固定 8 秒",
+                    "duration": "支持 4、6、8 秒；4/6 秒仅限 720p",
                     "modes": "文生、首帧、首尾帧、最多 3 图参考",
                     "audio": "始终生成，不能关闭",
                     "references": "不支持视频输入/延长的统一入口"
@@ -187,7 +202,7 @@
                   {
                     "model": "veo-3.1-lite",
                     "resolution": "720p / 1080p",
-                    "duration": "当前网关固定 8 秒",
+                    "duration": "支持 4、6、8 秒；4/6 秒仅限 720p",
                     "modes": "文生、首帧、首尾帧；不支持普通参考图模式",
                     "audio": "始终生成，不能关闭",
                     "references": "不支持视频输入/延长的统一入口"
@@ -195,6 +210,26 @@
                 ]
               },
               "examples": {
+                "4 秒文生视频": {
+                  "summary": "720p、4 秒文生视频",
+                  "value": {
+                    "model": "veo-3.1-fast",
+                    "prompt": "日落时分，镜头平稳跟随海滩上奔跑的金毛寻回犬。",
+                    "duration": 4,
+                    "resolution": "720p",
+                    "aspect_ratio": "16:9"
+                  }
+                },
+                "6 秒文生视频": {
+                  "summary": "720p、6 秒文生视频",
+                  "value": {
+                    "model": "veo-3.1-lite",
+                    "prompt": "镜头缓缓掠过晨雾中的山谷。",
+                    "duration": 6,
+                    "resolution": "720p",
+                    "aspect_ratio": "16:9"
+                  }
+                },
                 "文生视频": {
                   "summary": "文生视频",
                   "value": {

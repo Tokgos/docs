@@ -209,11 +209,6 @@
                       "b64_json",
                       "url"
                     ]
-                  },
-                  "hook_url": {
-                    "type": "string",
-                    "format": "uri",
-                    "description": "Optional. The callback address when the TTAPI task completes or fails."
                   }
                 },
                 "additionalProperties": false

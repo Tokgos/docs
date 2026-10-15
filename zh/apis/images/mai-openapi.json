@@ -65,6 +65,34 @@
                       "b64_json",
                       "url"
                     ]
+                  },
+                  "images": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 1,
+                    "description": "可选。单张图生图参考图，支持 JPEG 或 PNG；省略时为文生图。",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "image_url"
+                          ],
+                          "properties": {
+                            "image_url": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "图片 URL、data URL 或 Base64 字符串。"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
                   }
                 },
                 "allOf": [

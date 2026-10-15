@@ -1080,6 +1080,142 @@
                         }
                       }
                     }
+                  },
+                  "enable_thinking": {
+                    "type": "boolean",
+                    "description": "Qwen/Bailian extension: enable reasoning when supported by the model."
+                  },
+                  "thinking_budget": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Qwen/Bailian extension: reasoning token budget. Some models cannot combine this with reasoning_effort."
+                  },
+                  "thinking": {
+                    "type": "object",
+                    "required": [
+                      "type"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "enabled",
+                          "disabled",
+                          "adaptive"
+                        ]
+                      },
+                      "clear_thinking": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "description": "Reasoning configuration for GLM, Bailian, and MiniMax models. Supported modes vary by model."
+                  },
+                  "preserve_thinking": {
+                    "type": "boolean",
+                    "description": "Bailian extension: retain earlier reasoning content on supported models."
+                  },
+                  "clear_thinking": {
+                    "type": "boolean",
+                    "description": "Bailian extension: clear earlier reasoning content."
+                  },
+                  "top_k": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "description": "Qwen/Bailian extension: sampling candidate count."
+                  },
+                  "repetition_penalty": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "minimum": 0,
+                    "description": "Qwen/Bailian extension: repetition penalty; 1 disables the penalty."
+                  },
+                  "do_sample": {
+                    "type": "boolean",
+                    "description": "GLM extension: enable sampling. When false, temperature and top_p are ignored."
+                  },
+                  "tool_stream": {
+                    "type": "boolean",
+                    "description": "Qwen/GLM extension: stream tool-call arguments with stream=true."
+                  },
+                  "enable_search": {
+                    "type": "boolean",
+                    "description": "Qwen/Bailian extension: allow web search."
+                  },
+                  "search_options": {
+                    "type": "object",
+                    "properties": {
+                      "forced_search": {
+                        "type": "boolean"
+                      },
+                      "search_strategy": {
+                        "type": "string",
+                        "enum": [
+                          "turbo",
+                          "max",
+                          "agent"
+                        ]
+                      },
+                      "enable_source": {
+                        "type": "boolean"
+                      },
+                      "enable_citation": {
+                        "type": "boolean"
+                      },
+                      "citation_format": {
+                        "type": "string"
+                      },
+                      "enable_search_extension": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "description": "Qwen/Bailian search settings, used when enable_search=true."
+                  },
+                  "enable_code_interpreter": {
+                    "type": "boolean",
+                    "description": "Qwen/Bailian extension: enable the code interpreter where available."
+                  },
+                  "vl_high_resolution_images": {
+                    "type": "boolean",
+                    "description": "Qwen VL extension: enable high-resolution image understanding."
+                  },
+                  "skill": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "ppt"
+                        },
+                        "mode": {
+                          "type": "string",
+                          "enum": [
+                            "general",
+                            "creative"
+                          ]
+                        },
+                        "template_id": {
+                          "type": "string",
+                          "enum": [
+                            "news_01",
+                            "summary_01",
+                            "internet_01",
+                            "thesis_01"
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
+                    },
+                    "description": "Bailian qwen-doc-turbo generation skills; stream must be true."
                   }
                 },
                 "examples": [
@@ -1203,7 +1339,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "Successful response",
             "content": {
               "application/json": {
                 "schema": {
@@ -2367,6 +2503,15 @@
                         ]
                       }
                     }
+                  },
+                  "enable_thinking": {
+                    "type": "boolean",
+                    "description": "Qwen/Bailian extension: enable reasoning when supported by the model."
+                  },
+                  "ocr_options": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Qwen OCR extension for models with custom OCR tasks."
                   }
                 },
                 "examples": [
@@ -2522,7 +2667,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "Successful response",
             "content": {
               "application/json": {
                 "schema": {
@@ -2905,6 +3050,345 @@
             "bearer": []
           }
         ]
+      }
+    },
+    "/v1/models": {
+      "get": {
+        "summary": "List models",
+        "operationId": "getModels",
+        "tags": [
+          "Chat completions/OpenAI protocol"
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "example": "image,video",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "GetModelsResponse",
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "name",
+                          "aliases",
+                          "context_length",
+                          "architecture",
+                          "capabilities",
+                          "object",
+                          "owned_by"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "aliases": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "context_length": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ]
+                          },
+                          "max_output_tokens": {
+                            "type": "integer"
+                          },
+                          "architecture": {
+                            "type": "object",
+                            "required": [
+                              "input_modalities",
+                              "output_modalities"
+                            ],
+                            "properties": {
+                              "input_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "output_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          },
+                          "capabilities": {
+                            "type": "object",
+                            "required": [
+                              "reasoning_efforts",
+                              "endpoints",
+                              "parameters"
+                            ],
+                            "properties": {
+                              "reasoning_efforts": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "endpoints": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "parameters": {
+                                "type": "object",
+                                "required": [
+                                  "common"
+                                ],
+                                "properties": {
+                                  "common": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "additionalProperties": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "object": {
+                            "type": "string",
+                            "const": "model"
+                          },
+                          "owned_by": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "video_attributes": {
+                            "type": "object",
+                            "required": [
+                              "modes",
+                              "resolutions",
+                              "default_resolution",
+                              "min_duration_seconds",
+                              "max_duration_seconds",
+                              "supports_audio",
+                              "aspect_ratios"
+                            ],
+                            "properties": {
+                              "modes": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "resolutions": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "default_resolution": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "min_duration_seconds": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
+                              "max_duration_seconds": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
+                              "supports_audio": {
+                                "type": [
+                                  "boolean",
+                                  "null"
+                                ]
+                              },
+                              "aspect_ratios": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "Example",
+                    "value": {
+                      "object": "list",
+                      "data": [
+                        {
+                          "id": "black-forest-labs/flux-3-video",
+                          "name": "FLUX 3 Video",
+                          "aliases": [
+                            "flux-3-video"
+                          ],
+                          "context_length": null,
+                          "architecture": {
+                            "input_modalities": [
+                              "text",
+                              "image",
+                              "video"
+                            ],
+                            "output_modalities": [
+                              "video"
+                            ]
+                          },
+                          "capabilities": {
+                            "reasoning_efforts": [],
+                            "endpoints": [
+                              "/v1/videos"
+                            ],
+                            "parameters": {
+                              "common": [
+                                "model",
+                                "prompt",
+                                "duration",
+                                "resolution",
+                                "aspect_ratio",
+                                "frame_images",
+                                "input_references",
+                                "generate_audio",
+                                "extra_body"
+                              ],
+                              "/v1/videos": []
+                            }
+                          },
+                          "object": "model",
+                          "owned_by": "Flux",
+                          "video_attributes": {
+                            "modes": [
+                              "t2v",
+                              "i2v",
+                              "v2v"
+                            ],
+                            "resolutions": [
+                              "480p",
+                              "720p",
+                              "1080p"
+                            ],
+                            "default_resolution": "720p",
+                            "min_duration_seconds": 5,
+                            "max_duration_seconds": 20,
+                            "supports_audio": true,
+                            "aspect_ratios": [
+                              "16:9",
+                              "9:16",
+                              "1:1"
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "none": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "description": "List models available through the gateway. Filter by model type with the type query parameter."
       }
     }
   },

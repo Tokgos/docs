@@ -18,7 +18,7 @@
       "post": {
         "summary": "Create a Veo video",
         "deprecated": false,
-        "description": "Create Veo video tasks via unified `POST /v1/videos`. Model capabilities are subject to the actual callable range of the current Tikway gateway.\n\n| Model | Resolution | Duration | Supported Modes | Audio | Reference Limitations |\n| --- | --- | --- | --- | --- | --- |\n| `veo-3.1-fast` | 720p / 1080p | Current gateway is fixed for 8 seconds | Vincent, first frame, first and last frame, up to 3 picture references | Always generated, cannot be turned off | Unified entrance that does not support video input/extension |\n| `veo-3.1-quality` | 720p / 1080p | Current gateway is fixed for 8 seconds | Vincent, first frame, first and last frame, up to 3 picture references | Always generated, cannot be turned off | Unified entry for video input/extension is not supported |\n| `veo-3.1-lite` | 720p / 1080p | The current gateway is fixed for 8 seconds | Vincent, first frame, first and last frame; does not support ordinary reference picture mode | Always generated, cannot be turned off | Unified entrance of video input/extension is not supported |\n\nSource: [Google Veo 3.1 API](https://ai.google.dev/gemini-api/docs/veo?hl=en). The difference between the official website capabilities and the current unopened capabilities of the gateway can be found in this audit report.",
+        "description": "Create Veo video tasks via unified `POST /v1/videos`. Model capabilities are subject to the actual callable range of the current Tikway gateway.\n\n| Model | Resolution | Duration | Supported Modes | Audio | Reference Limitations |\n| --- | --- | --- | --- | --- | --- |\n| `veo-3.1-fast` | 720p / 1080p | Supports 4, 6, or 8 seconds; 4/6 seconds require 720p | Vincent, first frame, first and last frame, up to 3 picture references | Always generated, cannot be turned off | Unified entrance that does not support video input/extension |\n| `veo-3.1-quality` | 720p / 1080p | Supports 4, 6, or 8 seconds; 4/6 seconds require 720p | Vincent, first frame, first and last frame, up to 3 picture references | Always generated, cannot be turned off | Unified entry for video input/extension is not supported |\n| `veo-3.1-lite` | 720p / 1080p | Supports 4, 6, or 8 seconds; 4/6 seconds require 720p | Vincent, first frame, first and last frame; does not support ordinary reference picture mode | Always generated, cannot be turned off | Unified entrance of video input/extension is not supported |\n\nSource: [Google Veo 3.1 API](https://ai.google.dev/gemini-api/docs/veo?hl=en). The difference between the official website capabilities and the current unopened capabilities of the gateway can be found in this audit report.",
         "tags": [
           "Video generation/Veo"
         ],
@@ -52,14 +52,15 @@
                     "oneOf": [
                       {
                         "type": "integer",
-                        "const": 8
+                        "enum": [4, 6, 8]
                       },
                       {
                         "type": "string",
-                        "const": "8"
+                        "enum": ["4", "6", "8"]
                       }
                     ],
-                    "description": "The current Tikway route generates a fixed 8-second video. Google native Veo 3.1 also supports 4 seconds and 6 seconds, but the gateway is not currently open."
+                    "default": 8,
+                    "description": "Supports 4, 6, or 8 seconds; defaults to 8 when omitted. 4 and 6 seconds require 720p. Use 8 seconds for 1080p or ordinary reference images."
                   },
                   "aspect_ratio": {
                     "type": "string",
@@ -166,11 +167,25 @@
                   }
                 },
                 "additionalProperties": false,
+                "allOf": [
+                  {
+                    "if": {
+                      "properties": { "duration": { "enum": [4, 6, "4", "6"] } },
+                      "required": ["duration"]
+                    },
+                    "then": {
+                      "properties": {
+                        "resolution": { "const": "720p" },
+                        "input_references": { "maxItems": 0 }
+                      }
+                    }
+                  }
+                ],
                 "x-model-capabilities": [
                   {
                     "model": "veo-3.1-fast",
                     "resolution": "720p / 1080p",
-                    "duration": "The current gateway is fixed for 8 seconds",
+                    "duration": "Supports 4, 6, or 8 seconds; 4/6 seconds require 720p",
                     "modes": "Vincent, first frame, first and last frame, up to 3 pictures for reference",
                     "audio": "Always generated and cannot be closed",
                     "references": "Unified entry that does not support video input/extension"
@@ -178,7 +193,7 @@
                   {
                     "model": "veo-3.1-quality",
                     "resolution": "720p / 1080p",
-                    "duration": "The current gateway is fixed for 8 seconds",
+                    "duration": "Supports 4, 6, or 8 seconds; 4/6 seconds require 720p",
                     "modes": "Vincent, first frame, first and last frame, up to 3 pictures for reference",
                     "audio": "Always generated and cannot be closed",
                     "references": "Unified entry that does not support video input/extension"
@@ -186,7 +201,7 @@
                   {
                     "model": "veo-3.1-lite",
                     "resolution": "720p / 1080p",
-                    "duration": "The current gateway is fixed for 8 seconds",
+                    "duration": "Supports 4, 6, or 8 seconds; 4/6 seconds require 720p",
                     "modes": "Vincent, first frame, first and last frame; does not support ordinary reference picture mode",
                     "audio": "Always generated and cannot be closed",
                     "references": "Unified entry that does not support video input/extension"
@@ -194,6 +209,26 @@
                 ]
               },
               "examples": {
+                "4-second text to video": {
+                  "summary": "720p, 4-second text to video",
+                  "value": {
+                    "model": "veo-3.1-fast",
+                    "prompt": "At sunset, the camera follows a golden retriever running along the beach.",
+                    "duration": 4,
+                    "resolution": "720p",
+                    "aspect_ratio": "16:9"
+                  }
+                },
+                "6-second text to video": {
+                  "summary": "720p, 6-second text to video",
+                  "value": {
+                    "model": "veo-3.1-lite",
+                    "prompt": "The camera glides over a mountain valley in the morning mist.",
+                    "duration": 6,
+                    "resolution": "720p",
+                    "aspect_ratio": "16:9"
+                  }
+                },
                 "Text to video": {
                   "summary": "Vincent Video",
                   "value": {

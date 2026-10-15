@@ -209,11 +209,6 @@
                       "b64_json",
                       "url"
                     ]
-                  },
-                  "hook_url": {
-                    "type": "string",
-                    "format": "uri",
-                    "description": "可选。TTAPI 任务完成或失败时的回调地址。"
                   }
                 },
                 "additionalProperties": false
