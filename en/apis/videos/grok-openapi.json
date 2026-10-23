@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Tikway Grok Imagine Video Video API",
-    "description": "xAI (via TTAPI) OpenAI-compatible asynchronous video generation interface for the Grok Imagine Video model.",
+    "description": "xAI  OpenAI-compatible asynchronous video generation interface for the Grok Imagine Video model.",
     "version": "1.1.0"
   },
   "tags": [
@@ -180,7 +180,7 @@
                   },
                   "extra_body": {
                     "type": "object",
-                    "description": "Grok TTAPI extension parameters. It is recommended to use unified fields first.",
+                    "description": "Grok extension parameters. It is recommended to use unified fields first.",
                     "properties": {},
                     "additionalProperties": false
                   }

@@ -149,15 +149,25 @@
                   {
                     "group": "MAI Image",
                     "openapi": "zh/apis/images/mai-openapi.json",
-                    "pages": [
-                      "POST /v1/images/generations",
-                      "POST /v1/images/edits"
-                    ]
+                    "pages": ["POST /v1/images/generations"]
                   },
                   {
                     "group": "Novel",
                     "openapi": "zh/apis/images/novel-openapi.json",
                     "pages": ["POST /v1/images/generations"]
+                  },
+                  {
+                    "group": "Flux",
+                    "openapi": "zh/apis/images/flux-openapi.json",
+                    "pages": ["POST /v1/images/generations"]
+                  },
+                  {
+                    "group": "Grok",
+                    "openapi": "zh/apis/images/grok-openapi.json",
+                    "pages": [
+                      "POST /v1/images/generations",
+                      "POST /v1/images/edits"
+                    ]
                   }
                 ]
               },
@@ -204,15 +214,22 @@
               {
                 "group": "向量嵌入",
                 "openapi": "zh/apis/embeddings/openapi.json",
-                "pages": [
-                  "POST /v1/embeddings",
-                  "POST /v1beta/models/google/{model}:embedContent"
-                ]
+                "pages": ["POST /v1/embeddings", "POST /v1beta/models/google/{model}:embedContent"]
               },
               {
                 "group": "语音转写",
                 "openapi": "zh/apis/transcriptions/openapi.json",
                 "pages": ["POST /v1/audio/transcriptions"]
+              },
+              {
+                "group": "语音合成",
+                "openapi": "zh/apis/speech/openapi.json",
+                "pages": ["POST /v1/audio/speech"]
+              },
+              {
+                "group": "决策评估",
+                "openapi": "zh/apis/decisions/openapi.json",
+                "pages": ["POST /v1/decisions", "POST /v1/systemone"]
               }
             ]
           }
@@ -281,12 +298,18 @@
                   {
                     "group": "GPT Image",
                     "openapi": "en/apis/images/gpt-openapi.json",
-                    "pages": ["POST /v1/images/generations", "POST /v1/images/edits"]
+                    "pages": [
+                      "POST /v1/images/generations",
+                      "POST /v1/images/edits"
+                    ]
                   },
                   {
                     "group": "Nano Banana",
                     "openapi": "en/apis/images/nano-banana-openapi.json",
-                    "pages": ["POST /v1/images/generations", "POST /v1beta/models/{model}:generateContent"]
+                    "pages": [
+                      "POST /v1/images/generations",
+                      "POST /v1beta/models/{model}:generateContent"
+                    ]
                   },
                   {
                     "group": "Qwen Image",
@@ -301,12 +324,25 @@
                   {
                     "group": "MAI Image",
                     "openapi": "en/apis/images/mai-openapi.json",
-                    "pages": ["POST /v1/images/generations", "POST /v1/images/edits"]
+                    "pages": ["POST /v1/images/generations"]
                   },
                   {
                     "group": "Novel",
                     "openapi": "en/apis/images/novel-openapi.json",
                     "pages": ["POST /v1/images/generations"]
+                  },
+                  {
+                    "group": "Flux",
+                    "openapi": "en/apis/images/flux-openapi.json",
+                    "pages": ["POST /v1/images/generations"]
+                  },
+                  {
+                    "group": "Grok",
+                    "openapi": "en/apis/images/grok-openapi.json",
+                    "pages": [
+                      "POST /v1/images/generations",
+                      "POST /v1/images/edits"
+                    ]
                   }
                 ]
               },
@@ -359,6 +395,16 @@
                 "group": "Transcriptions",
                 "openapi": "en/apis/transcriptions/openapi.json",
                 "pages": ["POST /v1/audio/transcriptions"]
+              },
+              {
+                "group": "Speech",
+                "openapi": "en/apis/speech/openapi.json",
+                "pages": ["POST /v1/audio/speech"]
+              },
+              {
+                "group": "Decisions",
+                "openapi": "en/apis/decisions/openapi.json",
+                "pages": ["POST /v1/decisions", "POST /v1/systemone"]
               }
             ]
           }

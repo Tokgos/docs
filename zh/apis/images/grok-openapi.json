@@ -1,0 +1,400 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway Grok Image API",
+    "description": "Tikway 标准图片接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "图片生成"
+    },
+    {
+      "name": "图片生成/Grok"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "图片生成",
+        "deprecated": false,
+        "description": "Grok 文生图使用 `POST /v1/images/generations`，使用 `size` 指定比例、`quality` 指定分辨率，`n` 为 1–4。此入口不接受参考图；需要修改图片时使用本系列保留的图片编辑接口。",
+        "tags": [
+          "图片生成/Grok"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "examples": [
+                      "grok-imagine-1.0",
+                      "grok-imagine-2.0",
+                      "grok-imagine-image",
+                      "grok-imagine-image-quality",
+                      "grok-imagine-image-2.0"
+                    ],
+                    "description": "必填。使用 Get Models 返回的模型 ID 或可用别名。"
+                  },
+                  "enable_pro": {
+                    "type": "boolean",
+                    "description": "Grok Pro 模式开关，仅支持该参数的模型可用。"
+                  },
+                  "n": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4,
+                    "default": 1,
+                    "description": "生成图片数量，1–4。"
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
+                    "description": "输出宽高比使用 WIDTHxHEIGHT 表示，例如 1024x1536 表示 2:3；auto 使用模型默认比例。分辨率由 quality 控制。"
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "enum": [
+                      "url",
+                      "b64_json"
+                    ],
+                    "default": "url",
+                    "description": "Tikway 图片交付格式，url 返回图片链接，b64_json 返回纯 Base64。默认 url；该字段由网关消费，不作为上游模型参数。"
+                  },
+                  "quality": {
+                    "type": "string",
+                    "enum": [
+                      "standard",
+                      "hd"
+                    ],
+                    "default": "standard",
+                    "description": "standard 输出 1K，hd 输出 2K；可用能力以所选模型为准。"
+                  }
+                },
+                "additionalProperties": false,
+                "title": "TikwayGrokImageGenerationRequest",
+                "description": "Tikway 标准图片请求。",
+                "x-apifox-orders": [
+                  "prompt",
+                  "model",
+                  "enable_pro",
+                  "n",
+                  "size",
+                  "response_format",
+                  "quality"
+                ],
+                "examples": [
+                  {
+                    "model": "grok-imagine-1.0",
+                    "prompt": "雨夜的未来城市，写实摄影",
+                    "size": "1024x1024",
+                    "n": 1,
+                    "response_format": "url",
+                    "quality": "standard"
+                  }
+                ]
+              },
+              "examples": {
+                "文生图": {
+                  "value": {
+                    "model": "grok-imagine-1.0",
+                    "prompt": "雨夜的未来城市，写实摄影",
+                    "size": "1024x1024",
+                    "n": 1,
+                    "response_format": "url",
+                    "quality": "standard"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "生成时间戳。"
+                    },
+                    "model": {
+                      "type": "string"
+                    },
+                    "output_format": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "description": "response_format=url 时返回的图片地址。"
+                          },
+                          "b64_json": {
+                            "type": "string",
+                            "description": "response_format=b64_json 时返回的图片 Base64。"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/images/edits": {
+      "post": {
+        "summary": "图片编辑",
+        "deprecated": false,
+        "description": "Grok 图片编辑使用 `POST /v1/images/edits`。`model`、`prompt`、`images` 必填；参考图 1–5 张。使用 `size` 指定比例、`quality` 指定分辨率；编辑结果为一张图片，不支持独立 mask。",
+        "tags": [
+          "图片生成/Grok"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt",
+                  "images"
+                ],
+                "properties": {
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "examples": [
+                      "grok-imagine-1.0-edit",
+                      "grok-imagine-2.0-edit",
+                      "grok-imagine-image",
+                      "grok-imagine-image-quality",
+                      "grok-imagine-image-2.0"
+                    ],
+                    "description": "必填。使用 Get Models 返回的模型 ID 或可用别名。"
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
+                    "description": "输出宽高比使用 WIDTHxHEIGHT 表示，例如 1024x1536 表示 2:3；auto 使用模型默认比例。分辨率由 quality 控制。"
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "enum": [
+                      "url",
+                      "b64_json"
+                    ],
+                    "default": "url",
+                    "description": "Tikway 图片交付格式，url 返回图片链接，b64_json 返回纯 Base64。默认 url；该字段由网关消费，不作为上游模型参数。"
+                  },
+                  "images": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 5,
+                    "description": "必填。待编辑参考图，1–5 张。不支持独立 mask 参数。",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "image_url"
+                          ],
+                          "properties": {
+                            "image_url": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "图片 URL、data URL 或 Base64 字符串。"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "x-apifox-orders": [
+                            "image_url"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "quality": {
+                    "type": "string",
+                    "enum": [
+                      "standard",
+                      "hd"
+                    ],
+                    "default": "standard",
+                    "description": "standard 输出 1K，hd 输出 2K；可用能力以所选模型为准。"
+                  },
+                  "n": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1,
+                    "default": 1,
+                    "description": "编辑仅生成一张图片。"
+                  }
+                },
+                "additionalProperties": false,
+                "title": "TikwayGrokImageEditRequest",
+                "description": "Tikway 标准图片请求。",
+                "x-apifox-orders": [
+                  "prompt",
+                  "model",
+                  "size",
+                  "response_format",
+                  "images",
+                  "quality",
+                  "n"
+                ],
+                "examples": [
+                  {
+                    "model": "grok-imagine-1.0-edit",
+                    "prompt": "将参考图中的服装改成蓝色，保留人物形象",
+                    "size": "1024x1024",
+                    "n": 1,
+                    "response_format": "url",
+                    "quality": "standard",
+                    "images": [
+                      {
+                        "image_url": "https://example.com/assets/source.png"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "图片编辑": {
+                  "value": {
+                    "model": "grok-imagine-1.0-edit",
+                    "prompt": "将参考图中的服装改成蓝色，保留人物形象",
+                    "size": "1024x1024",
+                    "n": 1,
+                    "response_format": "url",
+                    "quality": "standard",
+                    "images": [
+                      {
+                        "image_url": "https://example.com/assets/source.png"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "生成时间戳。"
+                    },
+                    "model": {
+                      "type": "string"
+                    },
+                    "output_format": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "description": "response_format=url 时返回的图片地址。"
+                          },
+                          "b64_json": {
+                            "type": "string",
+                            "description": "response_format=b64_json 时返回的图片 Base64。"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

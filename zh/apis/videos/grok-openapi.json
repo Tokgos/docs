@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Tikway Grok Imagine Video 视频 API",
-    "description": "xAI（经 TTAPI） Grok Imagine Video 模型的 OpenAI 兼容异步视频生成接口。",
+    "description": "xAI Grok Imagine Video 模型的 OpenAI 兼容异步视频生成接口。",
     "version": "1.1.0"
   },
   "tags": [
@@ -22,7 +22,6 @@
         "tags": [
           "视频生成/Grok Imagine Video"
         ],
-
         "requestBody": {
           "content": {
             "application/json": {
@@ -181,7 +180,7 @@
                   },
                   "extra_body": {
                     "type": "object",
-                    "description": "Grok TTAPI 扩展参数。建议优先使用统一字段。",
+                    "description": "Grok 扩展参数。建议优先使用统一字段。",
                     "properties": {},
                     "additionalProperties": false
                   }

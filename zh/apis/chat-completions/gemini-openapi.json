@@ -745,10 +745,6 @@
                       "priority"
                     ]
                   },
-                  "store": {
-                    "type": "boolean",
-                    "description": "是否记录本请求；若设置，会覆盖项目级日志配置。"
-                  },
                   "labels": {
                     "type": "object",
                     "description": "请求标签；可使用 safety_identifier 等键。",
@@ -1937,10 +1933,6 @@
                       "flex",
                       "priority"
                     ]
-                  },
-                  "store": {
-                    "type": "boolean",
-                    "description": "是否记录本请求；若设置，会覆盖项目级日志配置。"
                   },
                   "labels": {
                     "type": "object",

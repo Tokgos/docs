@@ -89,7 +89,7 @@
                       }
                     ],
                     "examples": [
-                      "OfoxAI 是一个 LLM Gateway",
+                      "Tikway 是一个 LLM Gateway",
                       [
                         "第一段文本",
                         "第二段文本"
@@ -118,7 +118,7 @@
                 "examples": [
                   {
                     "model": "openai/text-embedding-3-small",
-                    "input": "OfoxAI 是一个 LLM Gateway",
+                    "input": "Tikway 是一个 LLM Gateway",
                     "encoding_format": "float"
                   },
                   {
@@ -649,10 +649,6 @@
                   "serviceTier": {
                     "type": "string",
                     "description": "请求服务层级。"
-                  },
-                  "store": {
-                    "type": "boolean",
-                    "description": "是否记录本请求；若设置，会覆盖项目级日志配置。"
                   }
                 },
                 "examples": [

@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Tikway GPT Image API",
-    "description": "OpenAI-compatible image generation and editing with GPT Image models.",
+    "title": "Tikway GPT Image Image API",
+    "description": "Tikway standard image API.",
     "version": "1.0.0"
   },
   "tags": [
@@ -24,6 +24,7 @@
         ],
         "parameters": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -37,7 +38,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 32000,
-                    "description": "Required. To generate a text description of the image; GPT Image model has a maximum length of 32,000 characters, dall-e-2 has a maximum length of 1,000 characters, and dall-e-3 has a maximum length of 4,000 characters."
+                    "description": "Required. Describe the image to generate."
                   },
                   "background": {
                     "type": [
@@ -54,7 +55,8 @@
                   },
                   "model": {
                     "type": "string",
-                    "enum": [
+                    "description": "Required. Use a model ID or available alias returned by Get Models.",
+                    "examples": [
                       "gpt-image-2.5-sunburst",
                       "gpt-image-2.5-sunburst-2026-09-08",
                       "gpt-image-2.5-flare",
@@ -67,7 +69,7 @@
                       "dall-e-2",
                       "dall-e-3"
                     ],
-                    "description": "Required. Image generation model. The gateway will not adopt OpenAI's dall-e-2 default value, and the model must be passed explicitly."
+                    "minLength": 1
                   },
                   "moderation": {
                     "type": [
@@ -88,7 +90,7 @@
                     ],
                     "minimum": 1,
                     "maximum": 10,
-                    "description": "The number of images generated. dall-e-3 only supports 1."
+                    "description": "Number of generated images. Allowed counts depend on the selected model."
                   },
                   "output_compression": {
                     "type": [
@@ -137,34 +139,21 @@
                       "hd",
                       null
                     ],
-                    "description": "Image quality. GPT Image supports auto/low/medium/high; GPT Image 2.5 additionally supports xhigh/max; dall-e-3 supports standard/hd; dall-e-2 only supports standard."
+                    "description": "Output quality. Supported values depend on the selected model."
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "Only dall-e-2 and dall-e-3 support url or b64_json. The GPT Image model always returns Base64 and this upstream parameter is not supported.",
-                    "default": "b64_json",
+                    "description": "Response format: url returns image URLs; b64_json returns Base64 image data.",
+                    "default": "url",
                     "enum": [
                       "b64_json",
                       "url"
                     ]
                   },
                   "size": {
-                    "type": [
-                      "string",
-                      "null"
-                    ],
-                    "enum": [
-                      "auto",
-                      "256x256",
-                      "512x512",
-                      "1024x1024",
-                      "1536x1024",
-                      "1024x1536",
-                      "1792x1024",
-                      "1024x1792",
-                      null
-                    ],
-                    "description": "Image size. GPT Image 2/2.5 supports WIDTHxHEIGHT: width and height are multiples of 16, ratio 1:3~3:1, up to 3840x2160; other GPT Images use auto, 1024x1024, 1536x1024 or 1024x1536; supported by dall-e-2 256x256, 512x512, 1024x1024; dall-e-3 supports 1024x1024, 1792x1024, 1024x1792."
+                    "type": "string",
+                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
+                    "description": "Output size as WIDTHxHEIGHT, or auto for the model default. Supported sizes depend on the selected model."
                   },
                   "stream": {
                     "type": [
@@ -193,29 +182,44 @@
                 "examples": [
                   {
                     "model": "gpt-image-1.5",
-                    "prompt": "A cute baby sea otter, watercolor illustration style",
+                    "prompt": "一只可爱的海獭宝宝，水彩插画风格",
                     "n": 1,
                     "size": "1024x1024",
                     "output_format": "png",
                     "quality": "medium"
                   }
-                ]
+                ],
+                "x-apifox-orders": [
+                  "prompt",
+                  "background",
+                  "model",
+                  "moderation",
+                  "n",
+                  "output_compression",
+                  "output_format",
+                  "partial_images",
+                  "quality",
+                  "response_format",
+                  "size",
+                  "stream",
+                  "style",
+                  "user"
+                ],
+                "additionalProperties": false
               },
               "examples": {
-                "Default": {
+                "text-to-image": {
                   "value": {
                     "model": "gpt-image-2",
                     "prompt": "Generate a photorealistic red apple resting on a rustic wooden table, soft window light, shallow depth of field.",
                     "size": "1024x1024",
                     "quality": "high",
                     "output_format": "png"
-                  },
-                  "summary": "Default"
+                  }
                 }
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -434,7 +438,7 @@
     },
     "/v1/images/edits": {
       "post": {
-        "summary": "Picture editing",
+        "summary": "Image editing",
         "deprecated": false,
         "description": "The gateway requires `model`, `images` and `prompt` to be passed in explicitly. GPT Image accepts up to 16 reference images; `dall-e-2` only accepts a single PNG input; `dall-e-3` does not support editing.\n\nGPT Image 2/2.5 supports any compliance `WIDTHxHEIGHT`, other GPT Images use the standard three sizes. `input_fidelity`, `background`, `moderation`, `output_format`, `output_compression`, `stream` and `partial_images` are only used for GPT Image series.",
         "tags": [
@@ -442,21 +446,22 @@
         ],
         "parameters": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "required": [
                   "model",
-                  "images",
-                  "prompt"
+                  "prompt",
+                  "images"
                 ],
                 "properties": {
                   "images": {
                     "type": "array",
                     "minItems": 1,
                     "maxItems": 16,
-                    "description": "Required. List of source images to be edited. The maximum number of GPT Image models is 16; each item must provide one of file_id or image_url. If uploading files directly, use the multipart field image[] (or images defined by your gateway).",
+                    "description": "Required source images. Supported counts depend on the selected model.",
                     "items": {
                       "type": "object",
                       "properties": {
@@ -466,15 +471,19 @@
                         },
                         "image_url": {
                           "type": "string",
-                          "description": "Full image URL, or Base64 data URL."
+                          "description": "Image URL, data URL, or Base64 string."
                         }
-                      }
+                      },
+                      "x-apifox-orders": [
+                        "file_id",
+                        "image_url"
+                      ]
                     }
                   },
                   "prompt": {
                     "type": "string",
                     "minLength": 1,
-                    "description": "Required. Text description of how you wish to edit or expand the image."
+                    "description": "Required. Describe the image to generate."
                   },
                   "background": {
                     "type": [
@@ -511,13 +520,18 @@
                       },
                       "image_url": {
                         "type": "string",
-                        "description": "Mask image URL or Base64 data URL."
+                        "description": "Image URL, data URL, or Base64 string."
                       }
-                    }
+                    },
+                    "x-apifox-orders": [
+                      "file_id",
+                      "image_url"
+                    ]
                   },
                   "model": {
                     "type": "string",
-                    "enum": [
+                    "description": "Required. Use a model ID or available alias returned by Get Models.",
+                    "examples": [
                       "gpt-image-2.5-sunburst",
                       "gpt-image-2.5-sunburst-2026-09-08",
                       "gpt-image-2.5-flare",
@@ -530,7 +544,7 @@
                       "chatgpt-image-latest",
                       "dall-e-2"
                     ],
-                    "description": "Required. Mockup for picture editing. dall-e-3 does not support image editing."
+                    "minLength": 1
                   },
                   "moderation": {
                     "type": [
@@ -551,7 +565,7 @@
                     ],
                     "minimum": 1,
                     "maximum": 10,
-                    "description": "The number of edited images to generate."
+                    "description": "Number of generated images. Allowed counts depend on the selected model."
                   },
                   "output_compression": {
                     "type": [
@@ -598,21 +612,12 @@
                       "auto",
                       null
                     ],
-                    "description": "Output quality. GPT Image supports low/medium/high/auto; GPT Image 2.5 additionally supports xhigh/max."
+                    "description": "Output quality. Supported values depend on the selected model."
                   },
                   "size": {
-                    "type": [
-                      "string",
-                      "null"
-                    ],
-                    "enum": [
-                      "auto",
-                      "1024x1024",
-                      "1536x1024",
-                      "1024x1536",
-                      null
-                    ],
-                    "description": "Image size. GPT Image 2/2.5 supports WIDTHxHEIGHT: width and height are multiples of 16, ratio 1:3~3:1, up to 3840x2160; other GPT Images use auto, 1024x1024, 1536x1024 or 1024x1536; supported by dall-e-2 256x256, 512x512, 1024x1024; dall-e-3 supports 1024x1024, 1792x1024, 1024x1792."
+                    "type": "string",
+                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
+                    "description": "Output size as WIDTHxHEIGHT, or auto for the model default. Supported sizes depend on the selected model."
                   },
                   "stream": {
                     "type": [
@@ -627,8 +632,8 @@
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "dall-e-2 is available as url or b64_json. GPT Image model fixedly returns Base64.",
-                    "default": "b64_json",
+                    "description": "Response format: url returns image URLs; b64_json returns Base64 image data.",
+                    "default": "url",
                     "enum": [
                       "b64_json",
                       "url"
@@ -642,28 +647,50 @@
                         "image_url": "https://example.com/source-image.png"
                       }
                     ],
-                    "prompt": "Add a watercolor effect to this image",
+                    "prompt": "为这张图添加水彩效果",
                     "model": "gpt-image-1.5",
                     "quality": "high",
                     "size": "1024x1024"
                   }
-                ]
+                ],
+                "x-apifox-orders": [
+                  "images",
+                  "prompt",
+                  "background",
+                  "input_fidelity",
+                  "mask",
+                  "model",
+                  "moderation",
+                  "n",
+                  "output_compression",
+                  "output_format",
+                  "partial_images",
+                  "quality",
+                  "size",
+                  "stream",
+                  "user",
+                  "response_format"
+                ],
+                "additionalProperties": false
               },
-              "example": {
-                "model": "gpt-image-2",
-                "prompt": "Keep the apple unchanged and replace only its background with a misty enchanted forest under soft cinematic lighting.",
-                "size": "1024x1024",
-                "quality": "high",
-                "output_format": "png",
-                "images": [
-                  {
-                    "image_url": "https://gd-hbimg.huaban.com/cb36fdfc6ee4707de3ec666d6bc202fb99d9bef326a10d-oQHn3b_fw658"
+              "examples": {
+                "reference-image": {
+                  "value": {
+                    "model": "gpt-image-2",
+                    "prompt": "Keep the apple unchanged and replace only its background with a misty enchanted forest under soft cinematic lighting.",
+                    "size": "1024x1024",
+                    "quality": "high",
+                    "output_format": "png",
+                    "images": [
+                      {
+                        "image_url": "https://gd-hbimg.huaban.com/cb36fdfc6ee4707de3ec666d6bc202fb99d9bef326a10d-oQHn3b_fw658"
+                      }
+                    ]
                   }
-                ]
+                }
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {

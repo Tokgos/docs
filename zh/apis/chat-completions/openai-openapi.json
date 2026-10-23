@@ -799,13 +799,6 @@
                     ],
                     "description": "请求的服务层级。"
                   },
-                  "store": {
-                    "type": [
-                      "boolean",
-                      "null"
-                    ],
-                    "description": "是否存储该请求的输出。"
-                  },
                   "metadata": {
                     "type": [
                       "object",
@@ -2082,13 +2075,6 @@
                     ],
                     "description": "请求的服务层级。"
                   },
-                  "store": {
-                    "type": [
-                      "boolean",
-                      "null"
-                    ],
-                    "description": "是否存储生成的 Response 以供后续通过 API 获取。"
-                  },
                   "stream": {
                     "type": [
                       "boolean",
@@ -2854,10 +2840,6 @@
                       "type": "boolean",
                       "description": "是否后台运行。"
                     },
-                    "store": {
-                      "type": "boolean",
-                      "description": "是否存储该响应。"
-                    },
                     "safety_identifier": {
                       "type": "string",
                       "description": "请求使用的安全标识符。"
@@ -2894,7 +2876,7 @@
                     }
                   ]
                 },
-                "example": "{\n    \"background\": false,\n    \"completed_at\": 1788668639,\n    \"created_at\": 1788668638,\n    \"error\": null,\n    \"frequency_penalty\": 0,\n    \"id\": \"resp_074472f9988a119f006a9ceade27888194add2283781e99db5::Q_Olg6GjTjN-VysDZS83LBWBO3NVTBTLcLGOvp0PrBP_XWO97d8Yq9ztZQZONcJzIV1Cug\",\n    \"incomplete_details\": null,\n    \"instructions\": null,\n    \"max_output_tokens\": null,\n    \"max_tool_calls\": null,\n    \"metadata\": {},\n    \"model\": \"gpt-5.6-sol\",\n    \"object\": \"response\",\n    \"output\": [\n        {\n            \"content\": [\n                {\n                    \"annotations\": [],\n                    \"logprobs\": [],\n                    \"text\": \"Hello! How can I help?\",\n                    \"type\": \"output_text\"\n                }\n            ],\n            \"id\": \"msg_074472f9988a119f006a9ceadecd488194a8a5c2f9f4c1d83e\",\n            \"phase\": \"final_answer\",\n            \"role\": \"assistant\",\n            \"status\": \"completed\",\n            \"type\": \"message\"\n        }\n    ],\n    \"parallel_tool_calls\": true,\n    \"presence_penalty\": 0,\n    \"previous_response_id\": null,\n    \"prompt_cache_key\": null,\n    \"prompt_cache_retention\": \"24h\",\n    \"reasoning\": {\n        \"context\": \"all_turns\",\n        \"effort\": \"medium\",\n        \"mode\": \"standard\",\n        \"summary\": null\n    },\n    \"safety_identifier\": null,\n    \"service_tier\": \"default\",\n    \"status\": \"completed\",\n    \"store\": true,\n    \"temperature\": 1,\n    \"text\": {\n        \"format\": {\n            \"type\": \"text\"\n        },\n        \"verbosity\": \"medium\"\n    },\n    \"tool_choice\": \"auto\",\n    \"tools\": [],\n    \"top_logprobs\": 0,\n    \"top_p\": 0.98,\n    \"truncation\": \"disabled\",\n    \"usage\": {\n        \"input_tokens\": 7,\n        \"input_tokens_details\": {\n            \"cache_write_tokens\": 0,\n            \"cached_read_tokens\": 0,\n            \"cached_tokens\": 0,\n            \"cached_write_tokens\": 0\n        },\n        \"output_tokens\": 11,\n        \"output_tokens_details\": {\n            \"reasoning_tokens\": 0\n        },\n        \"total_tokens\": 18\n    }\n}"
+                "example": "{\n    \"background\": false,\n    \"completed_at\": 1788668639,\n    \"created_at\": 1788668638,\n    \"error\": null,\n    \"frequency_penalty\": 0,\n    \"id\": \"resp_074472f9988a119f006a9ceade27888194add2283781e99db5::Q_Olg6GjTjN-VysDZS83LBWBO3NVTBTLcLGOvp0PrBP_XWO97d8Yq9ztZQZONcJzIV1Cug\",\n    \"incomplete_details\": null,\n    \"instructions\": null,\n    \"max_output_tokens\": null,\n    \"max_tool_calls\": null,\n    \"metadata\": {},\n    \"model\": \"gpt-5.6-sol\",\n    \"object\": \"response\",\n    \"output\": [\n        {\n            \"content\": [\n                {\n                    \"annotations\": [],\n                    \"logprobs\": [],\n                    \"text\": \"Hello! How can I help?\",\n                    \"type\": \"output_text\"\n                }\n            ],\n            \"id\": \"msg_074472f9988a119f006a9ceadecd488194a8a5c2f9f4c1d83e\",\n            \"phase\": \"final_answer\",\n            \"role\": \"assistant\",\n            \"status\": \"completed\",\n            \"type\": \"message\"\n        }\n    ],\n    \"parallel_tool_calls\": true,\n    \"presence_penalty\": 0,\n    \"previous_response_id\": null,\n    \"prompt_cache_key\": null,\n    \"prompt_cache_retention\": \"24h\",\n    \"reasoning\": {\n        \"context\": \"all_turns\",\n        \"effort\": \"medium\",\n        \"mode\": \"standard\",\n        \"summary\": null\n    },\n    \"safety_identifier\": null,\n    \"service_tier\": \"default\",\n    \"status\": \"completed\",\n    \"temperature\": 1,\n    \"text\": {\n        \"format\": {\n            \"type\": \"text\"\n        },\n        \"verbosity\": \"medium\"\n    },\n    \"tool_choice\": \"auto\",\n    \"tools\": [],\n    \"top_logprobs\": 0,\n    \"top_p\": 0.98,\n    \"truncation\": \"disabled\",\n    \"usage\": {\n        \"input_tokens\": 7,\n        \"input_tokens_details\": {\n            \"cache_write_tokens\": 0,\n            \"cached_read_tokens\": 0,\n            \"cached_tokens\": 0,\n            \"cached_write_tokens\": 0\n        },\n        \"output_tokens\": 11,\n        \"output_tokens_details\": {\n            \"reasoning_tokens\": 0\n        },\n        \"total_tokens\": 18\n    }\n}"
               }
             },
             "headers": {}

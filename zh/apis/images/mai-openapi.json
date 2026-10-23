@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Mintlify",
-    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "title": "Tikway MAI Image Image API",
+    "description": "Tikway 标准图片接口。",
     "version": "1.0.0"
   },
   "tags": [
@@ -18,17 +18,18 @@
       "post": {
         "summary": "生成图片",
         "deprecated": false,
-        "description": "`microsoft/mai-image-2.5-pro` 支持文生图。当前网关暴露 `model`、`prompt`、`size` 和兼容 `response_format`；模型只生成 1 张 PNG。尺寸的宽、高均至少 768，总像素不超过 1,048,576。",
+        "description": "`microsoft/mai-image-2.5-pro` 通过生成接口支持文生图和图生图。参考图使用可选 `images`，最多 1 张；每次生成一张 PNG。`size` 的宽、高均至少 768，总像素不超过 1,048,576。",
         "tags": [
           "图片生成/MAI Image"
         ],
         "parameters": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "DoubaoSeedream50ProGenerationRequest",
-                "description": "使用 Doubao Seedream 5.0 Pro 根据文字生成图片。",
+                "title": "TikwayMaiImageGenerationRequest",
+                "description": "MAI Image 文生图与图生图的标准请求。",
                 "type": "object",
                 "additionalProperties": false,
                 "required": [
@@ -38,10 +39,11 @@
                 "properties": {
                   "model": {
                     "type": "string",
-                    "description": "必填。MAI Image 2.5 Pro 的 Forward 模型 ID。",
-                    "enum": [
+                    "description": "必填。使用 Get Models 返回的模型 ID 或可用别名。",
+                    "examples": [
                       "microsoft/mai-image-2.5-pro"
-                    ]
+                    ],
+                    "minLength": 1
                   },
                   "prompt": {
                     "type": "string",
@@ -54,17 +56,48 @@
                   "size": {
                     "type": "string",
                     "default": "1024x1024",
-                    "pattern": "^[1-9]\\d*x[1-9]\\d*$",
-                    "description": "OFOX 兼容尺寸 WIDTHxHEIGHT。MAI Image 2.5 Pro 的宽、高均至少 768，且总像素不超过 1,048,576。"
+                    "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
+                    "description": "兼容尺寸 WIDTHxHEIGHT。MAI Image 2.5 Pro 的宽、高均至少 768，且总像素不超过 1,048,576。"
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "OFOX 兼容响应格式。MAI 原生输出始终为单张 PNG Base64；建议使用 b64_json。",
-                    "default": "b64_json",
+                    "description": "返回形式：url 返回图片地址，b64_json 返回图片 Base64。",
+                    "default": "url",
                     "enum": [
                       "b64_json",
                       "url"
                     ]
+                  },
+                  "images": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 1,
+                    "description": "可选。单张图生图参考图，支持 JPEG 或 PNG；省略时为文生图。",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "image_url"
+                          ],
+                          "properties": {
+                            "image_url": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "图片 URL、data URL 或 Base64 字符串。"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "x-apifox-orders": [
+                            "image_url"
+                          ]
+                        }
+                      ]
+                    }
                   }
                 },
                 "allOf": [
@@ -77,7 +110,10 @@
                         "background": {
                           "const": "transparent"
                         }
-                      }
+                      },
+                      "x-apifox-orders": [
+                        "background"
+                      ]
                     },
                     "then": {
                       "required": [
@@ -87,27 +123,65 @@
                         "output_format": {
                           "const": "png"
                         }
-                      }
+                      },
+                      "x-apifox-orders": [
+                        "output_format"
+                      ]
                     }
                   }
                 ],
                 "examples": [
                   {
                     "model": "microsoft/mai-image-2.5-pro",
-                    "prompt": "A cinematic mountain landscape at sunset.",
+                    "prompt": "雨夜的未来城市，写实摄影",
                     "size": "1024x1024",
-                    "response_format": "b64_json"
+                    "response_format": "url"
+                  },
+                  {
+                    "model": "microsoft/mai-image-2.5-pro",
+                    "prompt": "将产品置于白色摄影棚，保留外观",
+                    "size": "1024x1024",
+                    "response_format": "url",
+                    "images": [
+                      {
+                        "image_url": "https://example.com/assets/product.png"
+                      }
+                    ]
                   }
+                ],
+                "x-apifox-orders": [
+                  "model",
+                  "prompt",
+                  "images",
+                  "size",
+                  "response_format"
                 ]
               },
-              "example": {
-                "model": "microsoft/mai-image-2.5-pro",
-                "prompt": "日落时分的群山景色，夕阳映照山峦与天空，光影柔和，画面自然细腻，具有电影感。",
-                "size": "1024x1024"
+              "examples": {
+                "文生图": {
+                  "value": {
+                    "model": "microsoft/mai-image-2.5-pro",
+                    "prompt": "雨夜的未来城市，写实摄影",
+                    "size": "1024x1024",
+                    "response_format": "url"
+                  }
+                },
+                "图生图": {
+                  "value": {
+                    "model": "microsoft/mai-image-2.5-pro",
+                    "prompt": "将产品置于白色摄影棚，保留外观",
+                    "size": "1024x1024",
+                    "response_format": "url",
+                    "images": [
+                      {
+                        "image_url": "https://example.com/assets/product.png"
+                      }
+                    ]
+                  }
+                }
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -269,279 +343,6 @@
         ],
         "x-model-capabilities": {
           "microsoft/mai-image-2.5-pro": [
-            "prompt",
-            "size",
-            "response_format"
-          ]
-        }
-      }
-    },
-    "/v1/images/edits": {
-      "post": {
-        "summary": "图片编辑",
-        "deprecated": false,
-        "description": "`microsoft/mai-image-2.5-pro` 支持单张 JPEG/PNG 图片编辑。`model`、`images` 和 `prompt` 必填；输出固定为单张 PNG。",
-        "tags": [
-          "图片生成/MAI Image"
-        ],
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "model",
-                  "images",
-                  "prompt"
-                ],
-                "properties": {
-                  "model": {
-                    "type": "string",
-                    "description": "必填。MAI Image 2.5 Pro 的 Forward 模型 ID。",
-                    "enum": [
-                      "microsoft/mai-image-2.5-pro"
-                    ]
-                  },
-                  "images": {
-                    "type": "array",
-                    "minItems": 1,
-                    "maxItems": 1,
-                    "description": "必填。单张 JPEG 或 PNG 源图。Forward JSON 兼容形式使用一项 file_id/image_url 对象。",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "file_id": {
-                          "type": "string",
-                          "description": "已上传至 Files API 的源图文件 ID。"
-                        },
-                        "image_url": {
-                          "type": "string",
-                          "description": "完整图片 URL，或 Base64 data URL。"
-                        }
-                      }
-                    }
-                  },
-                  "prompt": {
-                    "type": "string",
-                    "minLength": 1,
-                    "description": "必填。期望如何编辑或扩展图像的文字描述。"
-                  },
-                  "size": {
-                    "type": [
-                      "string",
-                      "null"
-                    ],
-                    "enum": [
-                      "auto",
-                      "1024x1024",
-                      "1536x1024",
-                      "1024x1536",
-                      null
-                    ],
-                    "description": "兼容输出尺寸。MAI 原生编辑接口不提供独立尺寸参数，是否生效取决于 OFOX 上游。"
-                  },
-                  "response_format": {
-                    "type": "string",
-                    "description": "OFOX 兼容响应格式。MAI 原生输出固定为单张 PNG Base64；建议使用 b64_json。",
-                    "default": "b64_json",
-                    "enum": [
-                      "b64_json",
-                      "url"
-                    ]
-                  }
-                },
-                "examples": [
-                  {
-                    "model": "microsoft/mai-image-2.5-pro",
-                    "images": [
-                      {
-                        "image_url": "https://example.com/source-image.png"
-                      }
-                    ],
-                    "prompt": "Turn this image into a clean futuristic product shot.",
-                    "size": "1024x1024",
-                    "response_format": "b64_json"
-                  }
-                ]
-              },
-              "example": {
-                "model": "microsoft/mai-image-2.5-pro",
-                "prompt": "Keep the apple unchanged and replace only its background with a misty enchanted forest under soft cinematic lighting.",
-                "size": "1024x1024",
-                "images": [
-                  {
-                    "image_url": "https://gd-hbimg.huaban.com/cb36fdfc6ee4707de3ec666d6bc202fb99d9bef326a10d-oQHn3b_fw658"
-                  }
-                ]
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "created",
-                    "data"
-                  ],
-                  "properties": {
-                    "created": {
-                      "type": "integer",
-                      "description": "编辑结果创建时的 Unix 时间戳（秒）。"
-                    },
-                    "background": {
-                      "type": "string",
-                      "enum": [
-                        "transparent",
-                        "opaque"
-                      ],
-                      "description": "实际采用的输出背景。"
-                    },
-                    "data": {
-                      "type": "array",
-                      "description": "编辑后的图像列表。",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "b64_json": {
-                            "type": "string",
-                            "description": "Base64 编码的图片内容。GPT Image 模型默认返回。"
-                          },
-                          "revised_prompt": {
-                            "type": "string",
-                            "description": "DALL·E 3 的实际修订提示词；本编辑接口通常不返回该字段。"
-                          },
-                          "url": {
-                            "type": "string",
-                            "description": "生成图片 URL。DALL·E 使用 URL 返回格式时提供，通常有效 60 分钟。"
-                          }
-                        }
-                      }
-                    },
-                    "output_format": {
-                      "type": "string",
-                      "enum": [
-                        "png",
-                        "webp",
-                        "jpeg"
-                      ],
-                      "description": "实际输出格式。"
-                    },
-                    "quality": {
-                      "type": "string",
-                      "enum": [
-                        "low",
-                        "medium",
-                        "high",
-                        "auto"
-                      ],
-                      "description": "实际使用的输出质量。"
-                    },
-                    "size": {
-                      "type": "string",
-                      "description": "实际生成的图片尺寸。"
-                    },
-                    "usage": {
-                      "type": "object",
-                      "description": "GPT Image 模型的 token 用量。",
-                      "properties": {
-                        "input_tokens": {
-                          "type": "integer",
-                          "description": "输入文本和图像的 token 数。"
-                        },
-                        "input_tokens_details": {
-                          "type": "object",
-                          "properties": {
-                            "image_tokens": {
-                              "type": "integer",
-                              "description": "输入图像 token 数。"
-                            },
-                            "text_tokens": {
-                              "type": "integer",
-                              "description": "输入文本 token 数。"
-                            }
-                          }
-                        },
-                        "output_tokens": {
-                          "type": "integer",
-                          "description": "输出 token 数。"
-                        },
-                        "output_tokens_details": {
-                          "type": "object",
-                          "properties": {
-                            "image_tokens": {
-                              "type": "integer",
-                              "description": "输出图像 token 数。"
-                            },
-                            "text_tokens": {
-                              "type": "integer",
-                              "description": "输出文本 token 数。"
-                            }
-                          }
-                        },
-                        "total_tokens": {
-                          "type": "integer",
-                          "description": "输入和输出 token 总数。"
-                        }
-                      }
-                    }
-                  },
-                  "examples": [
-                    {
-                      "created": 1713833628,
-                      "data": [
-                        {
-                          "b64_json": "..."
-                        }
-                      ],
-                      "usage": {
-                        "total_tokens": 100,
-                        "input_tokens": 50,
-                        "output_tokens": 50,
-                        "input_tokens_details": {
-                          "text_tokens": 10,
-                          "image_tokens": 40
-                        }
-                      }
-                    }
-                  ]
-                },
-                "example": {
-                  "created": 1713833628,
-                  "data": [
-                    {
-                      "b64_json": "..."
-                    }
-                  ],
-                  "usage": {
-                    "total_tokens": 100,
-                    "input_tokens": 50,
-                    "output_tokens": 50,
-                    "input_tokens_details": {
-                      "text_tokens": 10,
-                      "image_tokens": 40
-                    }
-                  }
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "x-model-capabilities": {
-          "microsoft/mai-image-2.5-pro": [
-            "images",
             "prompt",
             "size",
             "response_format"

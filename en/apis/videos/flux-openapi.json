@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Tikway FLUX 3 Video video API",
-    "description": "Black Forest Labs (via TTAPI) OpenAI-compatible asynchronous video generation interface for the FLUX 3 Video model.",
+    "description": "Black Forest Labs  OpenAI-compatible asynchronous video generation interface for the FLUX 3 Video model.",
     "version": "1.1.0"
   },
   "tags": [

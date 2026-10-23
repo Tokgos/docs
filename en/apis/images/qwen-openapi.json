@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Tikway Qwen Image API",
-    "description": "OpenAI-compatible image generation and reference image editing with Qwen Image models.",
+    "description": "Tikway standard image API.",
     "version": "1.0.0"
   },
   "tags": [
@@ -11,9 +11,6 @@
     },
     {
       "name": "Image generation/Qwen"
-    },
-    {
-      "name": "Image generation/Qwen Image"
     }
   ],
   "paths": {
@@ -21,17 +18,17 @@
       "post": {
         "summary": "Image generation",
         "deprecated": false,
-        "description": "`qwen-image-3.0-pro` (as well as the `bailian/` alias) supports wensheng images and tsunimages of up to 3 reference images on the same endpoint.\n\nSupports: `model`, `prompt`, `size`, `images`, `prompt_extend`, `prompt_extend_mode`, `enable_thinking`, `negative_prompt`, `seed`, `watermark`, `response_format`.\n\nThe official compatible interface also supports `n=1..6`, but the current gateway will explicitly reject Qwen's `n`, so this specification does not expose this field. `prompt_extend_mode=agent` only supports Vincentian diagrams; `enable_thinking` only takes effect when `prompt_extend=true`.",
+        "description": "qwen-image-3.0-pro supports text-to-image and image-to-image through POST /v1/images/generations, with up to 3 reference images in images. prompt_extend_mode=agent is available for text-to-image only. enable_thinking requires prompt_extend=true. n is not supported by this endpoint.",
         "tags": [
-          "Image generation/Qwen",
-          "Image generation/Qwen Image"
+          "Image generation/Qwen"
         ],
         "parameters": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "title": "Qwen-Image 3.0 Pro request body",
+                "title": "TikwayImageRequest",
                 "type": "object",
                 "required": [
                   "model",
@@ -40,45 +37,58 @@
                 "properties": {
                   "model": {
                     "type": "string",
-                    "enum": [
+                    "description": "Required. Use a model ID or available alias returned by Get Models.",
+                    "examples": [
                       "bailian/qwen-image-3.0-pro",
                       "qwen-image-3.0-pro"
                     ],
-                    "description": "Required. It is recommended to use the public model ID bailian/qwen-image-3.0-pro; the short model name without the vendor prefix is ​​only available if the account alias is configured."
+                    "minLength": 1
                   },
                   "prompt": {
                     "type": "string",
                     "minLength": 1,
-                    "description": "Required. Image generation or editing instructions support Chinese and English. The official recommendation is no more than about 4,500 tokens."
+                    "description": "Required. Describe the image to generate."
                   },
                   "size": {
                     "type": "string",
-                    "pattern": "^(auto|[1-9]\\d*x[1-9]\\d*)$",
+                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
                     "default": "1024x1024",
                     "examples": [
                       "1024x1024",
                       "2048x2048",
                       "1536x1024"
                     ],
-                    "description": "Optional. Output size in the format WIDTHxHEIGHT, for example 1024x1024. When auto is omitted or passed, the gateway sends 1024x1024 to the upstream; the official pixel area range is 512×512 to 2048×2048, and the aspect ratio is 1:8~8:1."
+                    "description": "Output size as WIDTHxHEIGHT, or auto for the model default. Supported sizes depend on the selected model."
                   },
                   "images": {
                     "type": "array",
                     "minItems": 1,
                     "maxItems": 3,
-                    "description": "Optional. Drawing/editing reference pictures, up to 3 pictures. Each item provides a file_id or image_url; when omitted, a Vincentian image.",
+                    "description": "Optional reference images for image-to-image generation. Omit for text-to-image generation. Image limits depend on the selected model.",
                     "items": {
-                      "type": "object",
-                      "properties": {
-                        "file_id": {
+                      "oneOf": [
+                        {
                           "type": "string",
-                          "description": "The ID of the source image file uploaded to the Files API."
+                          "minLength": 1
                         },
-                        "image_url": {
-                          "type": "string",
-                          "description": "Full image URL, or Base64 data URL."
+                        {
+                          "type": "object",
+                          "required": [
+                            "image_url"
+                          ],
+                          "properties": {
+                            "image_url": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Image URL, data URL, or Base64 string."
+                            }
+                          },
+                          "additionalProperties": false,
+                          "x-apifox-orders": [
+                            "image_url"
+                          ]
                         }
-                      }
+                      ]
                     }
                   },
                   "prompt_extend": {
@@ -117,8 +127,8 @@
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "Fixed returning Base64 image so that the response conforms to the Response Schema of this interface.",
-                    "default": "b64_json",
+                    "description": "Response format: url returns image URLs; b64_json returns Base64 image data.",
+                    "default": "url",
                     "enum": [
                       "b64_json",
                       "url"
@@ -135,7 +145,10 @@
                         "prompt_extend_mode": {
                           "const": "agent"
                         }
-                      }
+                      },
+                      "x-apifox-orders": [
+                        "prompt_extend_mode"
+                      ]
                     }
                   },
                   {
@@ -151,27 +164,43 @@
                         "prompt_extend": {
                           "const": false
                         }
-                      }
+                      },
+                      "x-apifox-orders": [
+                        "enable_thinking",
+                        "prompt_extend"
+                      ]
                     }
                   }
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "x-apifox-orders": [
+                  "model",
+                  "prompt",
+                  "size",
+                  "images",
+                  "prompt_extend",
+                  "prompt_extend_mode",
+                  "enable_thinking",
+                  "negative_prompt",
+                  "seed",
+                  "watermark",
+                  "response_format"
+                ]
               },
               "examples": {
-                "Text to image": {
+                "text-to-image": {
                   "value": {
                     "model": "bailian/qwen-image-3.0-pro",
-                    "prompt": "A cinematic street scene in Shanghai on a rainy night, with neon lights reflected on the wet road, realistic photography",
+                    "prompt": "一张电影感的上海雨夜街景，霓虹灯倒映在湿润路面上，写实摄影",
                     "size": "1024x1024",
                     "prompt_extend": true,
                     "watermark": false
-                  },
-                  "summary": "Vincentian picture"
+                  }
                 },
-                "Reference image editing": {
+                "reference-image": {
                   "value": {
                     "model": "bailian/qwen-image-3.0-pro",
-                    "prompt": "Change the apples to blue and leave the rest unchanged",
+                    "prompt": "把苹果改成蓝色，其余保持不变",
                     "size": "1024x1024",
                     "images": [
                       {
@@ -180,13 +209,11 @@
                     ],
                     "prompt_extend": true,
                     "watermark": false
-                  },
-                  "summary": "Reference picture editing"
+                  }
                 }
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {

@@ -745,10 +745,6 @@
                       "priority"
                     ]
                   },
-                  "store": {
-                    "type": "boolean",
-                    "description": "Whether to log this request; if set, it will override the project-level log configuration."
-                  },
                   "labels": {
                     "type": "object",
                     "description": "Request tags; keys such as safety_identifier can be used.",
@@ -1937,10 +1933,6 @@
                       "flex",
                       "priority"
                     ]
-                  },
-                  "store": {
-                    "type": "boolean",
-                    "description": "Whether to log this request; if set, it will override the project-level log configuration."
                   },
                   "labels": {
                     "type": "object",

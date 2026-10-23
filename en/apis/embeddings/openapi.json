@@ -89,7 +89,7 @@
                       }
                     ],
                     "examples": [
-                      "OfoxAI is an LLM Gateway",
+                      "Tikway is an LLM Gateway",
                       [
                         "first text",
                         "second text"
@@ -118,7 +118,7 @@
                 "examples": [
                   {
                     "model": "openai/text-embedding-3-small",
-                    "input": "OfoxAI is an LLM Gateway",
+                    "input": "Tikway is an LLM Gateway",
                     "encoding_format": "float"
                   },
                   {
@@ -649,10 +649,6 @@
                   "serviceTier": {
                     "type": "string",
                     "description": "Request service level."
-                  },
-                  "store": {
-                    "type": "boolean",
-                    "description": "Whether to log this request; if set, it will override the project-level log configuration."
                   }
                 },
                 "examples": [
