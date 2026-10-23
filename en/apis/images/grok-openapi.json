@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Tikway Grok Image API",
-    "description": "Tikway standard image API.",
+    "description": "Unified Grok text-to-image and reference-image generation API.",
     "version": "1.0.0"
   },
   "tags": [
@@ -18,7 +18,7 @@
       "post": {
         "summary": "Image generation",
         "deprecated": false,
-        "description": "Grok text-to-image uses POST /v1/images/generations. Use size for the aspect ratio, quality for output resolution, and n for 1–4 images. This endpoint does not accept reference images; use the retained image editing endpoint to modify an image.",
+        "description": "Use `POST /v1/images/generations` for Grok text-to-image and reference-image generation. `model` and `prompt` are required; optional `images` accepts 1–5 reference images. Use `size` for the aspect ratio, `quality` for output resolution, and `n` for 1–4 outputs.",
         "tags": [
           "Image generation/Grok"
         ],
@@ -83,154 +83,12 @@
                     ],
                     "default": "standard",
                     "description": "standard produces 1K output; hd produces 2K output. Availability depends on the selected model."
-                  }
-                },
-                "additionalProperties": false,
-                "title": "TikwayImageRequest",
-                "description": "Model-specific image options.",
-                "x-apifox-orders": [
-                  "prompt",
-                  "model",
-                  "enable_pro",
-                  "n",
-                  "size",
-                  "response_format",
-                  "quality"
-                ],
-                "examples": [
-                  {
-                    "model": "grok-imagine-1.0",
-                    "prompt": "雨夜的未来城市，写实摄影",
-                    "size": "1024x1024",
-                    "n": 1,
-                    "response_format": "url",
-                    "quality": "standard"
-                  }
-                ]
-              },
-              "examples": {
-                "text-to-image": {
-                  "value": {
-                    "model": "grok-imagine-1.0",
-                    "prompt": "雨夜的未来城市，写实摄影",
-                    "size": "1024x1024",
-                    "n": 1,
-                    "response_format": "url",
-                    "quality": "standard"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "created",
-                    "data"
-                  ],
-                  "properties": {
-                    "created": {
-                      "type": "integer",
-                      "description": "Creation timestamp."
-                    },
-                    "model": {
-                      "type": "string"
-                    },
-                    "output_format": {
-                      "type": "string"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "url": {
-                            "type": "string",
-                            "description": "Image URL returned for response_format=url."
-                          },
-                          "b64_json": {
-                            "type": "string",
-                            "description": "Base64 image data returned for response_format=b64_json."
-                          }
-                        }
-                      }
-                    }
-                  },
-                  "additionalProperties": true
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ]
-      }
-    },
-    "/v1/images/edits": {
-      "post": {
-        "summary": "Image editing",
-        "deprecated": false,
-        "description": "Use POST /v1/images/edits with model, prompt, and 1–5 reference images in images. size sets the aspect ratio and quality sets output resolution. Editing produces one image. An independent mask is not supported.",
-        "tags": [
-          "Image generation/Grok"
-        ],
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "model",
-                  "prompt",
-                  "images"
-                ],
-                "properties": {
-                  "prompt": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "model": {
-                    "type": "string",
-                    "minLength": 1,
-                    "examples": [
-                      "grok-imagine-1.0-edit",
-                      "grok-imagine-2.0-edit",
-                      "grok-imagine-image",
-                      "grok-imagine-image-quality",
-                      "grok-imagine-image-2.0"
-                    ],
-                    "description": "Required. Use a model ID or available alias returned by Get Models."
-                  },
-                  "size": {
-                    "type": "string",
-                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
-                    "description": "Aspect ratio expressed as WIDTHxHEIGHT, such as 1024x1536 for 2:3. auto uses the model default ratio. quality controls output resolution."
-                  },
-                  "response_format": {
-                    "type": "string",
-                    "enum": [
-                      "url",
-                      "b64_json"
-                    ],
-                    "default": "url",
-                    "description": "Response format: url returns image URLs; b64_json returns Base64 image data."
                   },
                   "images": {
                     "type": "array",
                     "minItems": 1,
                     "maxItems": 5,
-                    "description": "Required source images. Supported counts depend on the selected model.",
+                    "description": "Optional reference images, 1–5 images. Omit for text-to-image generation; provide images to generate from references and the prompt. An independent mask is not supported.",
                     "items": {
                       "oneOf": [
                         {
@@ -256,40 +114,33 @@
                         }
                       ]
                     }
-                  },
-                  "quality": {
-                    "type": "string",
-                    "enum": [
-                      "standard",
-                      "hd"
-                    ],
-                    "default": "standard",
-                    "description": "standard produces 1K output; hd produces 2K output. Availability depends on the selected model."
-                  },
-                  "n": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 1,
-                    "default": 1,
-                    "description": "Editing produces one image."
                   }
                 },
                 "additionalProperties": false,
-                "title": "TikwayImageRequest",
-                "description": "Model-specific image options.",
+                "title": "TikwayGrokImageGenerationRequest",
+                "description": "Unified Grok image generation request with optional reference images.",
                 "x-apifox-orders": [
                   "prompt",
                   "model",
+                  "enable_pro",
+                  "n",
                   "size",
                   "response_format",
-                  "images",
                   "quality",
-                  "n"
+                  "images"
                 ],
                 "examples": [
                   {
-                    "model": "grok-imagine-1.0-edit",
-                    "prompt": "将参考图中的服装改成蓝色，保留人物形象",
+                    "model": "grok-imagine-1.0",
+                    "prompt": "雨夜的未来城市，写实摄影",
+                    "size": "1024x1024",
+                    "n": 1,
+                    "response_format": "url",
+                    "quality": "standard"
+                  },
+                  {
+                    "model": "grok-imagine-1.0",
+                    "prompt": "Change the clothing in the reference image to blue while preserving the person.",
                     "size": "1024x1024",
                     "n": 1,
                     "response_format": "url",
@@ -303,10 +154,21 @@
                 ]
               },
               "examples": {
-                "reference-image": {
+                "text-to-image": {
                   "value": {
-                    "model": "grok-imagine-1.0-edit",
-                    "prompt": "将参考图中的服装改成蓝色，保留人物形象",
+                    "model": "grok-imagine-1.0",
+                    "prompt": "雨夜的未来城市，写实摄影",
+                    "size": "1024x1024",
+                    "n": 1,
+                    "response_format": "url",
+                    "quality": "standard"
+                  }
+                },
+                "reference-image": {
+                  "summary": "Generate from a reference image",
+                  "value": {
+                    "model": "grok-imagine-1.0",
+                    "prompt": "Change the clothing in the reference image to blue while preserving the person.",
                     "size": "1024x1024",
                     "n": 1,
                     "response_format": "url",
@@ -351,17 +213,52 @@
                         "properties": {
                           "url": {
                             "type": "string",
-                            "description": "Image URL returned for response_format=url."
+                            "description": "Image URL returned for response_format=url.",
+                            "format": "uri"
                           },
                           "b64_json": {
                             "type": "string",
                             "description": "Base64 image data returned for response_format=b64_json."
+                          },
+                          "index": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "revised_prompt": {
+                            "type": "string"
                           }
-                        }
-                      }
+                        },
+                        "oneOf": [
+                          {
+                            "required": [
+                              "url"
+                            ]
+                          },
+                          {
+                            "required": [
+                              "b64_json"
+                            ]
+                          }
+                        ]
+                      },
+                      "minItems": 1
+                    },
+                    "size": {
+                      "type": "string"
+                    },
+                    "quality": {
+                      "type": "string"
+                    },
+                    "background": {
+                      "type": "string"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "additionalProperties": true
                     }
                   },
-                  "additionalProperties": true
+                  "additionalProperties": true,
+                  "title": "TikwayImageResponse"
                 }
               }
             }
@@ -371,7 +268,8 @@
           {
             "bearer": []
           }
-        ]
+        ],
+        "operationId": "createGrokImage"
       }
     }
   },

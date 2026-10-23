@@ -281,6 +281,26 @@
                       }
                     ]
                   }
+                },
+                "4 秒文生视频": {
+                  "summary": "720p、4 秒文生视频",
+                  "value": {
+                    "model": "veo-3.1-fast",
+                    "prompt": "日落时分，镜头平稳跟随海滩上奔跑的金毛寻回犬。",
+                    "duration": 4,
+                    "resolution": "720p",
+                    "aspect_ratio": "16:9"
+                  }
+                },
+                "6 秒文生视频": {
+                  "summary": "720p、6 秒文生视频",
+                  "value": {
+                    "model": "veo-3.1-lite",
+                    "prompt": "镜头缓缓掠过晨雾中的山谷。",
+                    "duration": 6,
+                    "resolution": "720p",
+                    "aspect_ratio": "16:9"
+                  }
                 }
               }
             }
@@ -383,13 +403,13 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "查询视频任务。完成时返回对象形式的 data；其他状态不返回 data。",
             "content": {
               "application/json": {
                 "schema": {
                   "$id": "https://api.example.com/schemas/videos/retrieve-response.json",
                   "title": "查询视频任务响应",
-                  "description": "GET /v1/videos/{id} 的响应参数。只有任务状态为 completed 时才返回 data。",
+                  "description": "GET /v1/videos/{id} 的响应参数。data 为最终结果对象，仅在 status=completed 时返回；其他状态省略 data。",
                   "type": "object",
                   "required": [
                     "created",
@@ -448,86 +468,71 @@
                       ]
                     },
                     "data": {
-                      "type": "array",
-                      "description": "视频任务结果。仅当 status 为 completed 时返回。",
-                      "minItems": 3,
-                      "maxItems": 3,
-                      "items": {
-                        "oneOf": [
-                          {
-                            "type": "object",
-                            "required": [
-                              "type",
-                              "video_url"
-                            ],
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "enum": [
-                                  "video_url"
-                                ],
-                                "description": "平台 OSS 视频"
-                              },
-                              "video_url": {
-                                "type": "string",
-                                "format": "uri",
-                                "description": "平台 OSS 视频地址，有效期为24小时"
-                              }
-                            },
-                            "additionalProperties": false
+                      "type": "object",
+                      "required": [
+                        "native_url",
+                        "video_url",
+                        "frame"
+                      ],
+                      "properties": {
+                        "native_url": {
+                          "type": "object",
+                          "required": [
+                            "url"
+                          ],
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "供应商原始视频的完整 URL，保留供应商返回的查询参数。"
+                            }
                           },
-                          {
-                            "type": "object",
-                            "required": [
-                              "type",
-                              "native_url"
-                            ],
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "enum": [
-                                  "native_url"
-                                ],
-                                "description": "供应商原始视频"
-                              },
-                              "native_url": {
-                                "type": "string",
-                                "format": "uri",
-                                "description": "供应商返回的原始视频地址"
-                              }
-                            },
-                            "additionalProperties": false
+                          "additionalProperties": false,
+                          "description": "供应商原始视频地址对象。"
+                        },
+                        "video_url": {
+                          "type": "object",
+                          "required": [
+                            "url"
+                          ],
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "平台存储的视频访问 URL。"
+                            }
                           },
-                          {
-                            "type": "object",
-                            "required": [
-                              "type",
-                              "first_url",
-                              "last_url"
-                            ],
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "enum": [
-                                  "frame"
-                                ],
-                                "description": "视频首尾帧"
-                              },
-                              "first_url": {
-                                "type": "string",
-                                "format": "uri",
-                                "description": "视频首帧地址，有效期为24小时"
-                              },
-                              "last_url": {
-                                "type": "string",
-                                "format": "uri",
-                                "description": "视频尾帧地址，有效期为24小时"
-                              }
+                          "additionalProperties": false,
+                          "description": "平台转存后的视频地址对象。"
+                        },
+                        "frame": {
+                          "type": "object",
+                          "required": [
+                            "first_url",
+                            "last_url"
+                          ],
+                          "properties": {
+                            "first_url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "视频首帧图片的访问 URL。"
                             },
-                            "additionalProperties": false
-                          }
-                        ]
-                      }
+                            "last_url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "视频尾帧图片的访问 URL。"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "description": "视频首尾帧地址对象。"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "description": "最终结果对象，只有 status=completed 时存在。其他状态省略整个 data 字段，不返回数组或 null。"
                     },
                     "usage": {
                       "type": "object",
@@ -629,21 +634,18 @@
                       "model": "veo-3.1-fast",
                       "prompt": "一只金毛犬在日落时分的海滩上奔跑，镜头平稳跟随，海风吹动毛发，画面呈现自然细腻的电影质感",
                       "status": "completed",
-                      "data": [
-                        {
-                          "type": "video_url",
-                          "video_url": "https://oss.example.com/temp/2026/09/11/video.mp4?expires=86400"
+                      "data": {
+                        "video_url": {
+                          "url": "https://oss.example.com/temp/2026/09/11/video.mp4?expires=86400"
                         },
-                        {
-                          "type": "native_url",
-                          "native_url": "https://provider.example.com/videos/video.mp4?expires=86400"
+                        "native_url": {
+                          "url": "https://provider.example.com/videos/video.mp4?expires=86400"
                         },
-                        {
-                          "type": "frame",
+                        "frame": {
                           "first_url": "https://oss.example.com/temp/2026/09/11/video.mp4?x-oss-process=video%2Fsnapshot%2Ct_0%2Cf_jpg%2Cw_0%2Ch_0",
                           "last_url": "https://oss.example.com/temp/2026/09/11/video.mp4?x-oss-process=video%2Fsnapshot%2Ct_3999%2Cf_jpg%2Cw_0%2Ch_0"
                         }
-                      ],
+                      },
                       "usage": {
                         "video_seconds": 4
                       }

@@ -1,0 +1,266 @@
+---
+title: "Qwen voices"
+sidebarTitle: "Qwen voices"
+description: "Find Qwen3-TTS and Qwen-Audio-TTS voice IDs by model and language."
+icon: "microphone"
+---
+
+When calling `POST /v1/audio/speech`, send the selected `voice` at the request body root. Choose the model first, then select a voice supported by that model.
+
+<Note>
+Voice IDs are case sensitive. Keep version suffixes and spaces exactly as shown. Voices from different models are not interchangeable; for example, `longanhuan_v3.1` belongs to Qwen-Audio 3.1, not Qwen3-TTS.
+</Note>
+
+## Model overview
+
+These four non-realtime models have **130 system voice entries** in the source catalog. Check model availability in the Tikway model catalog. Additional Qwen-Audio 3.0 base voices are linked below.
+
+| Model | System voices | Example `voice` |
+| --- | --- | --- |
+| `qwen3-tts-flash` | 48 | `Cherry` |
+| `qwen-audio-3.1-tts-flash` | 68 | `longanhuan_v3.1` |
+| `qwen-audio-3.0-tts-plus` | 2 | `longanlingxin` |
+| `qwen-audio-3.0-tts-flash` | 12 | `longanhuan_v3.6` |
+
+## Request examples
+
+Use a string `input` and a top-level `voice`. You can pass a configured model ID or alias.
+
+### Qwen3-TTS
+
+```json
+{
+  "model": "qwen3-tts-flash",
+  "input": "Hello, welcome to speech synthesis.",
+  "voice": "Cherry",
+  "response_format": "wav",
+  "extra_body": { "language_type": "English" }
+}
+```
+
+### Qwen-Audio 3.1
+
+```json
+{
+  "model": "qwen-audio-3.1-tts-flash",
+  "input": "Hello, welcome to speech synthesis.",
+  "voice": "Emily_v3.1",
+  "response_format": "wav"
+}
+```
+
+`language_type` is a Qwen3-TTS extension. Put it in `extra_body`, or at the request body root. A root value wins if both are present. Do not send it to Qwen-Audio.
+
+## Qwen3-TTS Flash
+
+Model: `qwen3-tts-flash`. [Official voices and samples](https://docs.bailian.console.aliyun.com/zh/model-studio/qwen-tts-voice-list#261bc7f209ri2).
+
+General voices support Mandarin, English, French, German, Russian, Italian, Spanish, Portuguese, Japanese, and Korean. Dialect voices use the listed Chinese accent and also support the other nine languages.
+
+### General multilingual voices · 38
+
+| `voice` | Native display name | Voice style |
+| --- | --- | --- |
+| `Cherry` | 芊悦 | Female · bright and natural |
+| `Serena` | 苏瑶 | Female · gentle |
+| `Ethan` | 晨煦 | Male · warm young voice |
+| `Chelsie` | 千雪 | Female · character voice |
+| `Momo` | 茉兔 | Female · playful |
+| `Vivian` | 十三 | Female · lively |
+| `Moon` | 月白 | Male · fresh |
+| `Maia` | 四月 | Female · warm and thoughtful |
+| `Kai` | 凯 | Male · soothing |
+| `Nofish` | 不吃鱼 | Male · distinct articulation |
+| `Bella` | 萌宝 | Female · childlike |
+| `Jennifer` | 詹妮弗 | Female · American commercial voice |
+| `Ryan` | 甜茶 | Male · dramatic delivery |
+| `Katerina` | 卡捷琳娜 | Female · mature |
+| `Aiden` | 艾登 | Male · young American voice |
+| `Eldric Sage` | 沧明子 | Male · elder voice |
+| `Mia` | 乖小妹 | Female · gentle |
+| `Mochi` | 沙小弥 | Male · boyish voice |
+| `Bellona` | 燕铮莺 | Female · resonant character voice |
+| `Vincent` | 田叔 | Male · raspy |
+| `Bunny` | 萌小姬 | Female · childlike |
+| `Neil` | 阿闻 | Male · newsreader |
+| `Elias` | 墨讲师 | Female · explainer |
+| `Arthur` | 徐大爷 | Male · elder storyteller |
+| `Nini` | 邻家妹妹 | Female · soft and sweet |
+| `Seren` | 小婉 | Female · sleep-friendly and soothing |
+| `Pip` | 顽屁小孩 | Male · mischievous boy |
+| `Stella` | 少女阿月 | Female · young female character |
+| `Bodega` | 博德加 | Male · Spanish style |
+| `Sonrisa` | 索尼莎 | Female · Latin American style |
+| `Alek` | 阿列克 | Male · Russian style |
+| `Dolce` | 多尔切 | Male · Italian style |
+| `Sohee` | 素熙 | Female · Korean style |
+| `Ono Anna` | 小野杏 | Female · young Japanese style |
+| `Lenn` | 莱恩 | Male · young German style |
+| `Emilien` | 埃米尔安 | Male · young French style |
+| `Andre` | 安德雷 | Male · steady low voice |
+| `Radio Gol` | 拉迪奥·戈尔 | Male · sports commentator |
+
+### Dialect voices · 10
+
+| `voice` | Native display name | Voice style |
+| --- | --- | --- |
+| `Jada` | 上海-阿珍 | Female · Shanghainese |
+| `Dylan` | 北京-晓东 | Male · Beijing dialect |
+| `Li` | 南京-老李 | Male · Nanjing dialect |
+| `Marcus` | 陕西-秦川 | Male · Shaanxi dialect |
+| `Roy` | 闽南-阿杰 | Male · Southern Min |
+| `Peter` | 天津-李彼得 | Male · Tianjin dialect |
+| `Sunny` | 四川-晴儿 | Female · Sichuan dialect |
+| `Eric` | 四川-程川 | Male · Sichuan dialect |
+| `Rocky` | 粤语-阿强 | Male · Cantonese |
+| `Kiki` | 粤语-阿清 | Female · Cantonese |
+
+Spaces are part of the IDs `Eldric Sage`, `Ono Anna`, and `Radio Gol`.
+
+## Qwen-Audio 3.1 Flash
+
+Model: `qwen-audio-3.1-tts-flash`. [Official voices and samples](https://docs.bailian.console.aliyun.com/zh/model-studio/qwen-audio-tts-voice-list#qwen-tts31-voices).
+
+According to the provider's regional guidance, multilingual and dialect voices and premium English voices work in Beijing and Singapore. Premium Chinese and other system voices are available in Beijing only.
+
+### Multilingual and dialect voices · 4
+
+These four voices share support for Shanghainese, Cantonese, Northeastern, Chongqing, Shaanxi, Yunnan, Ningbo, and Gansu dialects, plus Japanese, Korean, French, German, Portuguese, Italian, Vietnamese, and Indonesian.
+
+| `voice` | Native display name | Voice style |
+| --- | --- | --- |
+| `longanhuan_v3.1` | 龙安欢_v3.1 | Female |
+| `longanlingxin_v3.1` | 龙安灵心_v3.1 | Female |
+| `longanfengyue_v3.1` | 龙安风悦_v3.1 | Female |
+| `xunanchuan_v3.1` | 许南川 | Male |
+
+### Premium Chinese voices · 22
+
+For Mandarin text.
+
+| `voice` | Native display name | Voice style |
+| --- | --- | --- |
+| `yuxiaoyun_v3.1` | 于小云 | Female · energetic、friendly、natural |
+| `qiaoxiaojiao_v3.1` | 乔小娇 | Female · charming、cute |
+| `xiaxiaochen_v3.1` | 夏小晨 | Female · energetic、bright |
+| `anmingyuan_v3.1` | 安明远 | Male · clear and bright、natural |
+| `wenhuaiqing_v3.1` | 温怀清 | Female · clear and bright、soft |
+| `anxiaolan_v3.1` | 安小岚 | Female · sweet、pure |
+| `xieshurou_v3.1` | 谢舒柔 | Female · soft、natural、thoughtful |
+| `baiqinglan_v3.1` | 白清岚 | Female · bright、fresh and innocent |
+| `xuyuyuan_v3.1` | 许玉远 | Female · thoughtful、mature、textured |
+| `anruorou_v3.1` | 安若柔 | Female · breathy、thoughtful |
+| `wenhuaizhi_v3.1` | 闻怀之 | Female · steady、mature |
+| `xiaoxingzhi_v3.1` | 萧行之 | Female · elegant、refined |
+| `guyunshu_v3.1` | 顾云舒 | Female · mature、steady |
+| `huozhuoshi_v3.1` | 霍拙石 | Male · clear and bright |
+| `yeqinghe_v3.1` | 叶清禾 | Female · friendly、gentle |
+| `yunhuanhuan_v3.1` | 云欢欢 | Female · high and powerful、passionate |
+| `xuxiaoqiao_v3.1` | 徐小俏 | Female · natural、playful |
+| `baianran_v3.1` | 白安然 | Female · low、full-bodied、breathy |
+| `xuyanchu_v3.1` | 许言初 | Female · calm、resonant |
+| `yezhiqing_v3.1` | 叶知晴 | Female · light and lively、natural |
+| `andi_v3.1` | 安迪 | Male · American-born Chinese accent |
+| `anyuqing_v3.1` | 安语晴 | Female · sweet young voice |
+
+### Premium English voices · 15
+
+For English text.
+
+| `voice` | Native display name | Voice style |
+| --- | --- | --- |
+| `Emily_v3.1` | Emily | Female · British accent |
+| `Luna_v3.1` | Luna | Female · British accent |
+| `Eric_v3.1` | Eric | Male · British accent |
+| `Luca_v3.1` | Luca | Male · British accent |
+| `Abby_v3.1` | Abby | Female · American accent |
+| `Annie_v3.1` | Annie | Female · American accent |
+| `Ava_v3.1` | Ava | Female · American accent |
+| `Beth_v3.1` | Beth | Female · American accent |
+| `Betty_v3.1` | Betty | Female · American accent |
+| `Cally_v3.1` | Cally | Female · American accent |
+| `Cindy_v3.1` | Cindy | Female · American accent |
+| `Donna_v3.1` | Donna | Female · American accent |
+| `Andy_v3.1` | Andy | Male · American accent |
+| `Brian_v3.1` | Brian | Male · American accent |
+| `David_v3.1` | David | Male · American accent |
+
+### Other system voices · 27
+
+| `voice` | Native display name | Voice style |
+| --- | --- | --- |
+| `longanyuanfei_v3.1` | 龙安元妃_v3.1 | Female · court character |
+| `longjielidou_v3.1` | 龙杰力豆_v3.1 | Male · boyish voice |
+| `longanlingxi_v3.1` | 龙安灵希_v3.1 | Female · sweet |
+| `longhuohuo_v3.1` | 龙火火_v3.1 | Male · teenage boy |
+| `longyingtao_v3.1` | 龙应桃_v3.1 | Female · mild |
+| `longanya_v3.1` | 龙安雅_v3.1 | Female · thoughtful |
+| `longwan_v3.1` | 龙婉_v3.1 | Female · soft |
+| `longxing_v3.1` | 龙星_v3.1 | Female · friendly |
+| `longhua_v3.1` | 龙华_v3.1 | Female · bright |
+| `longhan_v3.1` | 龙寒_v3.1 | Male · warm |
+| `longanzhi_v3.1` | 龙安智_v3.1 | Male · mature |
+| `longzhe_v3.1` | 龙哲_v3.1 | Male · plainspoken |
+| `longanyang_v3.1` | 龙安洋_v3.1 | Male · upbeat young man |
+| `libai_v3.1` | 李白_v3.1 | Male · classical Chinese recitation |
+| `longling_v3.1` | 龙铃_v3.1 | Female · young girl |
+| `longniuniu_v3.1` | 龙牛牛_v3.1 | Male · clear child voice |
+| `longshanshan_v3.1` | 龙闪闪_v3.1 | Male · child character voice |
+| `longpaopao_v3.1` | 龙泡泡_v3.1 | Female · light child voice |
+| `loongstella_v3.1` | loongstella_v3.1 | Female · newsreader |
+| `longyuan_v3.1` | 龙媛_v3.1 | Female · warm |
+| `longmiao_v3.1` | 龙妙_v3.1 | Female · expressive |
+| `longsanshu_v3.1` | 龙三叔_v3.1 | Male · calm |
+| `longanli_v3.1` | 龙安莉_v3.1 | Female · clear and professional |
+| `longanwen_v3.1` | 龙安温_v3.1 | Female · thoughtful |
+| `longanlang_v3.1` | 龙安朗_v3.1 | Male · fresh |
+| `longxiaoxia_v3.1` | 龙小夏_v3.1 | Female · authoritative |
+| `longanchong_v3.1` | 龙安冲_v3.1 | Male · promotional announcer |
+
+## Qwen-Audio 3.0 Plus
+
+Model: `qwen-audio-3.0-tts-plus`. Both system voices support Mandarin and English. [Official voices and samples](https://docs.bailian.console.aliyun.com/zh/model-studio/qwen-audio-tts-voice-list#f399ce27bcc8).
+
+| `voice` | Native display name | Voice style |
+| --- | --- | --- |
+| `longanlingxin` | 龙安灵心 | Female · warm companion |
+| `longanlufeng` | 龙安鲁风 | Male · bright and cheerful |
+
+## Qwen-Audio 3.0 Flash
+
+Model: `qwen-audio-3.0-tts-flash`. The first nine system voices support Mandarin and English; the last three are English voices. [Official voices and samples](https://docs.bailian.console.aliyun.com/zh/model-studio/qwen-audio-tts-voice-list).
+
+| `voice` | Native display name | Voice style |
+| --- | --- | --- |
+| `longanfengyue` | 龙安风悦 | Female · natural and friendly |
+| `longanyuanfei` | 龙安元妃 | Female · female character voice |
+| `longanlingxi` | 龙安灵希 | Female · sweet female voice |
+| `longanxiaoxin` | 龙安小昕 | Female · lively female voice |
+| `longanhuan_v3.6` | 龙安欢 | Female · Chinese and English |
+| `longjielidou_v3.6` | 龙杰力豆 | Male · boyish voice |
+| `longpaopao_v3.6` | 龙泡泡 | Female · young girl |
+| `longhuohuo_v3.6` | 龙火火 | Male · teenage boy |
+| `longchuanshu_v3.6` | 龙川叔 | Male · Sichuan-accented Mandarin |
+| `loongmary` | loongmary | Female · British accent |
+| `loongeva_v3.6` | loongeva | Female · American accent |
+| `loongjohn` | loongJohn | Male · American accent |
+
+<Note>
+Version suffixes vary for 3.0 Flash: `longanfengyue` has no suffix, `longanhuan_v3.6` must keep `_v3.6`, and `loongjohn` is all lowercase.
+</Note>
+
+## Base voices and samples
+
+Qwen-Audio 3.0 Plus and Flash each offer over 500 additional base voices. These are separate from the system voice counts above.
+
+- [Qwen-Audio 3.0 Plus base voice list (Excel)](https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20260723/ydwqqz/qwen-audio-3.0-tts-plus%E5%9F%BA%E7%A1%80%E9%9F%B3%E8%89%B2.xlsx)
+- [Qwen-Audio 3.0 Flash base voice list (Excel)](https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20260723/thosjr/qwen-audio-3.0-tts-flash%E5%9F%BA%E7%A1%80%E9%9F%B3%E8%89%B2.xlsx)
+
+Use the full ID from the list. The `qwen-audio-3.0-tts-plus-...` and `qwen-audio-3.0-tts-flash-...` prefixes are model-specific.
+
+## Sources
+
+- [Alibaba Cloud Qwen-Audio-TTS voice list](https://docs.bailian.console.aliyun.com/zh/model-studio/qwen-audio-tts-voice-list)
+- [Alibaba Cloud Qwen-TTS voice list](https://docs.bailian.console.aliyun.com/zh/model-studio/qwen-tts-voice-list)
+
+Checked October 15, 2026. This page covers non-realtime HTTP speech synthesis.

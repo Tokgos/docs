@@ -97,12 +97,19 @@
                   {
                     "group": "OpenAI 协议",
                     "openapi": "zh/apis/chat-completions/openai-openapi.json",
-                    "pages": ["POST /v1/chat/completions", "POST /v1/responses"]
+                    "pages": [
+                      "POST /v1/chat/completions",
+                      "POST /v1/responses",
+                      "zh/apis/chat-completions/openai-openapi-models.json GET /v1/models"
+                    ]
                   },
                   {
                     "group": "Anthropic 协议",
                     "openapi": "zh/apis/chat-completions/anthropic-openapi.json",
-                    "pages": ["POST /v1/messages"]
+                    "pages": [
+                      "POST /v1/messages",
+                      "zh/apis/chat-completions/anthropic-openapi-models.json GET /anthropic/v1/models"
+                    ]
                   },
                   {
                     "group": "Gemini 协议",
@@ -110,6 +117,7 @@
                     "pages": [
                       "POST /v1beta/models/{model}:generateContent",
                       "POST /v1beta/models/{model}:streamGenerateContent",
+                      "zh/apis/chat-completions/gemini-openapi-models.json GET /v1beta/models",
                       "POST /v1beta/cachedContents",
                       "GET /v1beta/cachedContents/{id}",
                       "DELETE /v1beta/cachedContents/{id}"
@@ -164,10 +172,33 @@
                   {
                     "group": "Grok",
                     "openapi": "zh/apis/images/grok-openapi.json",
-                    "pages": [
-                      "POST /v1/images/generations",
-                      "POST /v1/images/edits"
-                    ]
+                    "pages": ["POST /v1/images/generations"]
+                  }
+                ]
+              },
+              {
+                "group": "Midjourney",
+                "pages": [
+                  "zh/apis/images/midjourney-guide",
+                  {
+                    "group": "图片生成",
+                    "openapi": "zh/apis/images/mi-gen-openapi.json",
+                    "pages": ["POST /v1/images/generations"]
+                  },
+                  {
+                    "group": "任务操作",
+                    "openapi": "zh/apis/images/mi-action-openapi.json",
+                    "pages": ["POST /v1/images/generations"]
+                  },
+                  {
+                    "group": "局部重绘",
+                    "openapi": "zh/apis/images/mi-vary-region-openapi.json",
+                    "pages": ["POST /v1/images/generations"]
+                  },
+                  {
+                    "group": "任务查询",
+                    "openapi": "zh/apis/images/mj-query-openapi.json",
+                    "pages": ["GET /v1/images/{id}"]
                   }
                 ]
               },
@@ -223,13 +254,50 @@
               },
               {
                 "group": "语音合成",
-                "openapi": "zh/apis/speech/openapi.json",
-                "pages": ["POST /v1/audio/speech"]
+                "pages": [
+                  "zh/apis/speech/qwen-voices",
+                  "zh/apis/speech/google-voices",
+                  {
+                    "group": "Qwen3-TTS",
+                    "openapi": "zh/apis/speech/qwen-openapi.json",
+                    "pages": ["POST /v1/audio/speech"]
+                  },
+                  {
+                    "group": "Google TTS",
+                    "openapi": "zh/apis/speech/google-openapi.json",
+                    "pages": ["POST /v1/audio/speech"]
+                  },
+                  {
+                    "group": "Qwen Audio",
+                    "openapi": "zh/apis/speech/qwen-audio-openapi.json",
+                    "pages": ["POST /v1/audio/speech"]
+                  }
+                ]
               },
               {
                 "group": "决策评估",
-                "openapi": "zh/apis/decisions/openapi.json",
-                "pages": ["POST /v1/decisions", "POST /v1/systemone"]
+                "pages": [
+                  {
+                    "group": "OpenAI",
+                    "openapi": "zh/apis/decisions/openai-openapi.json",
+                    "pages": ["POST /v1/decisions"]
+                  },
+                  {
+                    "group": "Jev",
+                    "openapi": "zh/apis/decisions/jev-openapi.json",
+                    "pages": ["POST /v1/decisions"]
+                  }
+                ]
+              },
+              {
+                "group": "实用接口",
+                "pages": [
+                  {
+                    "group": "余额查询",
+                    "openapi": "zh/apis/utilities/balance-openapi.json",
+                    "pages": ["GET /v1/user/balance"]
+                  }
+                ]
               }
             ]
           }
@@ -272,12 +340,19 @@
                   {
                     "group": "OpenAI protocol",
                     "openapi": "en/apis/chat-completions/openai-openapi.json",
-                    "pages": ["POST /v1/chat/completions", "POST /v1/responses"]
+                    "pages": [
+                      "POST /v1/chat/completions",
+                      "POST /v1/responses",
+                      "en/apis/chat-completions/openai-openapi-models.json GET /v1/models"
+                    ]
                   },
                   {
                     "group": "Anthropic protocol",
                     "openapi": "en/apis/chat-completions/anthropic-openapi.json",
-                    "pages": ["POST /v1/messages"]
+                    "pages": [
+                      "POST /v1/messages",
+                      "en/apis/chat-completions/anthropic-openapi-models.json GET /anthropic/v1/models"
+                    ]
                   },
                   {
                     "group": "Gemini protocol",
@@ -285,6 +360,7 @@
                     "pages": [
                       "POST /v1beta/models/{model}:generateContent",
                       "POST /v1beta/models/{model}:streamGenerateContent",
+                      "en/apis/chat-completions/gemini-openapi-models.json GET /v1beta/models",
                       "POST /v1beta/cachedContents",
                       "GET /v1beta/cachedContents/{id}",
                       "DELETE /v1beta/cachedContents/{id}"
@@ -339,10 +415,7 @@
                   {
                     "group": "Grok",
                     "openapi": "en/apis/images/grok-openapi.json",
-                    "pages": [
-                      "POST /v1/images/generations",
-                      "POST /v1/images/edits"
-                    ]
+                    "pages": ["POST /v1/images/generations"]
                   }
                 ]
               },
@@ -397,14 +470,51 @@
                 "pages": ["POST /v1/audio/transcriptions"]
               },
               {
-                "group": "Speech",
-                "openapi": "en/apis/speech/openapi.json",
-                "pages": ["POST /v1/audio/speech"]
+                "group": "Speech synthesis",
+                "pages": [
+                  "en/apis/speech/qwen-voices",
+                  "en/apis/speech/google-voices",
+                  {
+                    "group": "Qwen3-TTS",
+                    "openapi": "en/apis/speech/qwen-openapi.json",
+                    "pages": ["POST /v1/audio/speech"]
+                  },
+                  {
+                    "group": "Google TTS",
+                    "openapi": "en/apis/speech/google-openapi.json",
+                    "pages": ["POST /v1/audio/speech"]
+                  },
+                  {
+                    "group": "Qwen Audio",
+                    "openapi": "en/apis/speech/qwen-audio-openapi.json",
+                    "pages": ["POST /v1/audio/speech"]
+                  }
+                ]
               },
               {
                 "group": "Decisions",
-                "openapi": "en/apis/decisions/openapi.json",
-                "pages": ["POST /v1/decisions", "POST /v1/systemone"]
+                "pages": [
+                  {
+                    "group": "OpenAI",
+                    "openapi": "en/apis/decisions/openai-openapi.json",
+                    "pages": ["POST /v1/decisions"]
+                  },
+                  {
+                    "group": "Jev",
+                    "openapi": "en/apis/decisions/jev-openapi.json",
+                    "pages": ["POST /v1/decisions"]
+                  }
+                ]
+              },
+              {
+                "group": "Utilities",
+                "pages": [
+                  {
+                    "group": "Balance",
+                    "openapi": "en/apis/utilities/balance-openapi.json",
+                    "pages": ["GET /v1/user/balance"]
+                  }
+                ]
               }
             ]
           }

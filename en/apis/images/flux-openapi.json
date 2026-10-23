@@ -225,17 +225,52 @@
                         "properties": {
                           "url": {
                             "type": "string",
-                            "description": "Image URL returned for response_format=url."
+                            "description": "Image URL returned for response_format=url.",
+                            "format": "uri"
                           },
                           "b64_json": {
                             "type": "string",
                             "description": "Base64 image data returned for response_format=b64_json."
+                          },
+                          "index": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "revised_prompt": {
+                            "type": "string"
                           }
-                        }
-                      }
+                        },
+                        "oneOf": [
+                          {
+                            "required": [
+                              "url"
+                            ]
+                          },
+                          {
+                            "required": [
+                              "b64_json"
+                            ]
+                          }
+                        ]
+                      },
+                      "minItems": 1
+                    },
+                    "size": {
+                      "type": "string"
+                    },
+                    "quality": {
+                      "type": "string"
+                    },
+                    "background": {
+                      "type": "string"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "additionalProperties": true
                     }
                   },
-                  "additionalProperties": true
+                  "additionalProperties": true,
+                  "title": "TikwayImageResponse"
                 }
               }
             }
@@ -245,7 +280,8 @@
           {
             "bearer": []
           }
-        ]
+        ],
+        "operationId": "operation523577674"
       }
     }
   },

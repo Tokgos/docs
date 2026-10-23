@@ -270,7 +270,9 @@
                         "properties": {
                           "type": {
                             "type": "string",
-                            "enum": ["enabled"]
+                            "enum": [
+                              "enabled"
+                            ]
                           },
                           "budget_tokens": {
                             "type": "integer",
@@ -279,19 +281,37 @@
                           },
                           "block_binding": {
                             "description": "回传的思考块未通过对话前缀校验时的处理方式；省略、null 或空对象均使用默认行为。",
-                            "type": ["object", "null"],
+                            "type": [
+                              "object",
+                              "null"
+                            ],
                             "properties": {
                               "prefix_mismatch_behavior": {
-                                "type": ["string", "null"],
-                                "enum": ["error", "drop_block", null],
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "error",
+                                  "drop_block",
+                                  null
+                                ],
                                 "default": "error",
                                 "description": "error 会返回 400；drop_block 会移除不匹配的思考块。"
                               }
                             }
                           },
                           "display": {
-                            "type": ["string", "null"],
-                            "enum": ["summarized", "omitted", "updates", null],
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "summarized",
+                              "omitted",
+                              "updates",
+                              null
+                            ],
                             "default": "summarized",
                             "description": "思考内容的呈现方式；omitted 会隐藏内容但保留签名以供多轮对话使用。"
                           }
@@ -300,27 +320,49 @@
                       {
                         "title": "Adaptive thinking",
                         "type": "object",
-                        "required": ["type"],
+                        "required": [
+                          "type"
+                        ],
                         "properties": {
                           "type": {
                             "type": "string",
-                            "enum": ["adaptive"]
+                            "enum": [
+                              "adaptive"
+                            ]
                           },
                           "block_binding": {
                             "description": "回传的思考块未通过对话前缀校验时的处理方式；省略、null 或空对象均使用默认行为。",
-                            "type": ["object", "null"],
+                            "type": [
+                              "object",
+                              "null"
+                            ],
                             "properties": {
                               "prefix_mismatch_behavior": {
-                                "type": ["string", "null"],
-                                "enum": ["error", "drop_block", null],
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "error",
+                                  "drop_block",
+                                  null
+                                ],
                                 "default": "error",
                                 "description": "error 会返回 400；drop_block 会移除不匹配的思考块。"
                               }
                             }
                           },
                           "display": {
-                            "type": ["string", "null"],
-                            "enum": ["summarized", "omitted", "updates", null],
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "summarized",
+                              "omitted",
+                              "updates",
+                              null
+                            ],
                             "default": "summarized",
                             "description": "思考内容的呈现方式；omitted 会隐藏内容但保留签名以供多轮对话使用。"
                           }
@@ -329,11 +371,15 @@
                       {
                         "title": "Disabled thinking",
                         "type": "object",
-                        "required": ["type"],
+                        "required": [
+                          "type"
+                        ],
                         "properties": {
                           "type": {
                             "type": "string",
-                            "enum": ["disabled"]
+                            "enum": [
+                              "disabled"
+                            ]
                           }
                         }
                       },
@@ -575,6 +621,30 @@
                   "inference_geo": {
                     "type": "string",
                     "description": "推理地域偏好。"
+                  },
+                  "compaction": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "required": [
+                      "type"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "summarize"
+                      },
+                      "instructions": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "maxLength": 16384
+                      }
+                    },
+                    "additionalProperties": false,
+                    "description": "Anthropic 会话压缩请求。生成 compaction 内容块；非 null 时不能与 context_management 同时设置。"
                   }
                 },
                 "examples": [
@@ -1132,6 +1202,384 @@
             "anthropicApiKey": []
           }
         ]
+      }
+    },
+    "/anthropic/v1/models": {
+      "get": {
+        "summary": "Anthropic 模型列表",
+        "operationId": "listAnthropicModels",
+        "description": "返回与 GET /v1/models 相同的完整可调用模型目录，覆盖全部供应商、文本、图片、视频、语音、嵌入和决策模型，不按当前协议隐式过滤。保留当前协议的外层响应结构和分页；可用 provider、mode、type 显式筛选。\n\n每个模型都包含 aliases、architecture、capabilities.endpoints、capabilities.parameters 和 capabilities.reasoning_efforts，取值与 OpenAI 列表一致。参数读取方式：common 与端点路径数组取并集。列表展示不表示每个模型都能使用当前协议生成内容，实际可调用路径以 capabilities.endpoints 为准。\n\nGET /v1/models 携带 anthropic-version 请求头时也返回此格式。",
+        "tags": [
+          "对话补全/Anthropic协议"
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "query",
+            "description": "按模型 ID 的供应商命名空间精确筛选，例如 google。省略时返回全部供应商。",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "description": "按模式筛选：chat、image_generation、video_generation、embedding、transcription、audio_generation、decision 或 music_generation。多个值用逗号分隔，或重复传入，取并集。",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "按类型筛选：text、image、video、music、embedding、audio 或 decision。支持逗号分隔或重复传入；与 provider、mode 同时使用时取交集。",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 20
+            },
+            "description": "每页数量，默认 20，最大 1000。全部模型需按 has_more 和 last_id 继续翻页。"
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "从此模型 ID 之后继续查询，通常填上一页的 last_id。不能与 before_id 同时传入。"
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "查询此模型 ID 之前的一页。不能与 after_id 同时传入。"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "完整目录中的一页，包含平台定义的模型元数据。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "first_id",
+                    "has_more",
+                    "last_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "type",
+                          "id",
+                          "display_name",
+                          "created_at",
+                          "aliases",
+                          "architecture",
+                          "capabilities"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "model"
+                          },
+                          "id": {
+                            "type": "string",
+                            "description": "完整平台模型 ID，保留供应商命名空间。"
+                          },
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "description": "未配置发布时间时返回 1970-01-01T00:00:00Z。"
+                          },
+                          "description": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "context_length": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0
+                          },
+                          "max_input_tokens": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0
+                          },
+                          "max_tokens": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0
+                          },
+                          "supported_parameters": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Anthropic 原生参数名；没有该协议的参数配置时为空数组。"
+                          },
+                          "allowed_fallback_models": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "aliases": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "模型的可用别名，来自当前平台配置；未配置时返回空数组。"
+                          },
+                          "architecture": {
+                            "type": "object",
+                            "required": [
+                              "input_modalities",
+                              "output_modalities"
+                            ],
+                            "properties": {
+                              "input_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "output_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "description": "模型可接受和可输出的模态，按平台配置及实际可调用端点生成。"
+                          },
+                          "capabilities": {
+                            "type": "object",
+                            "required": [
+                              "reasoning_efforts",
+                              "endpoints",
+                              "parameters"
+                            ],
+                            "properties": {
+                              "reasoning_efforts": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "按实际端点参数配置汇总的推理档位；无可配置档位时返回空数组。"
+                              },
+                              "endpoints": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "parameters": {
+                                "type": "object",
+                                "required": [
+                                  "common"
+                                ],
+                                "properties": {
+                                  "common": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "additionalProperties": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "description": "common 为所有可调用端点共有的参数，各端点路径下只列额外参数。该端点的完整参数集为 common 与端点数组的并集；单端点模型的参数可全部位于 common。"
+                              },
+                              "batch": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              },
+                              "citations": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              },
+                              "code_execution": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              },
+                              "effort": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              },
+                              "image_input": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              },
+                              "pdf_input": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              },
+                              "structured_outputs": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              },
+                              "thinking": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              }
+                            },
+                            "description": "当前平台定义的端点、参数和推理档位。与其他协议格式中的这组字段一致。",
+                            "additionalProperties": true
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    },
+                    "first_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "last_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "examples": {
+                  "catalog_metadata": {
+                    "summary": "视频模型也包含在目录中",
+                    "value": {
+                      "data": [
+                        {
+                          "type": "model",
+                          "id": "happyhorse-1.0",
+                          "display_name": "HappyHorse 1.0",
+                          "created_at": "1970-01-01T00:00:00Z",
+                          "aliases": [
+                            "happyhorse-1.0",
+                            "happyhorse-1.0-20260624"
+                          ],
+                          "architecture": {
+                            "input_modalities": [
+                              "text",
+                              "image",
+                              "video"
+                            ],
+                            "output_modalities": [
+                              "video"
+                            ]
+                          },
+                          "capabilities": {
+                            "endpoints": [
+                              "/v1/videos"
+                            ],
+                            "parameters": {
+                              "/v1/videos": [],
+                              "common": [
+                                "seed",
+                                "model",
+                                "prompt",
+                                "duration",
+                                "extra_body",
+                                "resolution",
+                                "aspect_ratio",
+                                "callback_url",
+                                "frame_images",
+                                "input_references"
+                              ]
+                            },
+                            "reasoning_efforts": []
+                          }
+                        }
+                      ],
+                      "first_id": "happyhorse-1.0",
+                      "has_more": false,
+                      "last_id": "happyhorse-1.0"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "筛选参数或分页参数无效。"
+          }
+        }
       }
     }
   },

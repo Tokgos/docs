@@ -621,6 +621,30 @@
                   "inference_geo": {
                     "type": "string",
                     "description": "Reasoning about geographic preferences."
+                  },
+                  "compaction": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "required": [
+                      "type"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "summarize"
+                      },
+                      "instructions": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "maxLength": 16384
+                      }
+                    },
+                    "additionalProperties": false,
+                    "description": "Anthropic conversation compaction. Non-null values cannot be combined with context_management."
                   }
                 },
                 "examples": [
@@ -1178,6 +1202,384 @@
             "anthropicApiKey": []
           }
         ]
+      }
+    },
+    "/anthropic/v1/models": {
+      "get": {
+        "summary": "List Anthropic models",
+        "operationId": "listAnthropicModels",
+        "description": "Return the same full callable model catalog as GET /v1/models across providers and text, image, video, audio, embedding, and decision models. No implicit protocol filtering is applied. The native response envelope and pagination remain available; provider, mode, and type filters are explicit.\n\nEach model includes aliases, architecture, capabilities.endpoints, capabilities.parameters, and capabilities.reasoning_efforts, matching the OpenAI list. Merge common with the endpoint parameter array for its complete parameter set. Catalog inclusion does not imply support for generation through this protocol; use capabilities.endpoints.\n\nGET /v1/models with anthropic-version also returns this presentation.",
+        "tags": [
+          "Chat completions/Anthropic protocol"
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "query",
+            "description": "Filter by the exact provider namespace in the model ID, for example google. Omit to include all providers.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "description": "Filter by mode: chat, image_generation, video_generation, embedding, transcription, audio_generation, decision, or music_generation. Comma-separated or repeated values are combined with OR.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by type: text, image, video, music, embedding, audio, or decision. Comma-separated or repeated values are supported; provider, mode, and type filters intersect.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 20
+            },
+            "description": "Page size, default 20, maximum 1000. Follow has_more and last_id to retrieve the full catalog."
+          },
+          {
+            "name": "after_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Continue after this model ID, normally the previous last_id. Mutually exclusive with before_id."
+          },
+          {
+            "name": "before_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Retrieve the preceding page. Mutually exclusive with after_id."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of the full catalog with platform model metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "first_id",
+                    "has_more",
+                    "last_id"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "type",
+                          "id",
+                          "display_name",
+                          "created_at",
+                          "aliases",
+                          "architecture",
+                          "capabilities"
+                        ],
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "model"
+                          },
+                          "id": {
+                            "type": "string",
+                            "description": "Full platform model ID, preserving any provider namespace."
+                          },
+                          "display_name": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "description": "1970-01-01T00:00:00Z when no release date is configured."
+                          },
+                          "description": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "context_length": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0
+                          },
+                          "max_input_tokens": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0
+                          },
+                          "max_tokens": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0
+                          },
+                          "supported_parameters": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Native Anthropic parameter names; empty if no Anthropic profile exists."
+                          },
+                          "allowed_fallback_models": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "aliases": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Configured model aliases; an empty array is returned when none are configured."
+                          },
+                          "architecture": {
+                            "type": "object",
+                            "required": [
+                              "input_modalities",
+                              "output_modalities"
+                            ],
+                            "properties": {
+                              "input_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "output_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "description": "Input and output modalities derived from platform configuration and callable endpoints."
+                          },
+                          "capabilities": {
+                            "type": "object",
+                            "required": [
+                              "reasoning_efforts",
+                              "endpoints",
+                              "parameters"
+                            ],
+                            "properties": {
+                              "reasoning_efforts": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "Reasoning effort values from actual endpoint parameter profiles; an empty array when no levels are configured."
+                              },
+                              "endpoints": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "parameters": {
+                                "type": "object",
+                                "required": [
+                                  "common"
+                                ],
+                                "properties": {
+                                  "common": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "additionalProperties": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "description": "common contains parameters shared by all callable endpoints; each endpoint path contains only additional parameters. Combine both arrays for its full parameter set. A single-endpoint model may list every parameter in common."
+                              },
+                              "batch": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              },
+                              "citations": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              },
+                              "code_execution": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              },
+                              "effort": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              },
+                              "image_input": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              },
+                              "pdf_input": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              },
+                              "structured_outputs": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              },
+                              "thinking": {
+                                "type": "object",
+                                "properties": {
+                                  "supported": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "additionalProperties": true
+                              }
+                            },
+                            "description": "Configured callable endpoints, parameter groups, and reasoning efforts; shared across all catalog presentations.",
+                            "additionalProperties": true
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    },
+                    "first_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "last_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "examples": {
+                  "catalog_metadata": {
+                    "summary": "Video models are included in the catalog",
+                    "value": {
+                      "data": [
+                        {
+                          "type": "model",
+                          "id": "happyhorse-1.0",
+                          "display_name": "HappyHorse 1.0",
+                          "created_at": "1970-01-01T00:00:00Z",
+                          "aliases": [
+                            "happyhorse-1.0",
+                            "happyhorse-1.0-20260624"
+                          ],
+                          "architecture": {
+                            "input_modalities": [
+                              "text",
+                              "image",
+                              "video"
+                            ],
+                            "output_modalities": [
+                              "video"
+                            ]
+                          },
+                          "capabilities": {
+                            "endpoints": [
+                              "/v1/videos"
+                            ],
+                            "parameters": {
+                              "/v1/videos": [],
+                              "common": [
+                                "seed",
+                                "model",
+                                "prompt",
+                                "duration",
+                                "extra_body",
+                                "resolution",
+                                "aspect_ratio",
+                                "callback_url",
+                                "frame_images",
+                                "input_references"
+                              ]
+                            },
+                            "reasoning_efforts": []
+                          }
+                        }
+                      ],
+                      "first_id": "happyhorse-1.0",
+                      "has_more": false,
+                      "last_id": "happyhorse-1.0"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid filter or pagination parameters."
+          }
+        }
       }
     }
   },

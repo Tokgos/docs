@@ -1,0 +1,547 @@
+---
+title: "Midjourney 上手与参数指南"
+sidebarTitle: "上手与参数指南"
+description: "从第一张图开始：照着示例传参数，按需求选参考图，再查 9 个模型版本的差异。"
+icon: "book-open"
+---
+
+第一次接入，先用 `model` 和 `prompt` 生成一张图。之后想改比例、换画风或参考人物，再加对应的参数。
+
+本页的模型 ID、可传字段和数量限制按 Tikway 当前接口整理。示例中的参数组合是调参起点，实际效果还取决于提示词和参考图。
+
+## 第一张图，先这样传
+
+把下面的 API Key 换成你的密钥，修改 `prompt` 就能开始。示例提示词使用英文。
+
+```bash
+curl https://api.tikway.ai/v1/images/generations \
+  -H "Authorization: Bearer YOUR_TIKWAY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "midjourney/8.2",
+    "prompt": "a small orange cat sleeping by a sunny window",
+    "mode": "fast"
+  }'
+```
+
+`mode` 可以选 `fast` 或 `relax`，当前接口不支持 `turbo`。第一次请求可以先不传 `parameters`、`images` 和 `quality`。
+
+**提交成功后会得到任务 ID，图片需要等待生成。** 保存返回的 `id`，再查询这次任务：
+
+```bash
+curl https://api.tikway.ai/v1/images/YOUR_TASK_ID \
+  -H "Authorization: Bearer YOUR_TIKWAY_API_KEY"
+```
+
+把 `YOUR_TASK_ID` 换成刚才返回的 `id`；提交响应提供了 `polling_url` 时，也可以直接查询该地址。隔几秒查询一次，直到任务完成或失败。成功后读取 `data.image_url.url`；四宫格的单张图片可从 `data.image_url.split_image_urls` 获取，具体以返回字段为准。
+
+| 返回的 `status` | 你接下来做什么 |
+| --- | --- |
+| `pending` | 任务在等待，稍后继续查询 |
+| `in_progress` | 正在生成，可看 `data.progress` |
+| `completed` | 读取图片地址，以及可用的 `data.actions` |
+| `failed` | 读取 `error.message`，修正问题后重新提交 |
+
+## 参数放在哪里？记住这四层
+
+**画什么放 `prompt`，运行方式放顶层，参考图放 `images`，画面微调放 `parameters`。**
+
+下面是在最小请求上加了“竖图”和“适度风格化”的完整请求体，仍提交到同一个生成接口：
+
+```json
+{
+  "model": "midjourney/8.2",
+  "prompt": "a small orange cat sleeping by a sunny window",
+  "mode": "fast",
+  "aspect_ratio": "9:16",
+  "parameters": {
+    "stylize": 150,
+    "chaos": 10
+  }
+}
+```
+
+| 放置位置 | 常用字段 | 什么时候填 |
+| --- | --- | --- |
+| 请求体顶层 | `model`、`prompt` | 选择模型、描述画面 |
+| 请求体顶层 | `mode`、`aspect_ratio` | 指定运行模式、横图或竖图 |
+| 请求体顶层 | `images` | 有需要参考的图片时再填，每张图写明 `type` 和 `image_url` |
+| `parameters` 对象里 | `stylize`、`chaos`、`raw`、`seed` 等 | 想改变画面表现时，按需添加 |
+
+建议把比例统一写为顶层 `aspect_ratio`，速度统一写为顶层 `mode`。兼容写法 `parameters.aspect`、`parameters.mode` 留给已有集成使用，同一次请求保持一致。
+
+数字和布尔值直接写成 `150`、`true`；比例、模型 ID 和提示词是字符串。普通图片数组需要带上类型，具体格式见下方示例。
+
+<Accordion title="已经习惯 --ar、--s 这种 MJ 提示词写法？">
+
+也可以把原生参数写在 `prompt` 末尾。下面的请求同样使用竖图、风格化强度 150：
+
+```json
+{
+  "model": "midjourney/8.2",
+  "prompt": "a small orange cat sleeping by a sunny window --ar 9:16 --s 150",
+  "mode": "fast"
+}
+```
+
+新接入更适合使用上面的结构化 JSON，程序修改起来更方便。两种写法混用时，显式 `parameters` 会覆盖提示词中对应的参数；顶层同义字段与 `parameters` 冲突时可能返回参数错误。
+
+`model` 已选择版本，通常不用再写 `--v`、`--niji` 或 `parameters.version`。如果你确实传了版本，它必须与 `model` 一致。原生参数的书写位置可参考 [Midjourney 参数说明](https://docs.midjourney.com/hc/en-us/articles/32859204029709-Parameter-List)。
+
+</Accordion>
+
+## 想改变效果，先找这一项
+
+一次调整一两个参数，更容易看出哪个改动有效。下面“可以先试”的数值是建议起点，取值范围才是参数限制。
+
+| 你的需求 | 怎么传 | 可以先试什么 |
+| --- | --- | --- |
+| 做手机壁纸、竖版海报 | 顶层 `aspect_ratio` | `"9:16"`；横版用 `"16:9"`，方图用 `"1:1"` |
+| 画面更贴近文字描述 | `parameters.raw`，以及较低的 `stylize` | 支持 Raw 的版本试 `true`，`stylize` 试 `50` |
+| 让模型多发挥一点画风 | `parameters.stylize` | 先试 `250`；范围 `0–1000`，默认 `100` |
+| 同一组图多一些不同想法 | `parameters.chaos` | 先试 `20`；范围 `0–100`，默认 `0` |
+| 比较两组参数的影响 | `parameters.seed` | 固定为 `12345`；范围 `0–4294967295`，省略时随机 |
+| 尽量排除某种元素 | `parameters.no` | `"text, watermark"`，使用一个字符串 |
+| 探索更奇异的形象 | `parameters.weird` | 从 `100` 开始；范围 `0–3000`，Niji 5 不支持 |
+| 做可重复拼接的纹理 | `parameters.tile` | `true`，适合花纹、材质等需求 |
+
+`raw` 适用于本页列出的模型，**Niji 5 除外**。所有版本都有 `stylize`、`chaos`、`seed`、`no` 和 `tile`。固定 `seed` 有助于对比，但修改提示词、参数或模型后，仍可能产生不同画面。
+
+降低 `stylize` 通常更贴近提示词，提高它会增加模型的艺术表达；两者需要按你的画面需求取舍。[了解 Stylize](https://docs.midjourney.com/hc/en-us/articles/32196176868109-Stylize)。
+
+## 有参考图，选哪一种？
+
+先想清楚你想借用图片的什么。**参考构图、参考画风、参考人物，是不同的输入类型。**
+
+| 想借用什么 | `images[].type` | 调节影响的参数 | 当前接口的适用版本 |
+| --- | --- | --- | --- |
+| 内容、构图、颜色等整体参考 | `image_reference` | `iw`，先用 `1` | 本页全部 9 个版本，最多 4 张 |
+| 色调、笔触、材质等画风 | `style_reference` | `sw`，先用 `100` | Niji 6/7、V6/6.1、V7、V8.1/8.2，最多 3 张 |
+| 人物外观 | `character_reference` | `cw`，范围 `0–100` | Niji 6、V6、V6.1，最多 3 张 |
+| 人物、物体等主体特征 | `omni_reference` | `ow`，先用 `100` | V7，最多 1 张 |
+
+这些数量是 **Tikway 接口按每类参考图计算的限制**。模型不同，`iw` 的范围也不同，见后面的版本说明。
+
+<Note>
+  以下 `https://example.com/...` 都是占位地址。提交前换成真实、可访问的图片链接；不要直接复制占位地址发起参考图任务。`prompt` 写你希望最终出现的画面。
+</Note>
+
+<Tabs>
+<Tab title="参考内容与构图">
+
+保留 `image_reference`，先从 `iw: 1` 开始，再按效果调整。图片是创作参考，不保证逐像素复现。[了解图片提示词](https://docs.midjourney.com/hc/en-us/articles/32040250122381-Image-Prompts)。
+
+```json
+{
+  "model": "midjourney/8.2",
+  "prompt": "a ceramic teapot on a wooden table, morning light",
+  "mode": "fast",
+  "aspect_ratio": "4:3",
+  "images": [
+    {
+      "type": "image_reference",
+      "image_url": "https://example.com/composition.jpg"
+    }
+  ],
+  "parameters": {
+    "iw": 1
+  }
+}
+```
+
+</Tab>
+<Tab title="沿用画风">
+
+`style_reference` 借用画面的视觉风格，`prompt` 继续描述新内容。它不承担复制原图人物或物体的作用。[了解风格参考](https://docs.midjourney.com/hc/en-us/articles/32180011136653-Style-Reference)。
+
+```json
+{
+  "model": "midjourney/8.2",
+  "prompt": "a small bookshop on a rainy street",
+  "mode": "fast",
+  "images": [
+    {
+      "type": "style_reference",
+      "image_url": "https://example.com/style.jpg"
+    }
+  ],
+  "parameters": {
+    "sw": 100
+  }
+}
+```
+
+</Tab>
+<Tab title="V6.1 人物参考">
+
+需要沿用人物外观时，使用支持 `character_reference` 的版本。下面用 V6.1；同类写法也适用于 V6、Niji 6。
+
+```json
+{
+  "model": "midjourney/v6.1",
+  "prompt": "a portrait of a woman standing in a flower garden",
+  "mode": "fast",
+  "images": [
+    {
+      "type": "character_reference",
+      "image_url": "https://example.com/character.jpg"
+    }
+  ],
+  "parameters": {
+    "cw": 100
+  }
+}
+```
+
+</Tab>
+<Tab title="V7 主体参考">
+
+V7 使用 `omni_reference` 参考人物或物体，一次传 1 张。先用 `ow: 100`；不要同时开启 `draft` 或使用原生质量 `4`。此示例使用 `relax` 模式，适用限制可参阅 [Omni Reference](https://docs.midjourney.com/hc/en-us/articles/36285124473997-Omni-Reference)。
+
+```json
+{
+  "model": "midjourney/v7",
+  "prompt": "a red backpack on a stone bench in a park",
+  "mode": "relax",
+  "images": [
+    {
+      "type": "omni_reference",
+      "image_url": "https://example.com/backpack.jpg"
+    }
+  ],
+  "parameters": {
+    "ow": 100
+  }
+}
+```
+
+</Tab>
+</Tabs>
+
+<Accordion title="已经在用 ref、sref、cref、oref？或者想使用风格代码？">
+
+参考图还可以放在 `parameters` 的原生字段中。与顶层 `images` 选择一种写法即可，同一类参考图重复传递可能产生冲突。
+
+| 顶层 `images` 中的类型 | 对应的原生字段 | 类型 |
+| --- | --- | --- |
+| `image_reference` | `parameters.ref` | URL 字符串数组 |
+| `style_reference` | `parameters.sref` | URL、风格代码或 `"random"` 的字符串数组 |
+| `character_reference` | `parameters.cref` | URL 字符串数组 |
+| `omni_reference` | `parameters.oref` | 只含 1 个 URL 的字符串数组 |
+
+例如在 V7 中随机探索画风：
+
+```json
+{
+  "model": "midjourney/v7",
+  "prompt": "a cozy reading room with a large window",
+  "mode": "fast",
+  "parameters": {
+    "sref": ["random"],
+    "sw": 100,
+    "sv": 6
+  }
+}
+```
+
+`iw` 要配普通参考图，`sw`/`sv` 要配风格参考，`cw` 要配人物参考，`ow` 要配 Omni 参考。V7 使用风格代码或 `random` 时，`sv` 选 `4` 或 `6`；如果不了解算法版本，先省略 `sv`。
+
+`images[].image_url` 还接受带 MIME 类型的图片 data URL；纯 Base64 请先补成 `data:image/png;base64,...` 这样的完整格式。风格代码则放在 `parameters.sref`，不放进 `image_url`。
+
+</Accordion>
+
+## 9 个模型版本，怎么选参数？
+
+**先按你需要的参考能力选版本，再调画面。** 只想开始文生图，可以先试 V8.2；做动漫方向可以先试 Niji 7；已有 V6/V6.1 的人物参考流程可以继续沿用。
+
+| 模型 ID | 普通参考图 | 风格参考图 | 人物或主体参考 |
+| --- | --- | --- | --- |
+| `midjourney/8.2` | 支持 | 支持 | 当前接口未提供 `cref` / `oref` |
+| `midjourney/8.1` | 支持 | 支持 | 当前接口未提供 `cref` / `oref` |
+| `midjourney/v7` | 支持 | 支持 | Omni，使用 `omni_reference` |
+| `midjourney/v6.1` | 支持 | 支持 | 使用 `character_reference` |
+| `midjourney/v6` | 支持 | 支持 | 使用 `character_reference` |
+| `midjourney/v5.2` | 支持 | 未提供 | 未提供 |
+| `midjourney/niji-7` | 支持 | 支持 | 当前接口未提供 `cref` / `oref` |
+| `midjourney/niji-6` | 支持 | 支持 | 使用 `character_reference` |
+| `midjourney/niji-5` | 支持 | 未提供 | 未提供 |
+
+这里列的是本平台生成接口开放的能力。Midjourney 官网中的编辑器等功能，不等于当前 API 已开放的字段。[官方版本说明](https://docs.midjourney.com/hc/en-us/articles/32199405667853-Version)可用于了解模型背景。
+
+下面只列每个版本需要留意的区别；前面的比例、`stylize`、`chaos`、`seed` 等常用写法可以继续使用。
+
+<AccordionGroup>
+<Accordion title="V8.2 · midjourney/8.2">
+
+- **想要 HD**：传 `parameters.resolution: "hd"`；默认是 `"sd"`。HD 的长短边比例最多 `4:1`，普通分辨率最多 `14:1`，横竖方向都按这个限制计算。
+- **普通参考**：`iw` 默认 `1`，下限 `0`；当前参数定义未给出确认的上限，先从 `1` 调整。
+- **风格参考**：`sw` 为 `0–1000`，默认 `100`。`sv` 未提供确认的完整取值表，先省略。
+- **质量参数**：不使用原生 `parameters.quality`；顶层 `quality` 仅保留 `"auto"`，通常也可省略。
+- **其他差异**：支持 `raw`、`weird`、`exp`、`profile`；当前 DISCORD 通道不开放 V8 的 `draft`，也没有 `stop`、`cref`、`oref`。
+
+</Accordion>
+<Accordion title="V8.1 · midjourney/8.1">
+
+- **分辨率**：使用 `parameters.resolution` 的 `"sd"` / `"hd"`；HD 比例最多 `4:1`，SD 最多 `14:1`。
+- **普通参考**：`iw` 为 `0–3`，默认 `1`。
+- **风格参考**：`sw` 为 `0–1000`，默认 `100`；`sv` 的完整取值未确认，先省略。
+- **质量参数**：与 V8.2 一样，不使用原生 `quality`；顶层 `quality` 省略或用 `"auto"`。
+- **其他差异**：支持 `raw`、`weird`、`exp`、`profile`；当前 DISCORD 通道不开放 V8 的 `draft`，也没有 `stop`、`cref`、`oref`。
+
+</Accordion>
+<Accordion title="V7 · midjourney/v7">
+
+- **普通参考**：`iw` 为 `0–3`，默认 `1`。
+- **主体参考**：使用 1 张 `omni_reference`，配 `ow: 1–1000`，默认 `100`；这一版本用 `oref`，不使用 `cref`。
+- **原生质量**：`parameters.quality` 可选 `1`、`2`、`4`，默认 `1`；使用 Omni 参考时只选 `1` 或 `2`。
+- **风格算法**：图片风格参考的 `sv` 为 `1–6`，默认 `6`；风格代码或 `random` 使用 `4` / `6`。
+- **其他差异**：支持 `draft`、`exp`、`profile`。Omni 参考与 `draft` 不组合；此版本没有 `resolution` 和 `stop`。
+
+</Accordion>
+<Accordion title="V6.1 · midjourney/v6.1">
+
+- **普通参考**：`iw` 为 `0–3`，默认 `1`。
+- **人物参考**：使用 `character_reference`，配 `cw: 0–100`，默认 `100`。
+- **原生质量**：可选 `0.5`、`1`、`2`，默认 `1`。
+- **风格算法**：`sv` 可选 `1–4`，默认 `4`；`sw` 为 `0–1000`。
+- **其他差异**：支持 `raw`、`weird`、`profile`，以及 `stop: 10–100`；没有 `oref`、`draft`、`exp`、`resolution`。
+
+</Accordion>
+<Accordion title="V6 · midjourney/v6">
+
+- **普通参考**：`iw` 为 `0–3`，默认 `1`。
+- **人物与风格参考**：支持 `character_reference` / `style_reference`；`cw: 0–100`，`sw: 0–1000`。
+- **原生质量**：可选 `0.25`、`0.5`、`1`，默认 `1`；这项与 V6.1 不同。
+- **风格算法**：`sv` 可选 `1–4`，默认 `4`。
+- **其他差异**：支持 `raw`、`weird`、`profile`、`stop: 10–100`；没有 `oref`、`draft`、`exp`、`resolution`。
+
+</Accordion>
+<Accordion title="V5.2 · midjourney/v5.2">
+
+- **普通参考**：`iw` 为 `0.5–2`，默认 `1`。
+- **原生质量**：可选 `0.25`、`0.5`、`1`，默认 `1`。
+- **其他参数**：支持 `raw`、`weird`、`style` 和 `stop: 10–100`。`style` 的可用值按当前模型实际支持情况使用，通常先省略。
+- **参考能力**：使用普通参考图；此接口未提供风格、人物或 Omni 参考，也没有 `profile`、`draft`、`exp`、`resolution`。
+
+</Accordion>
+<Accordion title="Niji 7 · midjourney/niji-7">
+
+- **普通参考**：`iw` 为 `0–2`，默认 `1`。
+- **风格参考**：支持 `style_reference` 和 `sw: 0–1000`。需要兼容已知风格算法时可用 `sv: 4`，完整取值范围未确认，通常先省略 `sv`。
+- **质量参数**：原生 `quality` 尚无确认的完整档位表；先省略。顶层 `quality` 只提供 `"auto"`。
+- **其他差异**：支持 `raw`、`weird`、`profile`；当前接口没有 `cref`、`oref`、`style`、`stop`、`draft`、`exp`、`resolution`。
+
+</Accordion>
+<Accordion title="Niji 6 · midjourney/niji-6">
+
+- **普通参考**：`iw` 为 `0–3`，默认 `1`。
+- **人物与风格参考**：支持 `character_reference` / `style_reference`；分别用 `cw: 0–100`、`sw: 0–1000` 调节。
+- **原生质量**：可选 `0.25`、`0.5`、`1`，默认 `1`。
+- **风格算法**：`sv` 可选 `1–4`，默认 `4`。
+- **其他差异**：支持 `raw`、`weird`、`profile`、`stop: 10–100`；没有 Niji 5 的 `style` 预设，也没有 `oref`、`draft`、`exp`、`resolution`。
+
+</Accordion>
+<Accordion title="Niji 5 · midjourney/niji-5">
+
+- **风格预设**：`parameters.style` 可选 `"expressive"`、`"cute"`、`"original"`、`"scenic"`，例如先试 `"cute"`。
+- **普通参考**：`iw` 为 `0.2–2`，默认 `1`。
+- **原生质量**：可选 `0.25`、`0.5`、`1`，默认 `1`；还支持 `stop: 10–100`。
+- **常用调节**：可用 `stylize`、`chaos`、`seed`、`no`、`tile`。
+- **版本差异**：不使用 `raw`、`weird`，也没有风格、人物或 Omni 参考，以及 `profile`、`draft`、`exp`、`resolution`。
+
+</Accordion>
+</AccordionGroup>
+
+## 想要更高质量或 HD，应该传哪个？
+
+**V8.1 / V8.2 想要 HD，用 `parameters.resolution`。** 比例仍放在 `aspect_ratio`：
+
+```json
+{
+  "model": "midjourney/8.2",
+  "prompt": "a mountain lake at sunrise, detailed landscape photography",
+  "mode": "fast",
+  "aspect_ratio": "16:9",
+  "parameters": {
+    "resolution": "hd"
+  }
+}
+```
+
+`16:9` 满足 HD 的比例限制；`5:1` 或 `1:5` 则超出了 HD 范围。MJ 的 `size` 是兼容字段，接受比例或 `"auto"`，不接受 `"1024x1024"` 这种像素尺寸。
+
+### V7、V6 等版本的 quality 有两种写法
+
+| 写法 | 示例 | 含义 |
+| --- | --- | --- |
+| 顶层 `quality` | `"quality": "high"` | 平台档位，会转换成原生数值 |
+| `parameters.quality` | `"parameters": { "quality": 2 }` | 直接传 MJ 原生数值，必须属于所选版本支持的档位 |
+
+档位映射为 `low → 0.25`、`medium → 0.5`、`standard → 1`、`high → 2`、`xhigh → 4`；`auto` 表示省略显式原生质量参数。并非每个模型都能使用所有档位：
+
+| 模型 | 顶层可用档位（也都可用 `auto`） | 原生数值 |
+| --- | --- | --- |
+| Niji 5、Niji 6、V5.2、V6 | `low`、`medium`、`standard` | `0.25`、`0.5`、`1` |
+| V6.1 | `medium`、`standard`、`high` | `0.5`、`1`、`2` |
+| V7 | `standard`、`high`、`xhigh` | `1`、`2`、`4` |
+| Niji 7 | 先省略，或使用 `auto` | 暂无确认的完整档位表 |
+| V8.1、V8.2 | 省略，或使用 `auto` | 不使用原生 `quality`，HD 改用 `resolution` |
+
+两种质量写法选一种即可。质量参数调节生成时投入的计算量及细节表现，不是指定像素尺寸；V7 的原生质量 `4` 也不能与 Omni 参考一起使用。[了解 Quality](https://docs.midjourney.com/hc/en-us/articles/32176522101773-Quality)。
+
+## 还想调更多？按需展开
+
+<AccordionGroup>
+<Accordion title="剩余参数速查：默认值、适用版本和使用时机">
+
+| 参数 | 放哪里、怎么传 | 适用范围与使用建议 |
+| --- | --- | --- |
+| `style` | `parameters.style`，字符串 | Niji 5 有四个明确预设；V5.2 也保留该字段。其他版本先用 `raw` 或风格参考 |
+| `sv` | `parameters.sv`，整数 | 选择风格参考算法，不是选择 MJ 模型版本；先使用默认行为 |
+| `exp` | `parameters.exp`，`0–100`，默认 `0` | V7、V8.1、V8.2 的实验性美学强度；想探索时再逐步增加 |
+| `profile` | `parameters.profile`，`true` 或配置代码字符串 | Niji 6/7、V6/6.1、V7、V8.1/8.2；依赖所用账号的个性化配置，尚未配置时省略 |
+| `draft` | `parameters.draft`，布尔值，默认 `false` | 当前接口可在 V7 尝试；V8 的草稿能力标记为 WEB 专用，当前 DISCORD 通道不开放 |
+| `stop` | `parameters.stop`，`10–100`，默认 `100` | Niji 5/6、V5.2、V6/6.1；用于提前停止，不用于选择输出大小 |
+| `repeat` | `parameters.repeat`，`2–40` | 所有版本都保留此字段；实际次数受账号方案限制，`relax` 不可用。只需要一次生成时省略 |
+| `version` | `parameters.version`，例如 `"v 7"` 或 `"niji 6"` | 必须和 `model` 一致；通常交给顶层 `model` 选择即可 |
+| `channel` | `parameters.channel` | 当前上游只接收 `"DISCORD"`；保留默认即可。字段中出现 WEB 不代表当前接口可切换 |
+| `aspect` | `parameters.aspect`，例如 `"3:2"` | 原生比例字段；新接入统一使用顶层 `aspect_ratio` 更直观 |
+| `mode` | 顶层 `mode`，`"fast"` / `"relax"` | 原生同名字段 `parameters.mode` 供兼容使用；避免同一次请求写出不同模式 |
+
+重复次数的参数上限不是账号可用次数承诺。当前定义中 Basic 为 `2–4`、Standard 为 `2–10`、Pro / Mega 为 `2–40`，还要以实际可用账号能力为准。
+
+</Accordion>
+<Accordion title="不想反复查询：使用回调">
+
+在生成请求体顶层增加：
+
+```json
+{
+  "model": "midjourney/8.2",
+  "prompt": "a small orange cat sleeping by a sunny window",
+  "mode": "fast",
+  "webhook_url": "https://your-service.example/mj/callback",
+  "notify_progress_image": false
+}
+```
+
+把地址换成你的服务能接收的回调地址。`webhook_url` 用来接收任务通知，`notify_progress_image` 控制是否通知过程图。也可以继续用任务 ID 查询最终状态。
+
+</Accordion>
+<Accordion title="图生成后，如何选一张、做变体或重绘？">
+
+等父任务 `status` 为 `completed` 后，查看它返回的 `data.actions`。选一个实际返回的动作，仍提交到 `POST /v1/images/generations`：
+
+```json
+{
+  "parent_task_id": "1834578377046429696",
+  "action": "U1"
+}
+```
+
+把 `parent_task_id` 换成你自己的已完成任务 ID，并使用创建父任务的同一把 API Key。`model` 和 `mode` 通常不必再填，默认继承父任务；显式填写时必须与父任务一致。
+
+| 想做什么 | 在返回列表里找什么 | 还需留意什么 |
+| --- | --- | --- |
+| 选择第 1～4 张 | `U1`～`U4` | 这类动作继承原内容，通常只传父任务 ID 和动作 |
+| 生成某张图的变体 | `V1`～`V4` | 使用父任务实际返回的编号 |
+| 重新生成 | `REROLL` | 这是一次后续操作，不是查询进度 |
+| 局部重绘 | `VARY_REGION` | 需要 `mask.image_url`；蒙版画法见下方「局部重绘」 |
+| 自定义缩放 | `CUSTOM_ZOOM` | 需要 `parameters.zoom`，范围 `1–2` |
+
+这些是常见动作示意，不是每个模型或每张图都能执行的固定清单。后续操作返回新的任务 ID，继续查询这个新任务即可。
+
+</Accordion>
+</AccordionGroup>
+
+## 局部重绘：mask 怎么画？
+
+左侧 **Midjourney → 局部重绘** 提供了专门的请求示例，可以直接填父任务 ID、提示词和蒙版。它仍使用 `POST /v1/images/generations`，`action` 固定为 `VARY_REGION`。
+
+**想改哪里，就涂哪里。导出蒙版时，用黑底、白色选区，保存为不透明的 PNG。** 字段名是 `mask`，放在请求体顶层，图片地址写在 `mask.image_url`。
+
+`mask` 是一张与待修改的单张原图宽高一致的选区图。它告诉 MJ 哪些位置要重新生成；新内容由 `prompt` 描述。
+
+| 蒙版里的区域 | 代表什么 | 导出时怎么设置 |
+| --- | --- | --- |
+| 白色 `#FFFFFF` | 要重绘的位置 | 涂鸦区域 → 纯色 → 白色，完全不透明 |
+| 黑色 `#000000` | 要保留的位置 | 未涂鸦区域 → 纯色 → 黑色，完全不透明 |
+| 透明区域 | 不要依赖透明度表示本接口的选区 | 导出前改成上面的黑白设置；棋盘格表示透明，不是黑底 |
+
+![局部重绘示意：在原图花盆上涂鸦，导出蒙版中花盆为白色，其余为黑色。](/assets/midjourney-mask.svg)
+
+### “涂鸦区域”就是你想修改的地方
+
+例如想把橙色花盆换成蓝色花盆，就用画笔覆盖整个花盆，叶子和背景不要涂。画板上的蓝色或半透明高亮只是帮助你看清选区，**不表示生成结果要涂成这个颜色**。最终效果写在提示词里，例如 `a blue ceramic flowerpot`。
+
+涂鸦要填满要改的区域，不能只描一圈边线；只描边会把中间漏在重绘区之外。需要自然衔接时，可以把选区稍微扩到周围，但不要覆盖想保留的主体。
+
+<Tip>
+画板如果可以分别设置「涂鸦区域」和「未涂鸦区域」，请选择 **涂鸦区域：纯白；未涂鸦区域：纯黑；两者均不透明**。如果默认是「白色涂鸦 + 透明背景」，先把未涂鸦区域改成黑色再导出。白底配黑色涂鸦会把重绘区和保留区弄反。
+</Tip>
+
+### 画好后，这样提交
+
+1. 先选定一张图。四宫格结果可先执行 `U1`～`U4`，等新任务完成。
+2. 查询这张单图的任务，确认 `data.actions` 包含 `VARY_REGION`。以它的图片为底图绘制蒙版，导出时保持原图像素宽高，不裁剪、不缩放。
+3. 上传导出的黑白蒙版，把地址填入下面的 `mask.image_url`，并把 `parent_task_id` 换成这张单图的任务 ID。
+
+```json
+{
+  "parent_task_id": "YOUR_SINGLE_IMAGE_TASK_ID",
+  "action": "VARY_REGION",
+  "prompt": "a blue ceramic flowerpot",
+  "mask": {
+    "image_url": "https://your-service.example/masks/flowerpot-mask.png"
+  }
+}
+```
+
+请求仍发到 `POST /v1/images/generations`，使用创建父任务的同一把 API Key。提交的是单独的黑白蒙版，不是带涂鸦的原图截图。蒙版解码后最大 **10 MiB**。`mask.image_url` 支持三种写法：
+
+| 你手里的蒙版 | `mask.image_url` 填什么 |
+| --- | --- |
+| 已上传的 PNG | 完整的 `https://.../mask.png` 地址 |
+| 带类型前缀的 Base64 | 完整的 `data:image/png;base64,...` |
+| 纯 Base64 | PNG 文件编码后的完整字符串，例如以 `iVBORw0KGgo` 开头的内容，不需要加前缀 |
+
+这里的 `...` 仅表示省略，提交时要放完整编码；字符串 `"base64"` 本身不是有效的蒙版图片。提交后保存新的任务 ID，继续查询新任务的结果。
+
+<Note>
+`U4` 用来选择四宫格中的第 4 张，只传 `parent_task_id` 和 `action`，不能携带 `prompt` 或 `mask`。想修改这张图，先等 `U4` 任务完成，再把新任务 ID 作为父任务，提交 `VARY_REGION` 和蒙版。
+</Note>
+
+关于如何选区和调整提示词，也可以查看 [Midjourney 的 Vary Region 说明](https://docs.midjourney.com/hc/en-us/articles/32794723105549-Vary-Region)。
+
+## 传了参数却不对，先看这里
+
+<AccordionGroup>
+<Accordion title="参考图任务提示“图片处理失败”">
+
+先检查 `image_url` 是否真能打开图片：占位地址、登录页面、已过期链接都不能当成可用的参考图。用一张真实图片和一个简单英文提示词先跑通，再逐步加风格参考或其他参数。
+
+同时检查参考图的类型是否属于所选模型：Niji 7 不使用 `character_reference`，V8.2 不使用 `omni_reference`。多传一个类型，不会自动获得别的版本的能力。
+
+</Accordion>
+<Accordion title="参数传了，但没有出现在最终请求里">
+
+检查模型对应的参数列表。接口会过滤未知字段和该模型不支持的参数；有些字段即使被提交，也不会生效。可结合查询结果中的 `data.parameters` 和 `data.full_prompt` 查看实际使用的参数。
+
+先排查字段放错位置，例如把 `stylize` 写在请求体顶层、把 `resolution` 用在 V6.1，或把 `quality` 数值套到 V8.2。
+
+</Accordion>
+<Accordion title="出现 model 与版本冲突，或显式参数冲突">
+
+检查提示词末尾有没有旧的 `--v` / `--niji`，以及 `parameters.version` 是否还指向另一个版本。只保留需要的版本设置。
+
+比例统一使用顶层 `aspect_ratio`，速度统一使用顶层 `mode`；同时传原生同义字段时，保持取值一致。质量档位和原生数值也选择一种写法。
+
+</Accordion>
+<Accordion title="为什么参数多了，画面反而更难控制？">
+
+先把参考图权重、风格化、混沌和实验性参数恢复到默认行为，只保留提示词与比例。固定一个 `seed`，一次只改变一个值，比较结果后再保留有效改动。
+
+例如想改善对提示词的贴合程度，可以先尝试较低的 `stylize`；想探索构图，再单独增加 `chaos`。这比同时改动所有参数更容易判断效果。
+
+</Accordion>
+</AccordionGroup>

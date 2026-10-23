@@ -1,0 +1,355 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mintlify",
+    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "图片生成"
+    },
+    {
+      "name": "图片生成/Midjoruney"
+    }
+  ],
+  "paths": {
+    "/v1/images/{id}": {
+      "get": {
+        "summary": "查询任务",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "图片生成/Midjoruney"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "生成或操作接口返回的任务 ID。",
+            "schema": {
+              "type": "string",
+              "example": "1834578377046429696"
+            }
+          },
+          {
+            "name": "x-provider-route",
+            "in": "header",
+            "description": "上游速度cost、stable、fast",
+            "example": "cost",
+            "schema": {
+              "type": "string",
+              "default": "cost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "MidjourneyTaskResponse",
+                  "required": [
+                    "id",
+                    "model",
+                    "object",
+                    "status",
+                    "data",
+                    "error"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "任务 ID。",
+                      "example": "1834578377046429696"
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "任务使用的模型。",
+                      "example": "midjourney/8.2"
+                    },
+                    "object": {
+                      "type": "string",
+                      "const": "image.generation"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "completed",
+                        "failed"
+                      ],
+                      "description": "completed 表示任务成功，failed 表示任务失败。"
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "actions",
+                        "full_prompt",
+                        "mode",
+                        "parameters",
+                        "progress",
+                        "prompt"
+                      ],
+                      "properties": {
+                        "actions": {
+                          "type": "array",
+                          "description": "可执行的后续操作；任务失败时可为空数组。",
+                          "items": {
+                            "type": "string"
+                          },
+                          "example": [
+                            "U1",
+                            "U2",
+                            "U3",
+                            "U4",
+                            "REROLL",
+                            "V1",
+                            "V2",
+                            "V3",
+                            "V4"
+                          ]
+                        },
+                        "full_prompt": {
+                          "type": "string",
+                          "description": "包含参考图地址及参数的完整提示词。"
+                        },
+                        "image_url": {
+                          "type": "object",
+                          "description": "任务成功后返回的图片地址。",
+                          "required": [
+                            "url"
+                          ],
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "format": "uri",
+                              "description": "完整图片地址。"
+                            },
+                            "split_image_urls": {
+                              "type": "array",
+                              "description": "拆分后的单张图片地址。",
+                              "items": {
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            }
+                          }
+                        },
+                        "native_url": {
+                          "type": "object",
+                          "description": "上游返回的原始图片地址。",
+                          "required": [
+                            "url"
+                          ],
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "format": "uri"
+                            }
+                          }
+                        },
+                        "mode": {
+                          "type": "string",
+                          "description": "任务运行模式。",
+                          "example": "fast"
+                        },
+                        "parameters": {
+                          "type": "object",
+                          "description": "任务使用的参数，仅返回本次任务包含的字段。",
+                          "properties": {
+                            "aspect": {
+                              "type": "string",
+                              "description": "图片宽高比。",
+                              "example": "9:16"
+                            },
+                            "channel": {
+                              "type": "string",
+                              "description": "任务渠道。",
+                              "example": "DISCORD"
+                            },
+                            "chaos": {
+                              "type": "integer",
+                              "description": "混沌参数。",
+                              "example": 100
+                            },
+                            "iw": {
+                              "type": "number",
+                              "description": "参考图权重。",
+                              "example": 1
+                            },
+                            "mode": {
+                              "type": "string",
+                              "description": "运行模式。",
+                              "example": "fast"
+                            },
+                            "no": {
+                              "type": "string",
+                              "description": "负向提示词。",
+                              "example": "black cat"
+                            },
+                            "raw": {
+                              "type": "boolean",
+                              "description": "是否启用 Raw 模式。"
+                            },
+                            "ref": {
+                              "type": "array",
+                              "description": "参考图地址。",
+                              "items": {
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            },
+                            "seed": {
+                              "type": "integer",
+                              "description": "随机种子。",
+                              "example": 1231231
+                            },
+                            "sref": {
+                              "type": "array",
+                              "description": "风格参考图地址。",
+                              "items": {
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            },
+                            "stylize": {
+                              "type": "integer",
+                              "description": "风格化参数。",
+                              "example": 1000
+                            },
+                            "sw": {
+                              "type": "number",
+                              "description": "风格参考权重。",
+                              "example": 1000
+                            },
+                            "tile": {
+                              "type": "boolean",
+                              "description": "是否启用平铺模式。"
+                            },
+                            "version": {
+                              "type": "string",
+                              "description": "Midjourney 版本参数。",
+                              "example": "v 8.2"
+                            },
+                            "weird": {
+                              "type": "integer",
+                              "description": "怪诞参数。",
+                              "example": 1000
+                            }
+                          },
+                          "additionalProperties": true
+                        },
+                        "progress": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 100,
+                          "description": "任务进度百分比。"
+                        },
+                        "prompt": {
+                          "type": "string",
+                          "description": "原始文本提示词。",
+                          "example": "a cute cat"
+                        }
+                      },
+                      "additionalProperties": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "description": "任务成功时为 null，失败时返回错误详情。",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "description": "错误码。",
+                          "example": "generation_failed"
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "错误信息。",
+                          "example": "图片处理失败，请检查图片后重试"
+                        }
+                      },
+                      "nullable": true
+                    }
+                  },
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "status": {
+                            "const": "completed"
+                          }
+                        }
+                      },
+                      "then": {
+                        "properties": {
+                          "data": {
+                            "required": [
+                              "image_url"
+                            ]
+                          },
+                          "error": {
+                            "type": "null"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "properties": {
+                          "status": {
+                            "const": "failed"
+                          }
+                        }
+                      },
+                      "then": {
+                        "properties": {
+                          "error": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

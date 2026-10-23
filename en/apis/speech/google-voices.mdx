@@ -1,0 +1,183 @@
+---
+title: "Google TTS voices and usage"
+sidebarTitle: "Google voices"
+description: "Choose Gemini TTS voices and call Tikway's speech synthesis endpoint."
+icon: "microphone"
+---
+
+Call Google TTS with `POST /v1/audio/speech`. Send a configured `model`, string `input`, and top-level `voice`. The gateway converts the request and processes the audio.
+
+## Model catalog
+
+A Google catalog snapshot checked on October 15, 2026 lists five HTTP TTS models, **70 distinct preset voice IDs**, and 230 model-voice associations. The official preset page lists 30 voices; the 3.8 series includes 40 more in this snapshot.
+
+| Model | Voices in snapshot | List |
+| --- | --- | --- |
+| `gemini-3.8-flash-tts` | 70 | 30 shared voices + 40 new voices |
+| `gemini-3.8-flash-lite-tts` | 70 | Same snapshot list as 3.8 Flash |
+| `gemini-3.1-flash-tts-preview` | 30 | Shared voices only |
+| `gemini-2.5-pro-preview-tts` | 30 | Shared voices only |
+| `gemini-2.5-flash-preview-tts` | 30 | Present in snapshot; absent from current official support table |
+
+Model availability depends on your Tikway account and the current model catalog. The `models/` prefix belongs to Google's catalog; use a configured Tikway ID or alias such as `google/gemini-3.8-flash-tts`.
+
+<Note>
+The request schema accepts a voice name or ID instead of restricting it to this snapshot. Gemini 3.8 can also use available voices from a Google project. Check model and account access before using an ID.
+</Note>
+
+## How to read the voice lists
+
+- `voice` is an exact, case-sensitive name such as `Kore`, `Zephyr`, or `Arlo`.
+- Voice character, pitch, accent, and suggested uses help you choose a voice. They are not parameters of this endpoint.
+- The sample language in the snapshot is `en-US`; this does not mean synthesis is English-only. Language support varies by model.
+- Click a voice ID to hear its provider sample.
+
+## Shared preset voices · 30
+
+These voices appear with all five models in the snapshot.
+
+| `voice` (play sample) | Voice character | Pitch |
+| --- | --- | --- |
+| [`Zephyr`](https://gstatic.com/aistudio/voices/samples/Zephyr.wav) | Female · bright | high-mid |
+| [`Puck`](https://gstatic.com/aistudio/voices/samples/Puck.wav) | Male · cheerful | mid |
+| [`Charon`](https://gstatic.com/aistudio/voices/samples/Charon.wav) | Male · narrative | low-mid |
+| [`Kore`](https://gstatic.com/aistudio/voices/samples/Kore.wav) | Female · firm | mid |
+| [`Fenrir`](https://gstatic.com/aistudio/voices/samples/Fenrir.wav) | Male · passionate | low-mid |
+| [`Leda`](https://gstatic.com/aistudio/voices/samples/Leda.wav) | Female · youthful | high-mid |
+| [`Orus`](https://gstatic.com/aistudio/voices/samples/Orus.wav) | Male · firm | low-mid |
+| [`Aoede`](https://gstatic.com/aistudio/voices/samples/Aoede.wav) | Female · airy | mid |
+| [`Callirrhoe`](https://gstatic.com/aistudio/voices/samples/Callirrhoe.wav) | Female · easygoing | mid |
+| [`Autonoe`](https://gstatic.com/aistudio/voices/samples/Autonoe.wav) | Female · bright | mid |
+| [`Enceladus`](https://gstatic.com/aistudio/voices/samples/Enceladus.wav) | Male · breathy | low-mid |
+| [`Iapetus`](https://gstatic.com/aistudio/voices/samples/Iapetus.wav) | Male · clear | low-mid |
+| [`Umbriel`](https://gstatic.com/aistudio/voices/samples/Umbriel.wav) | Male · easygoing | low-mid |
+| [`Algieba`](https://gstatic.com/aistudio/voices/samples/Algieba.wav) | Male · smooth | low-mid |
+| [`Despina`](https://gstatic.com/aistudio/voices/samples/Despina.wav) | Female · smooth | mid |
+| [`Erinome`](https://gstatic.com/aistudio/voices/samples/Erinome.wav) | Female · clear | mid |
+| [`Algenib`](https://gstatic.com/aistudio/voices/samples/Algenib.wav) | Male · raspy | low-mid |
+| [`Rasalgethi`](https://gstatic.com/aistudio/voices/samples/Rasalgethi.wav) | Male · narrative | mid |
+| [`Laomedeia`](https://gstatic.com/aistudio/voices/samples/Laomedeia.wav) | Female · cheerful | high-mid |
+| [`Achernar`](https://gstatic.com/aistudio/voices/samples/Achernar.wav) | Female · soft | high-mid |
+| [`Alnilam`](https://gstatic.com/aistudio/voices/samples/Alnilam.wav) | Male · firm | low-mid |
+| [`Schedar`](https://gstatic.com/aistudio/voices/samples/Schedar.wav) | Male · steady | low-mid |
+| [`Gacrux`](https://gstatic.com/aistudio/voices/samples/Gacrux.wav) | Female · mature | mid |
+| [`Pulcherrima`](https://gstatic.com/aistudio/voices/samples/Pulcherrima.wav) | Female · direct | mid |
+| [`Achird`](https://gstatic.com/aistudio/voices/samples/Achird.wav) | Male · friendly | low-mid |
+| [`Zubenelgenubi`](https://gstatic.com/aistudio/voices/samples/Zubenelgenubi.wav) | Male · casual | low-mid |
+| [`Vindemiatrix`](https://gstatic.com/aistudio/voices/samples/Vindemiatrix.wav) | Female · mild | mid |
+| [`Sadachbia`](https://gstatic.com/aistudio/voices/samples/Sadachbia.wav) | Male · lively | low-mid |
+| [`Sadaltager`](https://gstatic.com/aistudio/voices/samples/Sadaltager.wav) | Male · scholarly | mid |
+| [`Sulafat`](https://gstatic.com/aistudio/voices/samples/Sulafat.wav) | Female · warm | mid |
+
+## New Gemini 3.8 voices · 40
+
+These voices appear with 3.8 Flash and Flash-Lite TTS in the snapshot.
+
+<AccordionGroup>
+<Accordion title="Show the 40 new voices">
+
+| `voice` (play sample) | Voice character | Pitch |
+| --- | --- | --- |
+| [`Arlo`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-arlo.wav) | Male · confident and clear | deep bass |
+| [`Bodi`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-bodi.wav) | Male · soft and approachable | bass |
+| [`Brio`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-brio.wav) | Male · soft and approachable | low-mid |
+| [`Cleo`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-cleo.wav) | Female · warm and vivid | high-mid |
+| [`Cruz`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-cruz.wav) | Male · steady and professional | deep bass |
+| [`Daro`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-daro.wav) | Male · confident and clear | bass |
+| [`Elio`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-elio.wav) | Male · calm and reassuring | mid |
+| [`Enya`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-enya.wav) | Female · crisp and professional | mid |
+| [`Enzo`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-enzo.wav) | Male · brisk and positive | bass |
+| [`Finn`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-finn.wav) | Male · warm and approachable | bass |
+| [`Fola`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-fola.wav) | Female · clear and friendly | mid |
+| [`Gero`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-gero.wav) | Male · clear and friendly | bass |
+| [`Hali`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-hali.wav) | Female · calm and reassuring | high-mid |
+| [`Jett`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-jett.wav) | Male · warm and empathetic | deep bass |
+| [`Jori`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-jori.wav) | Female · warm and approachable | low-mid |
+| [`Kira`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-kira.wav) | Female · composed and confident | mid |
+| [`Knox`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-knox.wav) | Male · warm conversational | bass |
+| [`Koda`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-koda.wav) | Male · direct and friendly | low-mid |
+| [`Lora`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-lora.wav) | Female · clear and friendly | mid |
+| [`Ludo`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-ludo.wav) | Male · confident and clear | bass |
+| [`Lumi`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-lumi.wav) | Female · warm and approachable | bass |
+| [`Mako`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-mako.wav) | Male · energetic and vivid | bass |
+| [`Milo`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-milo.wav) | Male · soft and approachable | bass |
+| [`Neno`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-neno.wav) | Male · low and mellow | deep bass |
+| [`Nika`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-nika.wav) | Female · warm and approachable | mid |
+| [`Nyla`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-nyla.wav) | Female · crisp and professional | high-mid |
+| [`Olin`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-olin.wav) | Male · light and precise | bass |
+| [`Rami`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-rami.wav) | Male · warm and approachable | bass |
+| [`Riko`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-riko.wav) | Male · confident and clear | deep bass |
+| [`Rina`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-rina.wav) | Female · gentle and relaxed | mid |
+| [`Sami`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-sami.wav) | Female · composed and confident | bass |
+| [`Sola`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-sola.wav) | Female · gentle and relaxed | very high |
+| [`Tari`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-tari.wav) | Female · confident and clear | mid |
+| [`Tavi`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-tavi.wav) | Female · soft and approachable | high-mid |
+| [`Tova`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-tova.wav) | Female · resonant and soothing | low-mid |
+| [`Varo`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-varo.wav) | Male · relaxed and casual | bass |
+| [`Veda`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-veda.wav) | Female · warm and approachable | high |
+| [`Zali`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-zali.wav) | Female · warm and empathetic | mid |
+| [`Zeno`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-zeno.wav) | Male · composed and confident | high-mid |
+| [`Zuri`](https://www.gstatic.com/aistudio/voices/samples/daikon/en-us-zuri.wav) | Female · natural and clear | mid |
+
+</Accordion>
+</AccordionGroup>
+
+## Standard request
+
+```json
+{
+  "model": "google/gemini-3.8-flash-tts",
+  "input": "Hello, welcome to speech synthesis.",
+  "voice": "Kore",
+  "instructions": "Read in a warm, clear style.",
+  "response_format": "wav",
+  "extra_body": { "language_code": "en-US" }
+}
+```
+
+| Field | Gateway behavior |
+| --- | --- |
+| `model`、`input`、`voice` | Required. `input` must be a string of at most 4,096 characters. |
+| `voice` | A name or ID string; `{ "id": "Kore" }` is also accepted. |
+| `instructions` | On 3.8, used as style metadata; on 2.5/3.1, used in the older prompt text. |
+| `speed` | Range 0.25–4, default 1. Google approximates this through style instructions, so exact speed is not guaranteed. |
+| `response_format` | Google supports `wav` and `pcm`; default `wav`. |
+| `stream_format` | `audio` returns audio bytes; `sse` returns gateway events. |
+| `extra_body` | Google extensions. Fields may also appear at the body root; root values take precedence. |
+
+Provider extensions include `language_code`, `speech_metadata`, `generation_config`, `multi_speaker_voice_config`, and text `contents`. Only the verified `temperature` option is shown under `generation_config`.
+
+<Note>
+The Google adapter receives the full synthesized result before wrapping it in `speech.audio.delta` and `speech.audio.done`. `stream_format=sse` does not imply low-latency upstream synthesis. WAV has a container header; PCM does not.
+</Note>
+
+## Gemini 3.8 and older previews
+
+Gemini 3.8 treats the main text as words to read verbatim. Send style guidance through top-level `instructions` or `speech_metadata.style`. The 2.5/3.1 adapter uses the older prompt-text behavior, so instruction effects may differ.
+
+Gemini 3.8 can use an existing `voice_...` or `voicekey_...` in your Google project. Send it as a `voice` string or `{ "id": "voice_..." }`. This endpoint uses existing voices; it does not create, clone, or list voices. Those IDs are not documented as supported on 2.5/3.1.
+
+## Multiple speakers
+
+The gateway supports up to two speakers. Configure preset voices in `extra_body.multi_speaker_voice_config`, then assign each turn with `extra_body.contents[].parts[].speech_metadata.speaker`.
+
+```json
+{
+  "model": "google/gemini-3.8-flash-tts",
+  "input": "A greeting between Joe and Jane.",
+  "voice": "Kore",
+  "response_format": "wav",
+  "extra_body": {
+    "multi_speaker_voice_config": {
+      "speakerVoiceConfigs": [
+        { "speaker": "Joe", "voiceConfig": { "prebuiltVoiceConfig": { "voiceName": "Puck" } } },
+        { "speaker": "Jane", "voiceConfig": { "prebuiltVoiceConfig": { "voiceName": "Kore" } } }
+      ]
+    },
+    "contents": [{ "role": "user", "parts": [
+      { "text": "Hello, how are you today?", "speech_metadata": { "speaker": "Joe", "style": "cheerful and friendly" } },
+      { "text": "I'm well, thanks for asking.", "speech_metadata": { "speaker": "Jane", "style": "calm and relaxed" } }
+    ] }]
+  }
+}
+```

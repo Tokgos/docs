@@ -1073,6 +1073,142 @@
                         }
                       }
                     }
+                  },
+                  "enable_thinking": {
+                    "type": "boolean",
+                    "description": "Qwen/Bailian extension: enable reasoning when supported by the model."
+                  },
+                  "thinking_budget": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Qwen/Bailian extension: reasoning token budget. Some models cannot combine this with reasoning_effort."
+                  },
+                  "thinking": {
+                    "type": "object",
+                    "required": [
+                      "type"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "enabled",
+                          "disabled",
+                          "adaptive"
+                        ]
+                      },
+                      "clear_thinking": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "description": "Reasoning configuration for GLM, Bailian, and MiniMax models. Supported modes vary by model."
+                  },
+                  "preserve_thinking": {
+                    "type": "boolean",
+                    "description": "Bailian extension: retain earlier reasoning content on supported models."
+                  },
+                  "clear_thinking": {
+                    "type": "boolean",
+                    "description": "Bailian extension: clear earlier reasoning content."
+                  },
+                  "top_k": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "description": "Qwen/Bailian extension: sampling candidate count."
+                  },
+                  "repetition_penalty": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "minimum": 0,
+                    "description": "Qwen/Bailian extension: repetition penalty; 1 disables the penalty."
+                  },
+                  "do_sample": {
+                    "type": "boolean",
+                    "description": "GLM extension: enable sampling. When false, temperature and top_p are ignored."
+                  },
+                  "tool_stream": {
+                    "type": "boolean",
+                    "description": "Qwen/GLM extension: stream tool-call arguments with stream=true."
+                  },
+                  "enable_search": {
+                    "type": "boolean",
+                    "description": "Qwen/Bailian extension: allow web search."
+                  },
+                  "search_options": {
+                    "type": "object",
+                    "properties": {
+                      "forced_search": {
+                        "type": "boolean"
+                      },
+                      "search_strategy": {
+                        "type": "string",
+                        "enum": [
+                          "turbo",
+                          "max",
+                          "agent"
+                        ]
+                      },
+                      "enable_source": {
+                        "type": "boolean"
+                      },
+                      "enable_citation": {
+                        "type": "boolean"
+                      },
+                      "citation_format": {
+                        "type": "string"
+                      },
+                      "enable_search_extension": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": true,
+                    "description": "Qwen/Bailian search settings, used when enable_search=true."
+                  },
+                  "enable_code_interpreter": {
+                    "type": "boolean",
+                    "description": "Qwen/Bailian extension: enable the code interpreter where available."
+                  },
+                  "vl_high_resolution_images": {
+                    "type": "boolean",
+                    "description": "Qwen VL extension: enable high-resolution image understanding."
+                  },
+                  "skill": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "ppt"
+                        },
+                        "mode": {
+                          "type": "string",
+                          "enum": [
+                            "general",
+                            "creative"
+                          ]
+                        },
+                        "template_id": {
+                          "type": "string",
+                          "enum": [
+                            "news_01",
+                            "summary_01",
+                            "internet_01",
+                            "thesis_01"
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
+                    },
+                    "description": "Bailian qwen-doc-turbo generation skills; stream must be true."
                   }
                 },
                 "examples": [
@@ -1196,7 +1332,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "Successful response",
             "content": {
               "application/json": {
                 "schema": {
@@ -2353,6 +2489,15 @@
                         ]
                       }
                     }
+                  },
+                  "enable_thinking": {
+                    "type": "boolean",
+                    "description": "Qwen/Bailian extension: enable reasoning when supported by the model."
+                  },
+                  "ocr_options": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Qwen OCR extension for models with custom OCR tasks."
                   }
                 },
                 "examples": [
@@ -2508,7 +2653,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "Successful response",
             "content": {
               "application/json": {
                 "schema": {
@@ -2876,7 +3021,78 @@
                     }
                   ]
                 },
-                "example": "{\n    \"background\": false,\n    \"completed_at\": 1788668639,\n    \"created_at\": 1788668638,\n    \"error\": null,\n    \"frequency_penalty\": 0,\n    \"id\": \"resp_074472f9988a119f006a9ceade27888194add2283781e99db5::Q_Olg6GjTjN-VysDZS83LBWBO3NVTBTLcLGOvp0PrBP_XWO97d8Yq9ztZQZONcJzIV1Cug\",\n    \"incomplete_details\": null,\n    \"instructions\": null,\n    \"max_output_tokens\": null,\n    \"max_tool_calls\": null,\n    \"metadata\": {},\n    \"model\": \"gpt-5.6-sol\",\n    \"object\": \"response\",\n    \"output\": [\n        {\n            \"content\": [\n                {\n                    \"annotations\": [],\n                    \"logprobs\": [],\n                    \"text\": \"Hello! How can I help?\",\n                    \"type\": \"output_text\"\n                }\n            ],\n            \"id\": \"msg_074472f9988a119f006a9ceadecd488194a8a5c2f9f4c1d83e\",\n            \"phase\": \"final_answer\",\n            \"role\": \"assistant\",\n            \"status\": \"completed\",\n            \"type\": \"message\"\n        }\n    ],\n    \"parallel_tool_calls\": true,\n    \"presence_penalty\": 0,\n    \"previous_response_id\": null,\n    \"prompt_cache_key\": null,\n    \"prompt_cache_retention\": \"24h\",\n    \"reasoning\": {\n        \"context\": \"all_turns\",\n        \"effort\": \"medium\",\n        \"mode\": \"standard\",\n        \"summary\": null\n    },\n    \"safety_identifier\": null,\n    \"service_tier\": \"default\",\n    \"status\": \"completed\",\n    \"temperature\": 1,\n    \"text\": {\n        \"format\": {\n            \"type\": \"text\"\n        },\n        \"verbosity\": \"medium\"\n    },\n    \"tool_choice\": \"auto\",\n    \"tools\": [],\n    \"top_logprobs\": 0,\n    \"top_p\": 0.98,\n    \"truncation\": \"disabled\",\n    \"usage\": {\n        \"input_tokens\": 7,\n        \"input_tokens_details\": {\n            \"cache_write_tokens\": 0,\n            \"cached_read_tokens\": 0,\n            \"cached_tokens\": 0,\n            \"cached_write_tokens\": 0\n        },\n        \"output_tokens\": 11,\n        \"output_tokens_details\": {\n            \"reasoning_tokens\": 0\n        },\n        \"total_tokens\": 18\n    }\n}"
+                "example": {
+                  "background": false,
+                  "completed_at": 1788668639,
+                  "created_at": 1788668638,
+                  "error": null,
+                  "frequency_penalty": 0,
+                  "id": "resp_074472f9988a119f006a9ceade27888194add2283781e99db5::Q_Olg6GjTjN-VysDZS83LBWBO3NVTBTLcLGOvp0PrBP_XWO97d8Yq9ztZQZONcJzIV1Cug",
+                  "incomplete_details": null,
+                  "instructions": null,
+                  "max_output_tokens": null,
+                  "max_tool_calls": null,
+                  "metadata": {},
+                  "model": "gpt-5.6-sol",
+                  "object": "response",
+                  "output": [
+                    {
+                      "content": [
+                        {
+                          "annotations": [],
+                          "logprobs": [],
+                          "text": "Hello! How can I help?",
+                          "type": "output_text"
+                        }
+                      ],
+                      "id": "msg_074472f9988a119f006a9ceadecd488194a8a5c2f9f4c1d83e",
+                      "phase": "final_answer",
+                      "role": "assistant",
+                      "status": "completed",
+                      "type": "message"
+                    }
+                  ],
+                  "parallel_tool_calls": true,
+                  "presence_penalty": 0,
+                  "previous_response_id": null,
+                  "prompt_cache_key": null,
+                  "prompt_cache_retention": "24h",
+                  "reasoning": {
+                    "context": "all_turns",
+                    "effort": "medium",
+                    "mode": "standard",
+                    "summary": null
+                  },
+                  "safety_identifier": null,
+                  "service_tier": "default",
+                  "status": "completed",
+                  "temperature": 1,
+                  "text": {
+                    "format": {
+                      "type": "text"
+                    },
+                    "verbosity": "medium"
+                  },
+                  "tool_choice": "auto",
+                  "tools": [],
+                  "top_logprobs": 0,
+                  "top_p": 0.98,
+                  "truncation": "disabled",
+                  "usage": {
+                    "input_tokens": 7,
+                    "input_tokens_details": {
+                      "cache_write_tokens": 0,
+                      "cached_read_tokens": 0,
+                      "cached_tokens": 0,
+                      "cached_write_tokens": 0
+                    },
+                    "output_tokens": 11,
+                    "output_tokens_details": {
+                      "reasoning_tokens": 0
+                    },
+                    "total_tokens": 18
+                  }
+                }
               }
             },
             "headers": {}
@@ -2887,6 +3103,399 @@
             "bearer": []
           }
         ]
+      }
+    },
+    "/v1/models": {
+      "get": {
+        "summary": "List models",
+        "operationId": "getModels",
+        "tags": [
+          "Chat completions/OpenAI protocol"
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "query",
+            "description": "Filter by the exact provider namespace in the model ID, for example google. Omit to include all providers.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "description": "Filter by mode: chat, image_generation, video_generation, embedding, transcription, audio_generation, decision, or music_generation. Comma-separated or repeated values are combined with OR.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by type: text, image, video, music, embedding, audio, or decision. Comma-separated or repeated values are supported; provider, mode, and type filters intersect.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "GetModelsResponse",
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "name",
+                          "aliases",
+                          "context_length",
+                          "architecture",
+                          "capabilities",
+                          "object",
+                          "owned_by"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "aliases": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Configured model aliases; an empty array is returned when none are configured."
+                          },
+                          "context_length": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ]
+                          },
+                          "max_output_tokens": {
+                            "type": "integer"
+                          },
+                          "architecture": {
+                            "type": "object",
+                            "required": [
+                              "input_modalities",
+                              "output_modalities"
+                            ],
+                            "properties": {
+                              "input_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "output_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "description": "Input and output modalities derived from platform configuration and callable endpoints."
+                          },
+                          "capabilities": {
+                            "type": "object",
+                            "required": [
+                              "reasoning_efforts",
+                              "endpoints",
+                              "parameters"
+                            ],
+                            "properties": {
+                              "reasoning_efforts": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "Reasoning effort values from actual endpoint parameter profiles; an empty array when no levels are configured."
+                              },
+                              "endpoints": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "parameters": {
+                                "type": "object",
+                                "required": [
+                                  "common"
+                                ],
+                                "properties": {
+                                  "common": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "additionalProperties": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "description": "common contains parameters shared by all callable endpoints; each endpoint path contains only additional parameters. Combine both arrays for its full parameter set. A single-endpoint model may list every parameter in common."
+                              }
+                            },
+                            "description": "Configured callable endpoints, parameter groups, and reasoning efforts; shared across all catalog presentations."
+                          },
+                          "object": {
+                            "type": "string",
+                            "const": "model"
+                          },
+                          "owned_by": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "video_attributes": {
+                            "type": "object",
+                            "required": [
+                              "modes",
+                              "resolutions",
+                              "default_resolution",
+                              "min_duration_seconds",
+                              "max_duration_seconds",
+                              "supports_audio",
+                              "aspect_ratios"
+                            ],
+                            "properties": {
+                              "modes": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "resolutions": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "default_resolution": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "min_duration_seconds": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
+                              "max_duration_seconds": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
+                              "supports_audio": {
+                                "type": [
+                                  "boolean",
+                                  "null"
+                                ]
+                              },
+                              "aspect_ratios": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "object": "list",
+                      "data": [
+                        {
+                          "id": "happyhorse-1.0",
+                          "name": "HappyHorse 1.0",
+                          "aliases": [
+                            "happyhorse-1.0",
+                            "happyhorse-1.0-20260624"
+                          ],
+                          "architecture": {
+                            "input_modalities": [
+                              "text",
+                              "image",
+                              "video"
+                            ],
+                            "output_modalities": [
+                              "video"
+                            ]
+                          },
+                          "capabilities": {
+                            "endpoints": [
+                              "/v1/videos"
+                            ],
+                            "parameters": {
+                              "/v1/videos": [],
+                              "common": [
+                                "seed",
+                                "model",
+                                "prompt",
+                                "duration",
+                                "extra_body",
+                                "resolution",
+                                "aspect_ratio",
+                                "callback_url",
+                                "frame_images",
+                                "input_references"
+                              ]
+                            },
+                            "reasoning_efforts": []
+                          },
+                          "context_length": null,
+                          "object": "model",
+                          "created": 0,
+                          "owned_by": "HappyHorse"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "examples": {
+                  "catalog_metadata": {
+                    "summary": "Aliases, modalities, and endpoint parameters",
+                    "value": {
+                      "object": "list",
+                      "data": [
+                        {
+                          "id": "happyhorse-1.0",
+                          "name": "HappyHorse 1.0",
+                          "aliases": [
+                            "happyhorse-1.0",
+                            "happyhorse-1.0-20260624"
+                          ],
+                          "architecture": {
+                            "input_modalities": [
+                              "text",
+                              "image",
+                              "video"
+                            ],
+                            "output_modalities": [
+                              "video"
+                            ]
+                          },
+                          "capabilities": {
+                            "endpoints": [
+                              "/v1/videos"
+                            ],
+                            "parameters": {
+                              "/v1/videos": [],
+                              "common": [
+                                "seed",
+                                "model",
+                                "prompt",
+                                "duration",
+                                "extra_body",
+                                "resolution",
+                                "aspect_ratio",
+                                "callback_url",
+                                "frame_images",
+                                "input_references"
+                              ]
+                            },
+                            "reasoning_efforts": []
+                          },
+                          "context_length": null,
+                          "object": "model",
+                          "created": 0,
+                          "owned_by": "HappyHorse"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Invalid request"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "none": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "description": "Return the full callable platform catalog across providers and model types, without implicit OpenAI, Anthropic, or Gemini protocol filtering. Use provider, mode, and type for explicit filtering.\n\nEvery model includes aliases, architecture, and capabilities. Merge capabilities.parameters.common with the per-endpoint array for its complete parameter set. An empty endpoint array can mean every parameter is in common. Values come from platform configuration.\n\nAnthropic and v1beta lists expose the same model set and metadata using their native envelopes and pagination. GET /v1/models with anthropic-version returns the Anthropic presentation."
       }
     }
   },

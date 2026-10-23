@@ -213,7 +213,8 @@
                       "description": "生成时间戳。"
                     },
                     "model": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "返回时为请求使用的模型 ID。"
                     },
                     "output_format": {
                       "type": "string"
@@ -225,17 +226,72 @@
                         "properties": {
                           "url": {
                             "type": "string",
-                            "description": "response_format=url 时返回的图片地址。"
+                            "description": "response_format=url 时返回的图片地址。",
+                            "format": "uri"
                           },
                           "b64_json": {
                             "type": "string",
                             "description": "response_format=b64_json 时返回的图片 Base64。"
+                          },
+                          "index": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "revised_prompt": {
+                            "type": "string"
                           }
-                        }
-                      }
+                        },
+                        "oneOf": [
+                          {
+                            "required": [
+                              "url"
+                            ]
+                          },
+                          {
+                            "required": [
+                              "b64_json"
+                            ]
+                          }
+                        ]
+                      },
+                      "minItems": 1
+                    },
+                    "size": {
+                      "type": "string"
+                    },
+                    "quality": {
+                      "type": "string"
+                    },
+                    "background": {
+                      "type": "string"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "additionalProperties": true
                     }
                   },
-                  "additionalProperties": true
+                  "additionalProperties": true,
+                  "title": "TikwayImageResponse",
+                  "examples": [
+                    {
+                      "created": 1791878400,
+                      "data": [
+                        {
+                          "url": "https://example.com/generated.png",
+                          "index": 0
+                        }
+                      ]
+                    },
+                    {
+                      "created": 1791878400,
+                      "data": [
+                        {
+                          "b64_json": "aW1hZ2U=",
+                          "index": 0
+                        }
+                      ]
+                    }
+                  ]
                 }
               }
             }
@@ -245,7 +301,8 @@
           {
             "bearer": []
           }
-        ]
+        ],
+        "operationId": "operation523577674"
       }
     }
   },
