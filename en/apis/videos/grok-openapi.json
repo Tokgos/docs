@@ -18,7 +18,7 @@
       "post": {
         "summary": "Create a Grok Imagine Video video",
         "deprecated": false,
-        "description": "Create Grok Imagine Video video tasks via unified `POST /v1/videos`. Model capabilities are subject to the actual callable range of the current Tikway gateway.\n\n| Model | Resolution | Duration | Supported Modes | Audio | Reference Limitations |\n| --- | --- | --- | --- | --- | --- |\n| `grok-imagine-video-1.5-fast` | 480p / 720p | 6–30 seconds | Vincent, up to 7 picture reference, first and last frames | Upstream defaults to sound; the current unified field cannot be turned off | Unofficial high-speed channel |\n| `grok-imagine-video-1.5` | 480p / 720p / 1080p | 1–15 seconds | The current gateway requires exactly 1 picture; can bring up to 3 preset sounds | Default is sound; the current unified field cannot be turned off | Does not support the last frame |\n| `grok-imagine-video` | 480p / 720p | Generate 1–15 seconds; extend 1–10 seconds | Vincent, multi-image reference, video extension | Upstream has sound by default; the current unified field cannot be turned off | End frame is not supported |\n\nSource: [xAI Video Generation Documentation](https://docs.x.ai/developers/model-capabilities/video/generation). The difference between the official website capabilities and the current unopened capabilities of the gateway can be found in this audit report.",
+        "description": "Create Grok Imagine Video video tasks via unified `POST /v1/videos`. Model capabilities are subject to the actual callable range of the current Tikway gateway.\n\n| Model | Resolution | Duration | Supported Modes | Audio | Reference Limitations |\n| --- | --- | --- | --- | --- | --- |\n| `grok-imagine-video-1.5-fast` | 480p / 720p | 6–30 seconds | Vincent, up to 7 picture reference, first and last frames | Upstream defaults to sound; the current unified field cannot be turned off | Unofficial high-speed channel |\n| `grok-imagine-video-1.5` | 480p / 720p / 1080p | 1–15 seconds | Up to 7 reference images and 4 keyframes; up to 3 preset voices | Default is sound; the current unified field cannot be turned off | Supports first and last frames |\n| `grok-imagine-video` | 480p / 720p | Generate 1–15 seconds; extend 1–10 seconds | Vincent, multi-image reference, video extension | Upstream has sound by default; the current unified field cannot be turned off | End frame is not supported |\n\nSource: [xAI Video Generation Documentation](https://docs.x.ai/developers/model-capabilities/video/generation). The difference between the official website capabilities and the current unopened capabilities of the gateway can be found in this audit report.",
         "tags": [
           "Video generation/Grok Imagine Video"
         ],
@@ -104,8 +104,8 @@
                   },
                   "input_references": {
                     "type": "array",
-                    "maxItems": 7,
-                    "description": "The maximum number of picture references is 7; 1.5 current routing requires exactly 1 picture. The video is only available as an extension for the basic version. 1.5 Up to 3 reference_audio can be transmitted, and the default voice_id is filled in reference_voice; audio_url is only used as a unified protocol placeholder.",
+                    "maxItems": 14,
+                    "description": "Up to 7 ordinary reference images map to refer_images. The 1.5 series supports up to 4 keyframe images with a seconds timestamp, mapped to keyframes. Grok 1.5 supports up to 3 preset voices using only reference_voice and role=reference_audio; audio_url is not required. Video input is available for extension on the base model only.",
                     "items": {
                       "type": "object",
                       "oneOf": [
@@ -121,8 +121,21 @@
                         },
                         {
                           "required": [
-                            "audio_url"
-                          ]
+                            "role",
+                            "reference_voice"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "reference_audio"
+                            }
+                          },
+                          "not": {
+                            "anyOf": [
+                              { "required": ["image_url"] },
+                              { "required": ["video_url"] },
+                              { "required": ["audio_url"] }
+                            ]
+                          }
                         }
                       ],
                       "properties": {
@@ -130,8 +143,7 @@
                           "type": "string",
                           "enum": [
                             "image_url",
-                            "video_url",
-                            "audio_url"
+                            "video_url"
                           ],
                           "description": "Optional. Material type; if provided, must be consistent with the corresponding URL field."
                         },
@@ -139,6 +151,7 @@
                           "type": "string",
                           "enum": [
                             "reference_image",
+                            "keyframe",
                             "source_video",
                             "first_clip",
                             "reference_audio"
@@ -157,18 +170,23 @@
                           "format": "uri",
                           "description": "Video URL string."
                         },
-                        "audio_url": {
-                          "type": "string",
-                          "minLength": 1,
-                          "format": "uri",
-                          "description": "Audio URL string."
-                        },
                         "reference_voice": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "Preset patch ID; only used by some models that support patch references."
+                          "description": "Preset voice ID. Grok 1.5 reference_audio uses this without audio_url."
+                        },
+                        "seconds": {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "description": "Target timestamp in seconds for a keyframe image."
                         }
                       },
+                      "allOf": [
+                        {
+                          "if": { "properties": { "role": { "const": "keyframe" } }, "required": ["role"] },
+                          "then": { "required": ["image_url", "seconds"] }
+                        }
+                      ],
                       "additionalProperties": false
                     }
                   },
@@ -199,9 +217,9 @@
                     "model": "grok-imagine-video-1.5",
                     "resolution": "480p / 720p / 1080p",
                     "duration": "1–15 seconds",
-                    "modes": "The current gateway requires exactly 1 picture; can bring up to 3 preset sounds",
+                    "modes": "Up to 7 reference images and 4 keyframes; up to 3 preset voices",
                     "audio": "Sound is enabled by default; the current unified field cannot be turned off",
-                    "references": "End frames are not supported"
+                    "references": "Supports first and last frames"
                   },
                   {
                     "model": "grok-imagine-video",
@@ -257,6 +275,31 @@
                         "type": "last_frame",
                         "image_url": "https://example.com/assets/last-frame.jpg"
                       }
+                    ]
+                  }
+                },
+                "Multiple images and preset voice": {
+                  "summary": "Multiple images and preset voice",
+                  "value": {
+                    "model": "grok-imagine-video-1.5",
+                    "prompt": "Keep the character, outfit, and voice consistent.",
+                    "duration": 10,
+                    "resolution": "720p",
+                    "input_references": [
+                      { "image_url": "https://example.com/assets/person.jpg", "role": "reference_image" },
+                      { "image_url": "https://example.com/assets/outfit.jpg", "role": "reference_image" },
+                      { "reference_voice": "sirius", "role": "reference_audio" }
+                    ]
+                  }
+                },
+                "Keyframe reference": {
+                  "summary": "Keyframe reference",
+                  "value": {
+                    "model": "grok-imagine-video-1.5",
+                    "prompt": "Switch to a frontal shot at five seconds.",
+                    "duration": 10,
+                    "input_references": [
+                      { "image_url": "https://example.com/assets/front.jpg", "role": "keyframe", "seconds": 5 }
                     ]
                   }
                 },

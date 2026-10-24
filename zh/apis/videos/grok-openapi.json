@@ -18,7 +18,7 @@
       "post": {
         "summary": "创建 Grok Imagine Video 视频",
         "deprecated": false,
-        "description": "通过统一的 `POST /v1/videos` 创建 Grok Imagine Video 视频任务。模型能力以当前 Tikway 网关实际可调用范围为准。\n\n| 模型 | 分辨率 | 时长 | 支持模式 | 音频 | 参考限制 |\n| --- | --- | --- | --- | --- | --- |\n| `grok-imagine-video-1.5-fast` | 480p / 720p | 6–30 秒 | 文生、最多 7 图参考、首尾帧 | 上游默认有声；当前统一字段不能关闭 | 非官方高速通道 |\n| `grok-imagine-video-1.5` | 480p / 720p / 1080p | 1–15 秒 | 当前网关要求恰好 1 张图；可带最多 3 个预设音色 | 默认有声；当前统一字段不能关闭 | 不支持尾帧 |\n| `grok-imagine-video` | 480p / 720p | 生成 1–15 秒；延长 1–10 秒 | 文生、多图参考、视频延长 | 上游默认有声；当前统一字段不能关闭 | 不支持尾帧 |\n\n来源：[xAI 视频生成文档](https://docs.x.ai/developers/model-capabilities/video/generation)。官网能力与当前网关未开放能力之间的差异见本次审计报告。",
+        "description": "通过统一的 `POST /v1/videos` 创建 Grok Imagine Video 视频任务。模型能力以当前 Tikway 网关实际可调用范围为准。\n\n| 模型 | 分辨率 | 时长 | 支持模式 | 音频 | 参考限制 |\n| --- | --- | --- | --- | --- | --- |\n| `grok-imagine-video-1.5-fast` | 480p / 720p | 6–30 秒 | 文生、最多 7 图参考、首尾帧 | 上游默认有声；当前统一字段不能关闭 | 非官方高速通道 |\n| `grok-imagine-video-1.5` | 480p / 720p / 1080p | 1–15 秒 | 最多 7 张参考图、4 个关键帧；可带最多 3 个预设音色 | 默认有声；当前统一字段不能关闭 | 支持首尾帧 |\n| `grok-imagine-video` | 480p / 720p | 生成 1–15 秒；延长 1–10 秒 | 文生、多图参考、视频延长 | 上游默认有声；当前统一字段不能关闭 | 不支持尾帧 |\n\n来源：[xAI 视频生成文档](https://docs.x.ai/developers/model-capabilities/video/generation)。官网能力与当前网关未开放能力之间的差异见本次审计报告。",
         "tags": [
           "视频生成/Grok Imagine Video"
         ],
@@ -105,8 +105,8 @@
                   },
                   "input_references": {
                     "type": "array",
-                    "maxItems": 7,
-                    "description": "图片参考最多 7 张；1.5 当前路由要求恰好 1 张图。视频仅供基础版延长。1.5 可传最多 3 个 reference_audio，并在 reference_voice 中填写预设 voice_id；audio_url 仅作统一协议占位。",
+                    "maxItems": 14,
+                    "description": "普通参考图最多 7 张，转换为 refer_images；1.5 系列关键帧最多 4 张，需指定 keyframe 角色与 seconds，转换为 keyframes。1.5 最多可传 3 个预设音色，仅填写 reference_voice 和 reference_audio 角色，无需 audio_url。视频素材仅供基础版延长。",
                     "items": {
                       "type": "object",
                       "oneOf": [
@@ -122,8 +122,21 @@
                         },
                         {
                           "required": [
-                            "audio_url"
-                          ]
+                            "role",
+                            "reference_voice"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "reference_audio"
+                            }
+                          },
+                          "not": {
+                            "anyOf": [
+                              { "required": ["image_url"] },
+                              { "required": ["video_url"] },
+                              { "required": ["audio_url"] }
+                            ]
+                          }
                         }
                       ],
                       "properties": {
@@ -131,8 +144,7 @@
                           "type": "string",
                           "enum": [
                             "image_url",
-                            "video_url",
-                            "audio_url"
+                            "video_url"
                           ],
                           "description": "可选。素材类型；若提供，必须与对应 URL 字段一致。"
                         },
@@ -140,6 +152,7 @@
                           "type": "string",
                           "enum": [
                             "reference_image",
+                            "keyframe",
                             "source_video",
                             "first_clip",
                             "reference_audio"
@@ -158,18 +171,23 @@
                           "format": "uri",
                           "description": "视频 URL 字符串。"
                         },
-                        "audio_url": {
-                          "type": "string",
-                          "minLength": 1,
-                          "format": "uri",
-                          "description": "音频 URL 字符串。"
-                        },
                         "reference_voice": {
                           "type": "string",
                           "minLength": 1,
-                          "description": "预设音色 ID；仅部分支持音色参考的模型使用。"
+                          "description": "预设音色 ID；Grok 1.5 的 reference_audio 可单独使用此字段，无需 audio_url。"
+                        },
+                        "seconds": {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "description": "keyframe 图片在生成视频中的目标时间，单位秒。"
                         }
                       },
+                      "allOf": [
+                        {
+                          "if": { "properties": { "role": { "const": "keyframe" } }, "required": ["role"] },
+                          "then": { "required": ["image_url", "seconds"] }
+                        }
+                      ],
                       "additionalProperties": false
                     }
                   },
@@ -200,9 +218,9 @@
                     "model": "grok-imagine-video-1.5",
                     "resolution": "480p / 720p / 1080p",
                     "duration": "1–15 秒",
-                    "modes": "当前网关要求恰好 1 张图；可带最多 3 个预设音色",
+                    "modes": "最多 7 张参考图、4 个关键帧；可带最多 3 个预设音色",
                     "audio": "默认有声；当前统一字段不能关闭",
-                    "references": "不支持尾帧"
+                    "references": "支持首尾帧"
                   },
                   {
                     "model": "grok-imagine-video",
@@ -258,6 +276,31 @@
                         "type": "last_frame",
                         "image_url": "https://example.com/assets/last-frame.jpg"
                       }
+                    ]
+                  }
+                },
+                "多图与预设音色": {
+                  "summary": "多图与预设音色",
+                  "value": {
+                    "model": "grok-imagine-video-1.5",
+                    "prompt": "保持人物形象、服装和声音一致。",
+                    "duration": 10,
+                    "resolution": "720p",
+                    "input_references": [
+                      { "image_url": "https://example.com/assets/person.jpg", "role": "reference_image" },
+                      { "image_url": "https://example.com/assets/outfit.jpg", "role": "reference_image" },
+                      { "reference_voice": "sirius", "role": "reference_audio" }
+                    ]
+                  }
+                },
+                "关键帧参考": {
+                  "summary": "关键帧参考",
+                  "value": {
+                    "model": "grok-imagine-video-1.5",
+                    "prompt": "第 5 秒切换到正面镜头。",
+                    "duration": 10,
+                    "input_references": [
+                      { "image_url": "https://example.com/assets/front.jpg", "role": "keyframe", "seconds": 5 }
                     ]
                   }
                 },

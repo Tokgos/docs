@@ -87,7 +87,7 @@
                   "frame_images": {
                     "type": "array",
                     "maxItems": 2,
-                    "description": "First frame/last frame shortcut. For more keyframes, please pass 1–10 reference_images via input_references, or specify keyframes with time points in extra_body.keyframes.",
+                    "description": "First/last frame shortcut. For more untimed keyframes, pass 1–10 reference_image entries in input_references. To set a timestamp, use role=keyframe with seconds, or pass native keyframes in extra_body.keyframes.",
                     "items": {
                       "type": "object",
                       "required": [
@@ -116,7 +116,7 @@
                   "input_references": {
                     "type": "array",
                     "maxItems": 10,
-                    "description": "Tusheng Video can transfer 1–10 reference_images as key frames; video continuation must and can only transfer 1 source_video or first_clip.",
+                    "description": "Image-to-video accepts 1–10 untimed reference_image entries or timed keyframe entries with seconds, mapped to [seconds, image URL]. Do not mix timed and untimed images. Video continuation requires exactly one source_video or first_clip.",
                     "items": {
                       "type": "object",
                       "oneOf": [
@@ -144,6 +144,7 @@
                           "type": "string",
                           "enum": [
                             "reference_image",
+                            "keyframe",
                             "source_video",
                             "first_clip"
                           ],
@@ -160,8 +161,19 @@
                           "minLength": 1,
                           "format": "uri",
                           "description": "Video URL string."
+                        },
+                        "seconds": {
+                          "type": "number",
+                          "minimum": 0,
+                          "description": "Required for role=keyframe; target timestamp in seconds."
                         }
                       },
+                      "allOf": [
+                        {
+                          "if": { "properties": { "role": { "const": "keyframe" } }, "required": ["role"] },
+                          "then": { "required": ["image_url", "seconds"] }
+                        }
+                      ],
                       "additionalProperties": false
                     }
                   },
@@ -270,6 +282,20 @@
                         "type": "last_frame",
                         "image_url": "https://example.com/assets/last-frame.jpg"
                       }
+                    ]
+                  }
+                },
+                "Timed keyframe": {
+                  "summary": "Timed keyframe",
+                  "value": {
+                    "model": "flux-3-video",
+                    "prompt": "A golden retriever runs on a beach at sunset.",
+                    "duration": 8,
+                    "resolution": "1080p",
+                    "aspect_ratio": "16:9",
+                    "generate_audio": true,
+                    "input_references": [
+                      { "image_url": "https://example.com/assets/keyframe.jpg", "role": "keyframe", "seconds": 5 }
                     ]
                   }
                 },

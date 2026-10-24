@@ -88,7 +88,7 @@
                   "frame_images": {
                     "type": "array",
                     "maxItems": 2,
-                    "description": "首帧/尾帧快捷写法。更多关键帧请通过 input_references 传 1–10 张 reference_image，或在 extra_body.keyframes 中指定带时间点的关键帧。",
+                    "description": "首帧/尾帧快捷写法。更多普通关键帧可通过 input_references 传 1–10 张 reference_image；指定时间点时使用 role=keyframe 和 seconds。也可在 extra_body.keyframes 中传原生格式。",
                     "items": {
                       "type": "object",
                       "required": [
@@ -117,7 +117,7 @@
                   "input_references": {
                     "type": "array",
                     "maxItems": 10,
-                    "description": "图生视频可传 1–10 张 reference_image 作为关键帧；视频续写必须且只能传 1 个 source_video 或 first_clip。",
+                    "description": "图生视频可传 1–10 张 reference_image 作为普通关键帧，或传带 seconds 的 keyframe 定时关键帧（转换为 [秒数, 图片 URL]）；两种形式不可混用。视频续写必须且只能传 1 个 source_video 或 first_clip。",
                     "items": {
                       "type": "object",
                       "oneOf": [
@@ -145,6 +145,7 @@
                           "type": "string",
                           "enum": [
                             "reference_image",
+                            "keyframe",
                             "source_video",
                             "first_clip"
                           ],
@@ -161,8 +162,19 @@
                           "minLength": 1,
                           "format": "uri",
                           "description": "视频 URL 字符串。"
+                        },
+                        "seconds": {
+                          "type": "number",
+                          "minimum": 0,
+                          "description": "role=keyframe 时必填；关键帧在视频中的时间点，单位秒。"
                         }
                       },
+                      "allOf": [
+                        {
+                          "if": { "properties": { "role": { "const": "keyframe" } }, "required": ["role"] },
+                          "then": { "required": ["image_url", "seconds"] }
+                        }
+                      ],
                       "additionalProperties": false
                     }
                   },
@@ -271,6 +283,20 @@
                         "type": "last_frame",
                         "image_url": "https://example.com/assets/last-frame.jpg"
                       }
+                    ]
+                  }
+                },
+                "定时关键帧": {
+                  "summary": "定时关键帧",
+                  "value": {
+                    "model": "flux-3-video",
+                    "prompt": "一只金毛寻回犬在日落时分的海滩上奔跑。",
+                    "duration": 8,
+                    "resolution": "1080p",
+                    "aspect_ratio": "16:9",
+                    "generate_audio": true,
+                    "input_references": [
+                      { "image_url": "https://example.com/assets/keyframe.jpg", "role": "keyframe", "seconds": 5 }
                     ]
                   }
                 },
