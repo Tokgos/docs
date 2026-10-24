@@ -799,13 +799,6 @@
                     ],
                     "description": "请求的服务层级。"
                   },
-                  "store": {
-                    "type": [
-                      "boolean",
-                      "null"
-                    ],
-                    "description": "是否存储该请求的输出。"
-                  },
                   "metadata": {
                     "type": [
                       "object",
@@ -2219,13 +2212,6 @@
                     ],
                     "description": "请求的服务层级。"
                   },
-                  "store": {
-                    "type": [
-                      "boolean",
-                      "null"
-                    ],
-                    "description": "是否存储生成的 Response 以供后续通过 API 获取。"
-                  },
                   "stream": {
                     "type": [
                       "boolean",
@@ -3000,10 +2986,6 @@
                       "type": "boolean",
                       "description": "是否后台运行。"
                     },
-                    "store": {
-                      "type": "boolean",
-                      "description": "是否存储该响应。"
-                    },
                     "safety_identifier": {
                       "type": "string",
                       "description": "请求使用的安全标识符。"
@@ -3040,7 +3022,78 @@
                     }
                   ]
                 },
-                "example": "{\n    \"background\": false,\n    \"completed_at\": 1788668639,\n    \"created_at\": 1788668638,\n    \"error\": null,\n    \"frequency_penalty\": 0,\n    \"id\": \"resp_074472f9988a119f006a9ceade27888194add2283781e99db5::Q_Olg6GjTjN-VysDZS83LBWBO3NVTBTLcLGOvp0PrBP_XWO97d8Yq9ztZQZONcJzIV1Cug\",\n    \"incomplete_details\": null,\n    \"instructions\": null,\n    \"max_output_tokens\": null,\n    \"max_tool_calls\": null,\n    \"metadata\": {},\n    \"model\": \"gpt-5.6-sol\",\n    \"object\": \"response\",\n    \"output\": [\n        {\n            \"content\": [\n                {\n                    \"annotations\": [],\n                    \"logprobs\": [],\n                    \"text\": \"Hello! How can I help?\",\n                    \"type\": \"output_text\"\n                }\n            ],\n            \"id\": \"msg_074472f9988a119f006a9ceadecd488194a8a5c2f9f4c1d83e\",\n            \"phase\": \"final_answer\",\n            \"role\": \"assistant\",\n            \"status\": \"completed\",\n            \"type\": \"message\"\n        }\n    ],\n    \"parallel_tool_calls\": true,\n    \"presence_penalty\": 0,\n    \"previous_response_id\": null,\n    \"prompt_cache_key\": null,\n    \"prompt_cache_retention\": \"24h\",\n    \"reasoning\": {\n        \"context\": \"all_turns\",\n        \"effort\": \"medium\",\n        \"mode\": \"standard\",\n        \"summary\": null\n    },\n    \"safety_identifier\": null,\n    \"service_tier\": \"default\",\n    \"status\": \"completed\",\n    \"store\": true,\n    \"temperature\": 1,\n    \"text\": {\n        \"format\": {\n            \"type\": \"text\"\n        },\n        \"verbosity\": \"medium\"\n    },\n    \"tool_choice\": \"auto\",\n    \"tools\": [],\n    \"top_logprobs\": 0,\n    \"top_p\": 0.98,\n    \"truncation\": \"disabled\",\n    \"usage\": {\n        \"input_tokens\": 7,\n        \"input_tokens_details\": {\n            \"cache_write_tokens\": 0,\n            \"cached_read_tokens\": 0,\n            \"cached_tokens\": 0,\n            \"cached_write_tokens\": 0\n        },\n        \"output_tokens\": 11,\n        \"output_tokens_details\": {\n            \"reasoning_tokens\": 0\n        },\n        \"total_tokens\": 18\n    }\n}"
+                "example": {
+                  "background": false,
+                  "completed_at": 1788668639,
+                  "created_at": 1788668638,
+                  "error": null,
+                  "frequency_penalty": 0,
+                  "id": "resp_074472f9988a119f006a9ceade27888194add2283781e99db5::Q_Olg6GjTjN-VysDZS83LBWBO3NVTBTLcLGOvp0PrBP_XWO97d8Yq9ztZQZONcJzIV1Cug",
+                  "incomplete_details": null,
+                  "instructions": null,
+                  "max_output_tokens": null,
+                  "max_tool_calls": null,
+                  "metadata": {},
+                  "model": "gpt-5.6-sol",
+                  "object": "response",
+                  "output": [
+                    {
+                      "content": [
+                        {
+                          "annotations": [],
+                          "logprobs": [],
+                          "text": "Hello! How can I help?",
+                          "type": "output_text"
+                        }
+                      ],
+                      "id": "msg_074472f9988a119f006a9ceadecd488194a8a5c2f9f4c1d83e",
+                      "phase": "final_answer",
+                      "role": "assistant",
+                      "status": "completed",
+                      "type": "message"
+                    }
+                  ],
+                  "parallel_tool_calls": true,
+                  "presence_penalty": 0,
+                  "previous_response_id": null,
+                  "prompt_cache_key": null,
+                  "prompt_cache_retention": "24h",
+                  "reasoning": {
+                    "context": "all_turns",
+                    "effort": "medium",
+                    "mode": "standard",
+                    "summary": null
+                  },
+                  "safety_identifier": null,
+                  "service_tier": "default",
+                  "status": "completed",
+                  "temperature": 1,
+                  "text": {
+                    "format": {
+                      "type": "text"
+                    },
+                    "verbosity": "medium"
+                  },
+                  "tool_choice": "auto",
+                  "tools": [],
+                  "top_logprobs": 0,
+                  "top_p": 0.98,
+                  "truncation": "disabled",
+                  "usage": {
+                    "input_tokens": 7,
+                    "input_tokens_details": {
+                      "cache_write_tokens": 0,
+                      "cached_read_tokens": 0,
+                      "cached_tokens": 0,
+                      "cached_write_tokens": 0
+                    },
+                    "output_tokens": 11,
+                    "output_tokens_details": {
+                      "reasoning_tokens": 0
+                    },
+                    "total_tokens": 18
+                  }
+                }
               }
             },
             "headers": {}
@@ -3056,29 +3109,37 @@
     "/v1/models": {
       "get": {
         "summary": "Get Models",
-        "description": "获取当前网关具有可调用端点的模型目录。默认返回全部类型，可用 type 按 text、image、video、music、embedding 筛选；多个类型用逗号分隔，或重复传 type，结果取并集。\n\n响应兼容 OpenAI object=list/data 结构，并提供 aliases、architecture、capabilities 和视频模型的 video_attributes。capabilities.parameters.common 为所有可调用端点共有的参数，端点键下仅列该端点的额外参数；端点完整参数集为 common 与端点数组的并集。\n\n本条目描述普通 OpenAI 格式。携带 anthropic-version 请求头会切换为 Anthropic 模型列表格式，应使用对应协议客户端解析。",
+        "description": "返回平台完整的可调用模型目录，覆盖全部供应商和模型类型，不按 OpenAI、Anthropic 或 Gemini 协议隐式过滤。可使用 provider、mode、type 显式筛选。\n\n每个模型均包含 aliases、architecture、capabilities。capabilities.parameters.common 为共有参数，各端点路径数组只列额外参数；两者取并集为该端点的完整参数集。单端点模型的路径数组为空时，参数仍可全部位于 common。字段值来自平台配置，不按示例固定。\n\nAnthropic 和 v1beta 模型列表返回同一模型集合及上述元数据，并保留各自的外层结构和分页。GET /v1/models 携带 anthropic-version 请求头时返回 Anthropic 格式。",
         "operationId": "getModels",
         "tags": [
           "对话补全/OpenAI 协议"
         ],
         "parameters": [
           {
-            "name": "type",
+            "name": "provider",
             "in": "query",
-            "required": false,
-            "description": "按模型类型筛选，省略返回全部。支持 text/image/video/music/embedding，忽略大小写和周围空格。多个类型逗号分隔或重复 type，未知或空值返回 400。",
-            "example": "image,video",
+            "description": "按模型 ID 的供应商命名空间精确筛选，例如 google。省略时返回全部供应商。",
             "schema": {
               "type": "string",
-              "minLength": 1,
-              "examples": [
-                "text",
-                "image",
-                "video",
-                "music",
-                "embedding",
-                "image,video"
-              ]
+              "minLength": 1
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "description": "按模式筛选：chat、image_generation、video_generation、embedding、transcription、audio_generation、decision 或 music_generation。多个值用逗号分隔，或重复传入，取并集。",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "按类型筛选：text、image、video、music、embedding、audio 或 decision。支持逗号分隔或重复传入；与 provider、mode 同时使用时取交集。",
+            "schema": {
+              "type": "string",
+              "minLength": 1
             }
           }
         ],
@@ -3125,7 +3186,8 @@
                             "type": "array",
                             "items": {
                               "type": "string"
-                            }
+                            },
+                            "description": "模型的可用别名，来自当前平台配置；未配置时返回空数组。"
                           },
                           "context_length": {
                             "type": [
@@ -3157,7 +3219,8 @@
                                   "type": "string"
                                 }
                               }
-                            }
+                            },
+                            "description": "模型可接受和可输出的模态，按平台配置及实际可调用端点生成。"
                           },
                           "capabilities": {
                             "type": "object",
@@ -3171,7 +3234,8 @@
                                 "type": "array",
                                 "items": {
                                   "type": "string"
-                                }
+                                },
+                                "description": "按实际端点参数配置汇总的推理档位；无可配置档位时返回空数组。"
                               },
                               "endpoints": {
                                 "type": "array",
@@ -3198,9 +3262,10 @@
                                     "type": "string"
                                   }
                                 },
-                                "description": "common 与各端点额外参数，端点键为动态 API 路径。"
+                                "description": "common 为所有可调用端点共有的参数，各端点路径下只列额外参数。该端点的完整参数集为 common 与端点数组的并集；单端点模型的参数可全部位于 common。"
                               }
-                            }
+                            },
+                            "description": "当前平台定义的端点、参数和推理档位。与其他协议格式中的这组字段一致。"
                           },
                           "object": {
                             "type": "string",
@@ -3280,12 +3345,12 @@
                       "object": "list",
                       "data": [
                         {
-                          "id": "black-forest-labs/flux-3-video",
-                          "name": "FLUX 3 Video",
+                          "id": "happyhorse-1.0",
+                          "name": "HappyHorse 1.0",
                           "aliases": [
-                            "flux-3-video"
+                            "happyhorse-1.0",
+                            "happyhorse-1.0-20260624"
                           ],
-                          "context_length": null,
                           "architecture": {
                             "input_modalities": [
                               "text",
@@ -3297,66 +3362,48 @@
                             ]
                           },
                           "capabilities": {
-                            "reasoning_efforts": [],
                             "endpoints": [
                               "/v1/videos"
                             ],
                             "parameters": {
+                              "/v1/videos": [],
                               "common": [
+                                "seed",
                                 "model",
                                 "prompt",
                                 "duration",
+                                "extra_body",
                                 "resolution",
                                 "aspect_ratio",
+                                "callback_url",
                                 "frame_images",
-                                "input_references",
-                                "generate_audio",
-                                "extra_body"
-                              ],
-                              "/v1/videos": []
-                            }
+                                "input_references"
+                              ]
+                            },
+                            "reasoning_efforts": []
                           },
+                          "context_length": null,
                           "object": "model",
-                          "owned_by": "Flux",
-                          "video_attributes": {
-                            "modes": [
-                              "t2v",
-                              "i2v",
-                              "v2v"
-                            ],
-                            "resolutions": [
-                              "480p",
-                              "720p",
-                              "1080p"
-                            ],
-                            "default_resolution": "720p",
-                            "min_duration_seconds": 5,
-                            "max_duration_seconds": 20,
-                            "supports_audio": true,
-                            "aspect_ratios": [
-                              "16:9",
-                              "9:16",
-                              "1:1"
-                            ]
-                          }
+                          "created": 0,
+                          "owned_by": "HappyHorse"
                         }
                       ]
                     }
                   ]
                 },
                 "examples": {
-                  "example1": {
-                    "summary": "视频模型目录示例",
+                  "catalog_metadata": {
+                    "summary": "模型别名、模态与端点参数",
                     "value": {
                       "object": "list",
                       "data": [
                         {
-                          "id": "black-forest-labs/flux-3-video",
-                          "name": "FLUX 3 Video",
+                          "id": "happyhorse-1.0",
+                          "name": "HappyHorse 1.0",
                           "aliases": [
-                            "flux-3-video"
+                            "happyhorse-1.0",
+                            "happyhorse-1.0-20260624"
                           ],
-                          "context_length": null,
                           "architecture": {
                             "input_modalities": [
                               "text",
@@ -3368,48 +3415,30 @@
                             ]
                           },
                           "capabilities": {
-                            "reasoning_efforts": [],
                             "endpoints": [
                               "/v1/videos"
                             ],
                             "parameters": {
+                              "/v1/videos": [],
                               "common": [
+                                "seed",
                                 "model",
                                 "prompt",
                                 "duration",
+                                "extra_body",
                                 "resolution",
                                 "aspect_ratio",
+                                "callback_url",
                                 "frame_images",
-                                "input_references",
-                                "generate_audio",
-                                "extra_body"
-                              ],
-                              "/v1/videos": []
-                            }
+                                "input_references"
+                              ]
+                            },
+                            "reasoning_efforts": []
                           },
+                          "context_length": null,
                           "object": "model",
-                          "owned_by": "Flux",
-                          "video_attributes": {
-                            "modes": [
-                              "t2v",
-                              "i2v",
-                              "v2v"
-                            ],
-                            "resolutions": [
-                              "480p",
-                              "720p",
-                              "1080p"
-                            ],
-                            "default_resolution": "720p",
-                            "min_duration_seconds": 5,
-                            "max_duration_seconds": 20,
-                            "supports_audio": true,
-                            "aspect_ratios": [
-                              "16:9",
-                              "9:16",
-                              "1:1"
-                            ]
-                          }
+                          "created": 0,
+                          "owned_by": "HappyHorse"
                         }
                       ]
                     }

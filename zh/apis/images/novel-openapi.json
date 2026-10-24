@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Mintlify",
-    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "title": "Tikway Novel AI Image API",
+    "description": "Tikway 标准图片接口。",
     "version": "1.0.0"
   },
   "tags": [
@@ -18,18 +18,19 @@
       "post": {
         "summary": "图片生成",
         "deprecated": false,
-        "description": "`diffusion-4-5-full` 与 `diffusion-4-5-curated` 使用相同参数集：`prompt`、`images`、`negative_prompt`、`n`、`size`、`seed`、`steps`、`scale`、`quality_toggle`、`sampler`、`noise_schedule`、`character_prompts`、`hook_url` 和 `response_format`。\n\n`n` 为 1～4。普通图生图源图最多 1 张；`vibe_transfer` 与 `character_reference` 不能同时使用。NovelAI 没有独立 JSON 编辑端点，编辑仍通过本生成端点的 `images` 完成。",
+        "description": "`diffusion-4-5-full` 与 `diffusion-4-5-curated` 使用相同参数集：`prompt`、`images`、`negative_prompt`、`n`、`size`、`seed`、`steps`、`scale`、`quality_toggle`、`sampler`、`noise_schedule`、`character_prompts` 和 `response_format`。\n\n`n` 为 1～4。普通图生图源图最多 1 张；`vibe_transfer` 与 `character_reference` 不能同时使用。图生图通过本生成接口的 `images` 传入源图。",
         "tags": [
           "图片生成/Novel AI"
         ],
         "parameters": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$id": "urn:tikway:schema:protocols:openai:images-generations:novelai-request:1",
                 "title": "NovelAIImageGenerationRequest",
-                "description": "NovelAI 图片生成 Request Body。统一参考图使用 images；网关负责转换为 TTAPI NovelAI 原生参数。",
+                "description": "NovelAI 图片生成 Request Body。统一参考图使用 images；使用统一 images 传入参考图。",
                 "type": "object",
                 "required": [
                   "model",
@@ -43,11 +44,7 @@
                       "diffusion-4-5-full",
                       "diffusion-4-5-curated"
                     ],
-                    "enum": [
-                      "diffusion-4-5-full",
-                      "diffusion-4-5-curated"
-                    ],
-                    "description": "必填。TTAPI 当前接入的 NovelAI Diffusion V4.5 模型。"
+                    "description": "必填。使用 Get Models 返回的模型 ID 或可用别名。"
                   },
                   "images": {
                     "type": "array",
@@ -95,7 +92,14 @@
                           "description": "仅 character_reference 使用。"
                         }
                       },
-                      "additionalProperties": false
+                      "additionalProperties": false,
+                      "x-apifox-orders": [
+                        "type",
+                        "image_url",
+                        "strength",
+                        "fidelity",
+                        "ref_type"
+                      ]
                     },
                     "maxItems": 16
                   },
@@ -195,23 +199,48 @@
                               "maximum": 1
                             }
                           },
-                          "additionalProperties": false
+                          "additionalProperties": false,
+                          "x-apifox-orders": [
+                            "x",
+                            "y"
+                          ]
                         }
                       },
-                      "additionalProperties": false
+                      "additionalProperties": false,
+                      "x-apifox-orders": [
+                        "prompt",
+                        "uc",
+                        "center"
+                      ]
                     }
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "固定返回 Base64 图片，使响应符合本接口的 Response Schema。",
-                    "default": "b64_json",
+                    "description": "Tikway 图片交付格式，url 返回图片链接，b64_json 返回纯 Base64。默认 url；该字段由网关消费，不作为上游模型参数。",
+                    "default": "url",
                     "enum": [
                       "b64_json",
                       "url"
                     ]
                   }
                 },
-                "additionalProperties": false
+                "additionalProperties": false,
+                "x-apifox-orders": [
+                  "model",
+                  "images",
+                  "prompt",
+                  "negative_prompt",
+                  "n",
+                  "size",
+                  "seed",
+                  "steps",
+                  "scale",
+                  "quality_toggle",
+                  "sampler",
+                  "noise_schedule",
+                  "character_prompts",
+                  "response_format"
+                ]
               },
               "examples": {
                 "文生图": {
@@ -225,8 +254,7 @@
                     "scale": 5,
                     "sampler": "Euler Ancestral",
                     "noise_schedule": "karras"
-                  },
-                  "summary": "文生图"
+                  }
                 },
                 "图生图": {
                   "value": {
@@ -243,8 +271,7 @@
                         "fidelity": 0.8
                       }
                     ]
-                  },
-                  "summary": "图生图"
+                  }
                 },
                 "风格参考": {
                   "value": {
@@ -260,8 +287,7 @@
                         "strength": 0.7
                       }
                     ]
-                  },
-                  "summary": "风格参考"
+                  }
                 },
                 "角色参考": {
                   "value": {
@@ -279,13 +305,11 @@
                         "fidelity": 0.5
                       }
                     ]
-                  },
-                  "summary": "角色参考"
+                  }
                 }
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {

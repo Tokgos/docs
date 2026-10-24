@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Tikway Nano Banana API",
-    "description": "OpenAI- and Gemini-compatible image generation with Nano Banana models.",
+    "title": "Tikway Nano Banana Image API",
+    "description": "Tikway standard image API.",
     "version": "1.0.0"
   },
   "tags": [
@@ -24,6 +24,7 @@
         ],
         "parameters": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -36,8 +37,8 @@
                   "model": {
                     "type": "string",
                     "minLength": 1,
-                    "description": "Required. Gemini picture model. See the interface description for the resolution, search, thinking and reference map limitations of different models. ",
-                    "enum": [
+                    "description": "Required. Use a model ID or available alias returned by Get Models.",
+                    "examples": [
                       "gemini-3.1-flash-image",
                       "gemini-3-pro-image",
                       "gemini-2.5-flash-image"
@@ -47,19 +48,38 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 32000,
-                    "description": "Required. Generate prompt words for pictures."
+                    "description": "Required. Describe the image to generate."
                   },
                   "images": {
                     "type": "array",
+                    "minItems": 1,
                     "maxItems": 14,
-                    "description": "Optional. Reference image array; at least 1 image is used for image editing. URL/data URL string or object containing image_url can be passed; file_id is not supported. See the interface description for the upper limit of the model.",
+                    "description": "Optional reference images for image-to-image generation. Omit for text-to-image generation. Image limits depend on the selected model.",
                     "items": {
-                      "type": [
-                        "string",
-                        "object"
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "image_url"
+                          ],
+                          "properties": {
+                            "image_url": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "Image URL, data URL, or Base64 string."
+                            }
+                          },
+                          "additionalProperties": false,
+                          "x-apifox-orders": [
+                            "image_url"
+                          ]
+                        }
                       ]
-                    },
-                    "minItems": 1
+                    }
                   },
                   "size": {
                     "type": "string",
@@ -79,7 +99,7 @@
                       "16:9",
                       "21:9"
                     ],
-                    "description": "Output aspect ratio. The gateway reduces and maps this field to Gemini aspectRatio; it is not a pixel dimension. Extreme ratios 1:4, 4:1, 1:8, 8:1 are only supported by gemini-3.1-flash-image."
+                    "description": "Output size as WIDTHxHEIGHT, or auto for the model default. Supported sizes depend on the selected model."
                   },
                   "quality": {
                     "type": "string",
@@ -91,7 +111,7 @@
                       "high",
                       "auto"
                     ],
-                    "description": "Output resolution mapping: low→512px, standard→1K, medium→2K, high/hd→4K, auto/omitted→not specified. gemini-2.5-flash-image only supports 1K."
+                    "description": "Output quality. Supported values depend on the selected model."
                   },
                   "google_search": {
                     "type": "boolean",
@@ -111,8 +131,8 @@
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "Fixed returning Base64 image so that the response conforms to the Response Schema of this interface.",
-                    "default": "b64_json",
+                    "description": "Response format: url returns image URLs; b64_json returns Base64 image data.",
+                    "default": "url",
                     "enum": [
                       "b64_json",
                       "url"
@@ -122,21 +142,36 @@
                 "examples": [
                   {
                     "model": "gemini-3.1-flash-image",
-                    "prompt": "Cinematic Shanghai rainy night street scene, neon light reflection, realistic photography",
+                    "prompt": "电影感的上海雨夜街景，霓虹灯倒影，写实摄影",
                     "size": "16:9",
                     "quality": "medium"
                   }
-                ]
+                ],
+                "x-apifox-orders": [
+                  "model",
+                  "prompt",
+                  "images",
+                  "size",
+                  "quality",
+                  "google_search",
+                  "image_search",
+                  "thinking_level",
+                  "response_format"
+                ],
+                "additionalProperties": false
               },
-              "example": {
-                "model": "gemini-3-pro-image",
-                "prompt": "Generate a photorealistic red apple on a rustic wooden table.",
-                "size": "1:1",
-                "quality": "standard"
+              "examples": {
+                "text-to-image": {
+                  "value": {
+                    "model": "gemini-3-pro-image",
+                    "prompt": "Generate a photorealistic red apple on a rustic wooden table.",
+                    "size": "1:1",
+                    "quality": "standard"
+                  }
+                }
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {

@@ -745,10 +745,6 @@
                       "priority"
                     ]
                   },
-                  "store": {
-                    "type": "boolean",
-                    "description": "Whether to log this request; if set, it will override the project-level log configuration."
-                  },
                   "labels": {
                     "type": "object",
                     "description": "Request tags; keys such as safety_identifier can be used.",
@@ -1938,10 +1934,6 @@
                       "priority"
                     ]
                   },
-                  "store": {
-                    "type": "boolean",
-                    "description": "Whether to log this request; if set, it will override the project-level log configuration."
-                  },
                   "labels": {
                     "type": "object",
                     "description": "Request tags; keys such as safety_identifier can be used.",
@@ -3057,6 +3049,300 @@
             "geminiApiKey": []
           }
         ]
+      }
+    },
+    "/v1beta/models": {
+      "get": {
+        "summary": "List Gemini models",
+        "operationId": "listGeminiModels",
+        "description": "Return the same full callable model catalog as GET /v1/models across providers and text, image, video, audio, embedding, and decision models. No implicit protocol filtering is applied. The native response envelope and pagination remain available; provider, mode, and type filters are explicit.\n\nEach model includes aliases, architecture, capabilities.endpoints, capabilities.parameters, and capabilities.reasoning_efforts, matching the OpenAI list. Merge common with the endpoint parameter array for its complete parameter set. Catalog inclusion does not imply support for generation through this protocol; use capabilities.endpoints.",
+        "tags": [
+          "Chat completions/Gemini protocol"
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "query",
+            "description": "Filter by the exact provider namespace in the model ID, for example google. Omit to include all providers.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "description": "Filter by mode: chat, image_generation, video_generation, embedding, transcription, audio_generation, decision, or music_generation. Comma-separated or repeated values are combined with OR.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by type: text, image, video, music, embedding, audio, or decision. Comma-separated or repeated values are supported; provider, mode, and type filters intersect.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 50
+            },
+            "description": "Page size, default 50, maximum 1000."
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The previous nextPageToken; omit for the first page."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of the full catalog with platform model metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "models"
+                  ],
+                  "properties": {
+                    "models": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "baseModelId",
+                          "displayName",
+                          "supportedGenerationMethods",
+                          "aliases",
+                          "architecture",
+                          "capabilities"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "pattern": "^models/.+",
+                            "description": "models/ followed by the full platform model ID, for example models/google/gemini-3.8-flash. Namespaces distinguish models with the same short name."
+                          },
+                          "baseModelId": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "inputTokenLimit": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0
+                          },
+                          "contextLength": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0
+                          },
+                          "outputTokenLimit": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "supportedParameters": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Native Gemini parameter names; empty if no Gemini profile exists."
+                          },
+                          "supportedGenerationMethods": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Gemini methods supported by the model; empty when no Gemini protocol capability exists. Use capabilities.endpoints to select the actual callable interface."
+                          },
+                          "thinking": {
+                            "type": "boolean"
+                          },
+                          "temperature": {
+                            "type": "number"
+                          },
+                          "maxTemperature": {
+                            "type": "number"
+                          },
+                          "topP": {
+                            "type": "number"
+                          },
+                          "topK": {
+                            "type": "number"
+                          },
+                          "aliases": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Configured model aliases; an empty array is returned when none are configured."
+                          },
+                          "architecture": {
+                            "type": "object",
+                            "required": [
+                              "input_modalities",
+                              "output_modalities"
+                            ],
+                            "properties": {
+                              "input_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "output_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "description": "Input and output modalities derived from platform configuration and callable endpoints."
+                          },
+                          "capabilities": {
+                            "type": "object",
+                            "required": [
+                              "reasoning_efforts",
+                              "endpoints",
+                              "parameters"
+                            ],
+                            "properties": {
+                              "reasoning_efforts": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "Reasoning effort values from actual endpoint parameter profiles; an empty array when no levels are configured."
+                              },
+                              "endpoints": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "parameters": {
+                                "type": "object",
+                                "required": [
+                                  "common"
+                                ],
+                                "properties": {
+                                  "common": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "additionalProperties": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "description": "common contains parameters shared by all callable endpoints; each endpoint path contains only additional parameters. Combine both arrays for its full parameter set. A single-endpoint model may list every parameter in common."
+                              }
+                            },
+                            "description": "Configured callable endpoints, parameter groups, and reasoning efforts; shared across all catalog presentations."
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    },
+                    "nextPageToken": {
+                      "type": "string",
+                      "description": "Returned when another page exists; pass it as pageToken in the next request."
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "examples": {
+                  "catalog_metadata": {
+                    "summary": "Video models are included in the catalog",
+                    "value": {
+                      "models": [
+                        {
+                          "name": "models/happyhorse-1.0",
+                          "baseModelId": "happyhorse-1.0",
+                          "displayName": "HappyHorse 1.0",
+                          "description": "HappyHorse 1.0",
+                          "inputTokenLimit": null,
+                          "contextLength": null,
+                          "supportedParameters": [],
+                          "supportedGenerationMethods": [],
+                          "thinking": false,
+                          "aliases": [
+                            "happyhorse-1.0",
+                            "happyhorse-1.0-20260624"
+                          ],
+                          "architecture": {
+                            "input_modalities": [
+                              "text",
+                              "image",
+                              "video"
+                            ],
+                            "output_modalities": [
+                              "video"
+                            ]
+                          },
+                          "capabilities": {
+                            "endpoints": [
+                              "/v1/videos"
+                            ],
+                            "parameters": {
+                              "/v1/videos": [],
+                              "common": [
+                                "seed",
+                                "model",
+                                "prompt",
+                                "duration",
+                                "extra_body",
+                                "resolution",
+                                "aspect_ratio",
+                                "callback_url",
+                                "frame_images",
+                                "input_references"
+                              ]
+                            },
+                            "reasoning_efforts": []
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid filter or pagination parameters."
+          }
+        }
       }
     }
   },

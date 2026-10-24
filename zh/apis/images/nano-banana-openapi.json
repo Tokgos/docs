@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Mintlify",
-    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "title": "Tikway Nano Banana Image API",
+    "description": "Tikway 标准图片接口。",
     "version": "1.0.0"
   },
   "tags": [
@@ -24,6 +24,7 @@
         ],
         "parameters": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -36,8 +37,8 @@
                   "model": {
                     "type": "string",
                     "minLength": 1,
-                    "description": "必填。Gemini 图片模型。不同模型的分辨率、搜索、思考和参考图限制见接口说明。 ",
-                    "enum": [
+                    "description": "必填。使用 Get Models 返回的模型 ID 或可用别名。",
+                    "examples": [
                       "gemini-3.1-flash-image",
                       "gemini-3-pro-image",
                       "gemini-2.5-flash-image"
@@ -51,15 +52,34 @@
                   },
                   "images": {
                     "type": "array",
+                    "minItems": 1,
                     "maxItems": 14,
-                    "description": "可选。参考图数组；用于图片编辑时至少 1 张。可传 URL/data URL 字符串或含 image_url 的对象；不支持 file_id。模型上限见接口说明。",
+                    "description": "可选。图生图参考图，最多 14 张；具体数量上限以所选模型为准。省略时为文生图。",
                     "items": {
-                      "type": [
-                        "string",
-                        "object"
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "image_url"
+                          ],
+                          "properties": {
+                            "image_url": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "图片 URL、data URL 或 Base64 字符串。"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "x-apifox-orders": [
+                            "image_url"
+                          ]
+                        }
                       ]
-                    },
-                    "minItems": 1
+                    }
                   },
                   "size": {
                     "type": "string",
@@ -111,8 +131,8 @@
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "固定返回 Base64 图片，使响应符合本接口的 Response Schema。",
-                    "default": "b64_json",
+                    "description": "Tikway 图片交付格式，url 返回图片链接，b64_json 返回纯 Base64。默认 url；该字段由网关消费，不作为上游模型参数。",
+                    "default": "url",
                     "enum": [
                       "b64_json",
                       "url"
@@ -126,17 +146,32 @@
                     "size": "16:9",
                     "quality": "medium"
                   }
-                ]
+                ],
+                "x-apifox-orders": [
+                  "model",
+                  "prompt",
+                  "images",
+                  "size",
+                  "quality",
+                  "google_search",
+                  "image_search",
+                  "thinking_level",
+                  "response_format"
+                ],
+                "additionalProperties": false
               },
-              "example": {
-                "model": "gemini-3-pro-image",
-                "prompt": "Generate a photorealistic red apple on a rustic wooden table.",
-                "size": "1:1",
-                "quality": "standard"
+              "examples": {
+                "请求示例": {
+                  "value": {
+                    "model": "gemini-3-pro-image",
+                    "prompt": "Generate a photorealistic red apple on a rustic wooden table.",
+                    "size": "1:1",
+                    "quality": "standard"
+                  }
+                }
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {

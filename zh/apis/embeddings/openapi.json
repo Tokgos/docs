@@ -89,7 +89,7 @@
                       }
                     ],
                     "examples": [
-                      "OfoxAI 是一个 LLM Gateway",
+                      "Tikway 是一个 LLM Gateway",
                       [
                         "第一段文本",
                         "第二段文本"
@@ -118,7 +118,7 @@
                 "examples": [
                   {
                     "model": "openai/text-embedding-3-small",
-                    "input": "OfoxAI 是一个 LLM Gateway",
+                    "input": "Tikway 是一个 LLM Gateway",
                     "encoding_format": "float"
                   },
                   {
@@ -285,7 +285,7 @@
         ]
       }
     },
-    "/v1beta/models/google/gemini-embedding-2-preview:embedContent": {
+    "/v1beta/models/google/{model}:embedContent": {
       "post": {
         "summary": "Gemini - 向量",
         "deprecated": false,
@@ -293,7 +293,19 @@
         "tags": [
           "向量嵌入"
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "required": true,
+            "description": "Gemini 模型名称，不含 google/ 前缀。",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "gemini-embedding-2-preview"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {

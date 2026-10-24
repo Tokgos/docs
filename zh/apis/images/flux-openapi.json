@@ -1,15 +1,14 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Tikway Flux 图片生成 API",
+    "title": "Tikway Flux Image API",
+    "description": "Tikway 标准图片接口。",
     "version": "1.0.0"
   },
-  "servers": [
-    {
-      "url": "https://api.tikway.ai"
-    }
-  ],
   "tags": [
+    {
+      "name": "图片生成"
+    },
     {
       "name": "图片生成/Flux"
     }
@@ -18,118 +17,12 @@
     "/v1/images/generations": {
       "post": {
         "summary": "图片生成",
+        "deprecated": false,
         "description": "Flux 通过 `POST /v1/images/generations` 支持文生图和图生图。参考图统一使用 `images`，最多 4 张；输出尺寸使用 `size`，每次生成一张图片。`seed`、`output_format` 和 `safety_tolerance` 为所选模型支持的可选参数，能力以 Get Models 为准。",
-        "operationId": "operation523577674",
         "tags": [
           "图片生成/Flux"
         ],
         "parameters": [],
-        "responses": {
-          "200": {
-            "description": "同步返回统一 Images 结果；response_format 决定返回 url 或 b64_json。",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "TikwayImageResponse",
-                  "type": "object",
-                  "required": [
-                    "created",
-                    "data"
-                  ],
-                  "properties": {
-                    "created": {
-                      "type": "integer",
-                      "description": "Unix 时间戳（秒）。"
-                    },
-                    "model": {
-                      "type": "string",
-                      "description": "返回时为请求使用的模型 ID。"
-                    },
-                    "data": {
-                      "type": "array",
-                      "minItems": 1,
-                      "items": {
-                        "type": "object",
-                        "oneOf": [
-                          {
-                            "required": [
-                              "url"
-                            ]
-                          },
-                          {
-                            "required": [
-                              "b64_json"
-                            ]
-                          }
-                        ],
-                        "properties": {
-                          "url": {
-                            "type": "string",
-                            "format": "uri",
-                            "description": "response_format=url 时返回的图片地址。"
-                          },
-                          "b64_json": {
-                            "type": "string",
-                            "description": "response_format=b64_json 时返回的纯 Base64 图片内容。"
-                          },
-                          "index": {
-                            "type": "integer",
-                            "minimum": 0
-                          },
-                          "revised_prompt": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    },
-                    "size": {
-                      "type": "string"
-                    },
-                    "output_format": {
-                      "type": "string"
-                    },
-                    "quality": {
-                      "type": "string"
-                    },
-                    "background": {
-                      "type": "string"
-                    },
-                    "usage": {
-                      "type": "object",
-                      "additionalProperties": true
-                    }
-                  },
-                  "additionalProperties": true,
-                  "examples": [
-                    {
-                      "created": 1791878400,
-                      "data": [
-                        {
-                          "url": "https://example.com/generated.png",
-                          "index": 0
-                        }
-                      ]
-                    },
-                    {
-                      "created": 1791878400,
-                      "data": [
-                        {
-                          "b64_json": "aW1hZ2U=",
-                          "index": 0
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -226,7 +119,10 @@
                               "description": "图片 URL、data URL 或 Base64 字符串。"
                             }
                           },
-                          "additionalProperties": false
+                          "additionalProperties": false,
+                          "x-apifox-orders": [
+                            "image_url"
+                          ]
                         }
                       ]
                     }
@@ -239,6 +135,17 @@
                   }
                 },
                 "additionalProperties": false,
+                "x-apifox-orders": [
+                  "model",
+                  "prompt",
+                  "size",
+                  "seed",
+                  "output_format",
+                  "safety_tolerance",
+                  "response_format",
+                  "images",
+                  "n"
+                ],
                 "examples": [
                   {
                     "model": "flux-2-flex",
@@ -263,7 +170,6 @@
               },
               "examples": {
                 "文生图": {
-                  "summary": "文生图",
                   "value": {
                     "model": "flux-2-flex",
                     "prompt": "雨夜的未来城市，写实摄影",
@@ -273,7 +179,6 @@
                   }
                 },
                 "图生图": {
-                  "summary": "图生图",
                   "value": {
                     "model": "flux-2-flex",
                     "prompt": "将产品置于白色摄影棚，保留外观",
@@ -290,16 +195,137 @@
               }
             }
           }
-        }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "生成时间戳。"
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "返回时为请求使用的模型 ID。"
+                    },
+                    "output_format": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "description": "response_format=url 时返回的图片地址。",
+                            "format": "uri"
+                          },
+                          "b64_json": {
+                            "type": "string",
+                            "description": "response_format=b64_json 时返回的图片 Base64。"
+                          },
+                          "index": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "revised_prompt": {
+                            "type": "string"
+                          }
+                        },
+                        "oneOf": [
+                          {
+                            "required": [
+                              "url"
+                            ]
+                          },
+                          {
+                            "required": [
+                              "b64_json"
+                            ]
+                          }
+                        ]
+                      },
+                      "minItems": 1
+                    },
+                    "size": {
+                      "type": "string"
+                    },
+                    "quality": {
+                      "type": "string"
+                    },
+                    "background": {
+                      "type": "string"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true,
+                  "title": "TikwayImageResponse",
+                  "examples": [
+                    {
+                      "created": 1791878400,
+                      "data": [
+                        {
+                          "url": "https://example.com/generated.png",
+                          "index": 0
+                        }
+                      ]
+                    },
+                    {
+                      "created": 1791878400,
+                      "data": [
+                        {
+                          "b64_json": "aW1hZ2U=",
+                          "index": 0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "operation523577674"
       }
     }
   },
+  "webhooks": {},
   "components": {
+    "schemas": {},
+    "responses": {},
     "securitySchemes": {
-      "bearerAuth": {
+      "bearer": {
         "type": "http",
         "scheme": "bearer"
       }
     }
-  }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
 }

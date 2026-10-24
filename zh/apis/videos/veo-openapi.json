@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Tikway Veo 视频 API",
-    "description": "Google（经 TTAPI） Veo 模型的 OpenAI 兼容异步视频生成接口。",
+    "description": "Google Veo 模型的 OpenAI 兼容异步视频生成接口。",
     "version": "1.1.0"
   },
   "tags": [
@@ -18,11 +18,10 @@
       "post": {
         "summary": "创建 Veo 视频",
         "deprecated": false,
-        "description": "通过统一的 `POST /v1/videos` 创建 Veo 视频任务。模型能力以当前 Tikway 网关实际可调用范围为准。\n\n| 模型 | 分辨率 | 时长 | 支持模式 | 音频 | 参考限制 |\n| --- | --- | --- | --- | --- | --- |\n| `veo-3.1-fast` | 720p / 1080p | 支持 4、6、8 秒；4/6 秒仅限 720p | 文生、首帧、首尾帧、最多 3 图参考 | 始终生成，不能关闭 | 不支持视频输入/延长的统一入口 |\n| `veo-3.1-quality` | 720p / 1080p | 支持 4、6、8 秒；4/6 秒仅限 720p | 文生、首帧、首尾帧、最多 3 图参考 | 始终生成，不能关闭 | 不支持视频输入/延长的统一入口 |\n| `veo-3.1-lite` | 720p / 1080p | 支持 4、6、8 秒；4/6 秒仅限 720p | 文生、首帧、首尾帧；不支持普通参考图模式 | 始终生成，不能关闭 | 不支持视频输入/延长的统一入口 |\n\n来源：[Google Veo 3.1 API](https://ai.google.dev/gemini-api/docs/veo?hl=en)。官网能力与当前网关未开放能力之间的差异见本次审计报告。",
+        "description": "通过统一的 `POST /v1/videos` 创建 Veo 视频任务。模型能力以当前 Tikway 网关实际可调用范围为准。\n\n| 模型 | 分辨率 | 时长 | 支持模式 | 音频 | 参考限制 |\n| --- | --- | --- | --- | --- | --- |\n| `veo-3.1-fast` | 720p / 1080p | 4、6、8 秒（默认 8 秒） | 文生、首帧、首尾帧、最多 3 图参考 | 始终生成，不能关闭 | 不支持视频输入/延长的统一入口 |\n| `veo-3.1-quality` | 720p / 1080p | 4、6、8 秒（默认 8 秒） | 文生、首帧、首尾帧、最多 3 图参考 | 始终生成，不能关闭 | 不支持视频输入/延长的统一入口 |\n| `veo-3.1-lite` | 720p / 1080p | 4、6、8 秒（默认 8 秒） | 文生、首帧、首尾帧；不支持普通参考图模式 | 始终生成，不能关闭 | 不支持视频输入/延长的统一入口 |\n\n来源：[Google Veo 3.1 API](https://ai.google.dev/gemini-api/docs/veo?hl=en)。4、6 秒仅支持 720p；1080p 或普通参考图模式须使用 8 秒。",
         "tags": [
           "视频生成/Veo"
         ],
-
         "requestBody": {
           "content": {
             "application/json": {
@@ -53,15 +52,23 @@
                     "oneOf": [
                       {
                         "type": "integer",
-                        "enum": [4, 6, 8]
+                        "enum": [
+                          4,
+                          6,
+                          8
+                        ]
                       },
                       {
                         "type": "string",
-                        "enum": ["4", "6", "8"]
+                        "enum": [
+                          "4",
+                          "6",
+                          "8"
+                        ]
                       }
                     ],
                     "default": 8,
-                    "description": "支持 4、6、8 秒，省略时默认 8 秒。4/6 秒仅支持 720p；1080p 或普通参考图请求必须使用 8 秒。"
+                    "description": "视频时长，支持 4、6、8 秒；省略时为 8 秒。4、6 秒仅支持 720p；1080p 或普通参考图模式须使用 8 秒。"
                   },
                   "aspect_ratio": {
                     "type": "string",
@@ -154,7 +161,7 @@
                   },
                   "extra_body": {
                     "type": "object",
-                    "description": "TTAPI Veo 扩展参数。通常无需设置，网关会根据 frame_images 或 input_references 自动选择 generation_type。",
+                    "description": "Veo 扩展参数。通常无需设置，网关会根据 frame_images 或 input_references 自动选择 generation_type。",
                     "properties": {
                       "generation_type": {
                         "type": "string",
@@ -168,25 +175,11 @@
                   }
                 },
                 "additionalProperties": false,
-                "allOf": [
-                  {
-                    "if": {
-                      "properties": { "duration": { "enum": [4, 6, "4", "6"] } },
-                      "required": ["duration"]
-                    },
-                    "then": {
-                      "properties": {
-                        "resolution": { "const": "720p" },
-                        "input_references": { "maxItems": 0 }
-                      }
-                    }
-                  }
-                ],
                 "x-model-capabilities": [
                   {
                     "model": "veo-3.1-fast",
                     "resolution": "720p / 1080p",
-                    "duration": "支持 4、6、8 秒；4/6 秒仅限 720p",
+                    "duration": "4、6、8 秒（默认 8 秒）；4、6 秒仅支持 720p",
                     "modes": "文生、首帧、首尾帧、最多 3 图参考",
                     "audio": "始终生成，不能关闭",
                     "references": "不支持视频输入/延长的统一入口"
@@ -194,7 +187,7 @@
                   {
                     "model": "veo-3.1-quality",
                     "resolution": "720p / 1080p",
-                    "duration": "支持 4、6、8 秒；4/6 秒仅限 720p",
+                    "duration": "4、6、8 秒（默认 8 秒）；4、6 秒仅支持 720p",
                     "modes": "文生、首帧、首尾帧、最多 3 图参考",
                     "audio": "始终生成，不能关闭",
                     "references": "不支持视频输入/延长的统一入口"
@@ -202,41 +195,50 @@
                   {
                     "model": "veo-3.1-lite",
                     "resolution": "720p / 1080p",
-                    "duration": "支持 4、6、8 秒；4/6 秒仅限 720p",
+                    "duration": "4、6、8 秒（默认 8 秒）；4、6 秒仅支持 720p",
                     "modes": "文生、首帧、首尾帧；不支持普通参考图模式",
                     "audio": "始终生成，不能关闭",
                     "references": "不支持视频输入/延长的统一入口"
                   }
+                ],
+                "allOf": [
+                  {
+                    "if": {
+                      "properties": {
+                        "duration": {
+                          "enum": [
+                            4,
+                            6,
+                            "4",
+                            "6"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "duration"
+                      ]
+                    },
+                    "then": {
+                      "properties": {
+                        "resolution": {
+                          "const": "720p"
+                        },
+                        "input_references": {
+                          "maxItems": 0
+                        }
+                      }
+                    }
+                  }
                 ]
               },
               "examples": {
-                "4 秒文生视频": {
-                  "summary": "720p、4 秒文生视频",
-                  "value": {
-                    "model": "veo-3.1-fast",
-                    "prompt": "日落时分，镜头平稳跟随海滩上奔跑的金毛寻回犬。",
-                    "duration": 4,
-                    "resolution": "720p",
-                    "aspect_ratio": "16:9"
-                  }
-                },
-                "6 秒文生视频": {
-                  "summary": "720p、6 秒文生视频",
-                  "value": {
-                    "model": "veo-3.1-lite",
-                    "prompt": "镜头缓缓掠过晨雾中的山谷。",
-                    "duration": 6,
-                    "resolution": "720p",
-                    "aspect_ratio": "16:9"
-                  }
-                },
                 "文生视频": {
                   "summary": "文生视频",
                   "value": {
                     "model": "veo-3.1-fast",
                     "prompt": "一只金毛寻回犬在日落时分的海滩上奔跑，镜头平稳跟随，画面具有自然细腻的电影质感。",
-                    "duration": 8,
-                    "resolution": "1080p",
+                    "duration": 4,
+                    "resolution": "720p",
                     "aspect_ratio": "16:9"
                   }
                 },
@@ -245,8 +247,8 @@
                   "value": {
                     "model": "veo-3.1-quality",
                     "prompt": "从首帧自然过渡到尾帧，保持主体、构图与视觉风格连贯。",
-                    "duration": 8,
-                    "resolution": "1080p",
+                    "duration": "6",
+                    "resolution": "720p",
                     "aspect_ratio": "16:9",
                     "frame_images": [
                       {
@@ -278,6 +280,26 @@
                         "role": "reference_image"
                       }
                     ]
+                  }
+                },
+                "4 秒文生视频": {
+                  "summary": "720p、4 秒文生视频",
+                  "value": {
+                    "model": "veo-3.1-fast",
+                    "prompt": "日落时分，镜头平稳跟随海滩上奔跑的金毛寻回犬。",
+                    "duration": 4,
+                    "resolution": "720p",
+                    "aspect_ratio": "16:9"
+                  }
+                },
+                "6 秒文生视频": {
+                  "summary": "720p、6 秒文生视频",
+                  "value": {
+                    "model": "veo-3.1-lite",
+                    "prompt": "镜头缓缓掠过晨雾中的山谷。",
+                    "duration": 6,
+                    "resolution": "720p",
+                    "aspect_ratio": "16:9"
                   }
                 }
               }
@@ -381,13 +403,13 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "查询视频任务。完成时返回对象形式的 data；其他状态不返回 data。",
             "content": {
               "application/json": {
                 "schema": {
                   "$id": "https://api.example.com/schemas/videos/retrieve-response.json",
                   "title": "查询视频任务响应",
-                  "description": "GET /v1/videos/{id} 的响应参数。只有任务状态为 completed 时才返回 data。",
+                  "description": "GET /v1/videos/{id} 的响应参数。data 为最终结果对象，仅在 status=completed 时返回；其他状态省略 data。",
                   "type": "object",
                   "required": [
                     "created",
@@ -446,86 +468,71 @@
                       ]
                     },
                     "data": {
-                      "type": "array",
-                      "description": "视频任务结果。仅当 status 为 completed 时返回。",
-                      "minItems": 3,
-                      "maxItems": 3,
-                      "items": {
-                        "oneOf": [
-                          {
-                            "type": "object",
-                            "required": [
-                              "type",
-                              "video_url"
-                            ],
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "enum": [
-                                  "video_url"
-                                ],
-                                "description": "平台 OSS 视频"
-                              },
-                              "video_url": {
-                                "type": "string",
-                                "format": "uri",
-                                "description": "平台 OSS 视频地址，有效期为24小时"
-                              }
-                            },
-                            "additionalProperties": false
+                      "type": "object",
+                      "required": [
+                        "native_url",
+                        "video_url",
+                        "frame"
+                      ],
+                      "properties": {
+                        "native_url": {
+                          "type": "object",
+                          "required": [
+                            "url"
+                          ],
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "供应商原始视频的完整 URL，保留供应商返回的查询参数。"
+                            }
                           },
-                          {
-                            "type": "object",
-                            "required": [
-                              "type",
-                              "native_url"
-                            ],
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "enum": [
-                                  "native_url"
-                                ],
-                                "description": "供应商原始视频"
-                              },
-                              "native_url": {
-                                "type": "string",
-                                "format": "uri",
-                                "description": "供应商返回的原始视频地址"
-                              }
-                            },
-                            "additionalProperties": false
+                          "additionalProperties": false,
+                          "description": "供应商原始视频地址对象。"
+                        },
+                        "video_url": {
+                          "type": "object",
+                          "required": [
+                            "url"
+                          ],
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "平台存储的视频访问 URL。"
+                            }
                           },
-                          {
-                            "type": "object",
-                            "required": [
-                              "type",
-                              "first_url",
-                              "last_url"
-                            ],
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "enum": [
-                                  "frame"
-                                ],
-                                "description": "视频首尾帧"
-                              },
-                              "first_url": {
-                                "type": "string",
-                                "format": "uri",
-                                "description": "视频首帧地址，有效期为24小时"
-                              },
-                              "last_url": {
-                                "type": "string",
-                                "format": "uri",
-                                "description": "视频尾帧地址，有效期为24小时"
-                              }
+                          "additionalProperties": false,
+                          "description": "平台转存后的视频地址对象。"
+                        },
+                        "frame": {
+                          "type": "object",
+                          "required": [
+                            "first_url",
+                            "last_url"
+                          ],
+                          "properties": {
+                            "first_url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "视频首帧图片的访问 URL。"
                             },
-                            "additionalProperties": false
-                          }
-                        ]
-                      }
+                            "last_url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "视频尾帧图片的访问 URL。"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "description": "视频首尾帧地址对象。"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "description": "最终结果对象，只有 status=completed 时存在。其他状态省略整个 data 字段，不返回数组或 null。"
                     },
                     "usage": {
                       "type": "object",
@@ -627,21 +634,18 @@
                       "model": "veo-3.1-fast",
                       "prompt": "一只金毛犬在日落时分的海滩上奔跑，镜头平稳跟随，海风吹动毛发，画面呈现自然细腻的电影质感",
                       "status": "completed",
-                      "data": [
-                        {
-                          "type": "video_url",
-                          "video_url": "https://oss.example.com/temp/2026/09/11/video.mp4?expires=86400"
+                      "data": {
+                        "video_url": {
+                          "url": "https://oss.example.com/temp/2026/09/11/video.mp4?expires=86400"
                         },
-                        {
-                          "type": "native_url",
-                          "native_url": "https://provider.example.com/videos/video.mp4?expires=86400"
+                        "native_url": {
+                          "url": "https://provider.example.com/videos/video.mp4?expires=86400"
                         },
-                        {
-                          "type": "frame",
+                        "frame": {
                           "first_url": "https://oss.example.com/temp/2026/09/11/video.mp4?x-oss-process=video%2Fsnapshot%2Ct_0%2Cf_jpg%2Cw_0%2Ch_0",
                           "last_url": "https://oss.example.com/temp/2026/09/11/video.mp4?x-oss-process=video%2Fsnapshot%2Ct_3999%2Cf_jpg%2Cw_0%2Ch_0"
                         }
-                      ],
+                      },
                       "usage": {
                         "video_seconds": 4
                       }

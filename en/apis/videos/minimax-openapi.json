@@ -359,13 +359,13 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "Video task status. Completed tasks include a data object; other states omit data.",
             "content": {
               "application/json": {
                 "schema": {
                   "$id": "https://api.example.com/schemas/videos/retrieve-response.json",
                   "title": "Query video task response",
-                  "description": "Response parameters for GET /v1/videos/{id}. Data is returned only when the task status is completed.",
+                  "description": "Response for GET /v1/videos/{id}. Data is a final result object returned only when status is completed; other states omit data.",
                   "type": "object",
                   "required": [
                     "created",
@@ -424,86 +424,71 @@
                       ]
                     },
                     "data": {
-                      "type": "array",
-                      "description": "Video task results. Returned only if status is completed.",
-                      "minItems": 3,
-                      "maxItems": 3,
-                      "items": {
-                        "oneOf": [
-                          {
-                            "type": "object",
-                            "required": [
-                              "type",
-                              "video_url"
-                            ],
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "enum": [
-                                  "video_url"
-                                ],
-                                "description": "Platform OSS video"
-                              },
-                              "video_url": {
-                                "type": "string",
-                                "format": "uri",
-                                "description": "Platform OSS video address, valid for 24 hours"
-                              }
-                            },
-                            "additionalProperties": false
+                      "type": "object",
+                      "required": [
+                        "native_url",
+                        "video_url",
+                        "frame"
+                      ],
+                      "properties": {
+                        "native_url": {
+                          "type": "object",
+                          "required": [
+                            "url"
+                          ],
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "Full original video URL from the supplier, including its query parameters."
+                            }
                           },
-                          {
-                            "type": "object",
-                            "required": [
-                              "type",
-                              "native_url"
-                            ],
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "enum": [
-                                  "native_url"
-                                ],
-                                "description": "Supplier original video"
-                              },
-                              "native_url": {
-                                "type": "string",
-                                "format": "uri",
-                                "description": "The original video address returned by the supplier"
-                              }
-                            },
-                            "additionalProperties": false
+                          "additionalProperties": false,
+                          "description": "Supplier original video address object."
+                        },
+                        "video_url": {
+                          "type": "object",
+                          "required": [
+                            "url"
+                          ],
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "Access URL for the video stored by the platform."
+                            }
                           },
-                          {
-                            "type": "object",
-                            "required": [
-                              "type",
-                              "first_url",
-                              "last_url"
-                            ],
-                            "properties": {
-                              "type": {
-                                "type": "string",
-                                "enum": [
-                                  "frame"
-                                ],
-                                "description": "Video first and last frames"
-                              },
-                              "first_url": {
-                                "type": "string",
-                                "format": "uri",
-                                "description": "The address of the first frame of the video, valid for 24 hours"
-                              },
-                              "last_url": {
-                                "type": "string",
-                                "format": "uri",
-                                "description": "Video last frame address, valid for 24 hours"
-                              }
+                          "additionalProperties": false,
+                          "description": "Video address object after storage by the platform."
+                        },
+                        "frame": {
+                          "type": "object",
+                          "required": [
+                            "first_url",
+                            "last_url"
+                          ],
+                          "properties": {
+                            "first_url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "Access URL for the first video frame image."
                             },
-                            "additionalProperties": false
-                          }
-                        ]
-                      }
+                            "last_url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "Access URL for the last video frame image."
+                            }
+                          },
+                          "additionalProperties": false,
+                          "description": "First and last video frame address object."
+                        }
+                      },
+                      "additionalProperties": false,
+                      "description": "Final result object, returned only when status is completed. Other states omit data entirely; no array or null is returned."
                     },
                     "usage": {
                       "type": "object",
@@ -605,21 +590,18 @@
                       "model": "minimax-h3",
                       "prompt": "A golden retriever runs on the beach at sunset. The camera follows steadily, and the sea breeze blows the hair. The picture presents a natural and delicate film texture.",
                       "status": "completed",
-                      "data": [
-                        {
-                          "type": "video_url",
-                          "video_url": "https://oss.example.com/temp/2026/09/11/video.mp4?expires=86400"
+                      "data": {
+                        "video_url": {
+                          "url": "https://oss.example.com/temp/2026/09/11/video.mp4?expires=86400"
                         },
-                        {
-                          "type": "native_url",
-                          "native_url": "https://provider.example.com/videos/video.mp4?expires=86400"
+                        "native_url": {
+                          "url": "https://provider.example.com/videos/video.mp4?expires=86400"
                         },
-                        {
-                          "type": "frame",
+                        "frame": {
                           "first_url": "https://oss.example.com/temp/2026/09/11/video.mp4?x-oss-process=video%2Fsnapshot%2Ct_0%2Cf_jpg%2Cw_0%2Ch_0",
                           "last_url": "https://oss.example.com/temp/2026/09/11/video.mp4?x-oss-process=video%2Fsnapshot%2Ct_3999%2Cf_jpg%2Cw_0%2Ch_0"
                         }
-                      ],
+                      },
                       "usage": {
                         "video_seconds": 4
                       }

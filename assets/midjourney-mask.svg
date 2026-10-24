@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="354" viewBox="0 0 800 354" role="img" aria-labelledby="title desc">
+  <title id="title">MJ 局部重绘蒙版画法</title>
+  <desc id="desc">左边在花盆上涂鸦选中要修改的区域。右边导出的蒙版中，花盆是白色重绘区，叶子和背景是黑色保留区。</desc>
+  <rect width="800" height="354" rx="16" fill="#f5f5f4"/>
+  <g font-family="system-ui, 'Microsoft YaHei', sans-serif" fill="#292524">
+    <text x="32" y="36" font-size="17" font-weight="600">1. 在原图上选中花盆</text>
+    <text x="432" y="36" font-size="17" font-weight="600">2. 导出黑白蒙版</text>
+    <svg x="32" y="54" width="336" height="230" viewBox="0 0 336 230">
+      <rect width="336" height="230" rx="8" fill="#e7e5df"/>
+      <path d="M0 190H336V230H0Z" fill="#d2c8bb"/>
+      <path d="M168 146V48M168 111L133 78M168 96L200 62" fill="none" stroke="#566b43" stroke-width="7" stroke-linecap="round"/>
+      <ellipse cx="131" cy="74" rx="26" ry="12" transform="rotate(32 131 74)" fill="#688453"/>
+      <ellipse cx="201" cy="58" rx="27" ry="12" transform="rotate(-35 201 58)" fill="#688453"/>
+      <ellipse cx="168" cy="44" rx="13" ry="25" fill="#7a965f"/>
+      <path d="M119 140H217L203 202H133Z" fill="#c87145"/>
+      <rect x="113" y="132" width="110" height="17" rx="4" fill="#db8a5f"/>
+      <path d="M113 132H223V149H215L203 202H133L121 149H113Z" fill="#38bdf8" fill-opacity=".65" stroke="#0369a1" stroke-width="2" stroke-dasharray="5 4"/>
+    </svg>
+    <path d="M385 164H414M405 156L414 164L405 172" fill="none" stroke="#78716c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <svg x="432" y="54" width="336" height="230" viewBox="0 0 336 230">
+      <rect width="336" height="230" rx="8" fill="#000"/>
+      <path d="M113 132H223V149H215L203 202H133L121 149H113Z" fill="#fff"/>
+      <text x="168" y="176" text-anchor="middle" font-size="15" fill="#000">重绘</text>
+      <text x="168" y="65" text-anchor="middle" font-size="15" fill="#fff">保留</text>
+    </svg>
+    <text x="32" y="310" font-size="14">蓝色高亮只显示选区，覆盖要修改的整个区域</text>
+    <text x="432" y="310" font-size="14">白色 = 重绘　黑色 = 保留　均不透明</text>
+    <text x="400" y="337" text-anchor="middle" font-size="13" fill="#57534e">蒙版与单张原图保持相同像素宽高 · 示意图不代表实际输出尺寸</text>
+  </g>
+</svg>

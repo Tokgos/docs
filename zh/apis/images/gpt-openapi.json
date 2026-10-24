@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Mintlify",
-    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "title": "Tikway GPT Image Image API",
+    "description": "Tikway 标准图片接口。",
     "version": "1.0.0"
   },
   "tags": [
@@ -24,6 +24,7 @@
         ],
         "parameters": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -54,7 +55,8 @@
                   },
                   "model": {
                     "type": "string",
-                    "enum": [
+                    "description": "必填。使用 Get Models 返回的模型 ID 或可用别名。",
+                    "examples": [
                       "gpt-image-2.5-sunburst",
                       "gpt-image-2.5-sunburst-2026-09-08",
                       "gpt-image-2.5-flare",
@@ -67,7 +69,7 @@
                       "dall-e-2",
                       "dall-e-3"
                     ],
-                    "description": "必填。图片生成模型。网关不会采用 OpenAI 的 dall-e-2 默认值，必须显式传 model。"
+                    "minLength": 1
                   },
                   "moderation": {
                     "type": [
@@ -141,30 +143,17 @@
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "仅 dall-e-2 和 dall-e-3 支持 url 或 b64_json。GPT Image 模型始终返回 Base64，不支持此上游参数。",
-                    "default": "b64_json",
+                    "description": "Tikway 图片交付格式，url 返回图片链接，b64_json 返回纯 Base64。默认 url；该字段由网关消费，不作为上游模型参数。",
+                    "default": "url",
                     "enum": [
                       "b64_json",
                       "url"
                     ]
                   },
                   "size": {
-                    "type": [
-                      "string",
-                      "null"
-                    ],
-                    "enum": [
-                      "auto",
-                      "256x256",
-                      "512x512",
-                      "1024x1024",
-                      "1536x1024",
-                      "1024x1536",
-                      "1792x1024",
-                      "1024x1792",
-                      null
-                    ],
-                    "description": "图像尺寸。GPT Image 2/2.5 支持 WIDTHxHEIGHT：宽高均为 16 的倍数、比例 1:3～3:1，最高 3840x2160；其他 GPT Image 使用 auto、1024x1024、1536x1024 或 1024x1536；dall-e-2 支持 256x256、512x512、1024x1024；dall-e-3 支持 1024x1024、1792x1024、1024x1792。"
+                    "type": "string",
+                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
+                    "description": "输出尺寸，使用 auto 或 WIDTHxHEIGHT；具体尺寸范围和约束见所选模型能力。"
                   },
                   "stream": {
                     "type": [
@@ -199,7 +188,24 @@
                     "output_format": "png",
                     "quality": "medium"
                   }
-                ]
+                ],
+                "x-apifox-orders": [
+                  "prompt",
+                  "background",
+                  "model",
+                  "moderation",
+                  "n",
+                  "output_compression",
+                  "output_format",
+                  "partial_images",
+                  "quality",
+                  "response_format",
+                  "size",
+                  "stream",
+                  "style",
+                  "user"
+                ],
+                "additionalProperties": false
               },
               "examples": {
                 "默认": {
@@ -209,13 +215,11 @@
                     "size": "1024x1024",
                     "quality": "high",
                     "output_format": "png"
-                  },
-                  "summary": "默认"
+                  }
                 }
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -442,14 +446,15 @@
         ],
         "parameters": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "required": [
                   "model",
-                  "images",
-                  "prompt"
+                  "prompt",
+                  "images"
                 ],
                 "properties": {
                   "images": {
@@ -468,7 +473,11 @@
                           "type": "string",
                           "description": "完整图片 URL，或 Base64 data URL。"
                         }
-                      }
+                      },
+                      "x-apifox-orders": [
+                        "file_id",
+                        "image_url"
+                      ]
                     }
                   },
                   "prompt": {
@@ -513,11 +522,16 @@
                         "type": "string",
                         "description": "遮罩图片 URL 或 Base64 data URL。"
                       }
-                    }
+                    },
+                    "x-apifox-orders": [
+                      "file_id",
+                      "image_url"
+                    ]
                   },
                   "model": {
                     "type": "string",
-                    "enum": [
+                    "description": "必填。使用 Get Models 返回的模型 ID 或可用别名。",
+                    "examples": [
                       "gpt-image-2.5-sunburst",
                       "gpt-image-2.5-sunburst-2026-09-08",
                       "gpt-image-2.5-flare",
@@ -530,7 +544,7 @@
                       "chatgpt-image-latest",
                       "dall-e-2"
                     ],
-                    "description": "必填。用于图片编辑的模型。dall-e-3 不支持图片编辑。"
+                    "minLength": 1
                   },
                   "moderation": {
                     "type": [
@@ -601,18 +615,9 @@
                     "description": "输出质量。GPT Image 支持 low/medium/high/auto；GPT Image 2.5 额外支持 xhigh/max。"
                   },
                   "size": {
-                    "type": [
-                      "string",
-                      "null"
-                    ],
-                    "enum": [
-                      "auto",
-                      "1024x1024",
-                      "1536x1024",
-                      "1024x1536",
-                      null
-                    ],
-                    "description": "图像尺寸。GPT Image 2/2.5 支持 WIDTHxHEIGHT：宽高均为 16 的倍数、比例 1:3～3:1，最高 3840x2160；其他 GPT Image 使用 auto、1024x1024、1536x1024 或 1024x1536；dall-e-2 支持 256x256、512x512、1024x1024；dall-e-3 支持 1024x1024、1792x1024、1024x1792。"
+                    "type": "string",
+                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
+                    "description": "输出尺寸，使用 auto 或 WIDTHxHEIGHT；具体尺寸范围和约束见所选模型能力。"
                   },
                   "stream": {
                     "type": [
@@ -627,8 +632,8 @@
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "dall-e-2 可用 url 或 b64_json。GPT Image 模型固定返回 Base64。",
-                    "default": "b64_json",
+                    "description": "Tikway 图片交付格式，url 返回图片链接，b64_json 返回纯 Base64。默认 url；该字段由网关消费，不作为上游模型参数。",
+                    "default": "url",
                     "enum": [
                       "b64_json",
                       "url"
@@ -647,23 +652,45 @@
                     "quality": "high",
                     "size": "1024x1024"
                   }
-                ]
+                ],
+                "x-apifox-orders": [
+                  "images",
+                  "prompt",
+                  "background",
+                  "input_fidelity",
+                  "mask",
+                  "model",
+                  "moderation",
+                  "n",
+                  "output_compression",
+                  "output_format",
+                  "partial_images",
+                  "quality",
+                  "size",
+                  "stream",
+                  "user",
+                  "response_format"
+                ],
+                "additionalProperties": false
               },
-              "example": {
-                "model": "gpt-image-2",
-                "prompt": "Keep the apple unchanged and replace only its background with a misty enchanted forest under soft cinematic lighting.",
-                "size": "1024x1024",
-                "quality": "high",
-                "output_format": "png",
-                "images": [
-                  {
-                    "image_url": "https://gd-hbimg.huaban.com/cb36fdfc6ee4707de3ec666d6bc202fb99d9bef326a10d-oQHn3b_fw658"
+              "examples": {
+                "请求示例": {
+                  "value": {
+                    "model": "gpt-image-2",
+                    "prompt": "Keep the apple unchanged and replace only its background with a misty enchanted forest under soft cinematic lighting.",
+                    "size": "1024x1024",
+                    "quality": "high",
+                    "output_format": "png",
+                    "images": [
+                      {
+                        "image_url": "https://gd-hbimg.huaban.com/cb36fdfc6ee4707de3ec666d6bc202fb99d9bef326a10d-oQHn3b_fw658"
+                      }
+                    ]
                   }
-                ]
+                }
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {

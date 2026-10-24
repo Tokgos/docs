@@ -89,7 +89,7 @@
                       }
                     ],
                     "examples": [
-                      "OfoxAI is an LLM Gateway",
+                      "Tikway is an LLM Gateway",
                       [
                         "first text",
                         "second text"
@@ -118,7 +118,7 @@
                 "examples": [
                   {
                     "model": "openai/text-embedding-3-small",
-                    "input": "OfoxAI is an LLM Gateway",
+                    "input": "Tikway is an LLM Gateway",
                     "encoding_format": "float"
                   },
                   {
@@ -285,7 +285,7 @@
         ]
       }
     },
-    "/v1beta/models/google/gemini-embedding-2-preview:embedContent": {
+    "/v1beta/models/google/{model}:embedContent": {
       "post": {
         "summary": "Gemini embedding",
         "deprecated": false,
@@ -293,7 +293,19 @@
         "tags": [
           "Embeddings"
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "required": true,
+            "description": "Gemini model name without the google/ prefix.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "gemini-embedding-2-preview"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {

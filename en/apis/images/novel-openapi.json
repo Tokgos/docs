@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Tikway Novel Image API",
-    "description": "OpenAI-compatible image generation and reference image editing with Novel models.",
+    "title": "Tikway Novel AI Image API",
+    "description": "Tikway standard image API.",
     "version": "1.0.0"
   },
   "tags": [
@@ -18,18 +18,19 @@
       "post": {
         "summary": "Image generation",
         "deprecated": false,
-        "description": "`diffusion-4-5-full` uses the same parameter set as `diffusion-4-5-curated`: `prompt`, `images`, `negative_prompt`, `n`, `size`, `seed`, `steps`, `scale`, `quality_toggle`, `sampler`, `noise_schedule`, `character_prompts`, `hook_url` and `response_format`.\n\n`n` is 1~4. A maximum of 1 ordinary image source image can be used; `vibe_transfer` and `character_reference` cannot be used at the same time. NovelAI does not have a standalone JSON editing endpoint, editing is still done through the `images` of this generated endpoint.",
+        "description": "Use POST /v1/images/generations for text-to-image and image-to-image with diffusion-4-5-full or diffusion-4-5-curated. Supply source images and style or character references through images. n supports 1–4 outputs; only one ordinary source image is allowed. vibe_transfer and character_reference cannot be combined.",
         "tags": [
           "Image generation/Novel AI"
         ],
         "parameters": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$id": "urn:tikway:schema:protocols:openai:images-generations:novelai-request:1",
-                "title": "NovelAIImageGenerationRequest",
-                "description": "NovelAI image generation Request Body. The unified reference image uses images; the gateway is responsible for converting to TTAPI NovelAI native parameters.",
+                "title": "TikwayImageRequest",
+                "description": "NovelAI image generation Request Body. The unified reference image uses images; the gateway is responsible for converting to model parameters.",
                 "type": "object",
                 "required": [
                   "model",
@@ -43,15 +44,11 @@
                       "diffusion-4-5-full",
                       "diffusion-4-5-curated"
                     ],
-                    "enum": [
-                      "diffusion-4-5-full",
-                      "diffusion-4-5-curated"
-                    ],
-                    "description": "Required. The NovelAI Diffusion V4.5 model currently connected to TTAPI."
+                    "description": "Required. Use a model ID or available alias returned by Get Models."
                   },
                   "images": {
                     "type": "array",
-                    "description": "Optional. Unified reference map array. type=image (or omitted) is the source image of a single image; type=vibe_transfer is the atmosphere reference; type=character_reference is the precise character/style reference. There can only be one ordinary image source image, and vibe_transfer and character_reference cannot be mixed.",
+                    "description": "Optional reference images for image-to-image generation. Omit for text-to-image generation. Image limits depend on the selected model.",
                     "items": {
                       "type": "object",
                       "required": [
@@ -95,7 +92,14 @@
                           "description": "Only used by character_reference."
                         }
                       },
-                      "additionalProperties": false
+                      "additionalProperties": false,
+                      "x-apifox-orders": [
+                        "type",
+                        "image_url",
+                        "strength",
+                        "fidelity",
+                        "ref_type"
+                      ]
                     },
                     "maxItems": 16
                   },
@@ -103,7 +107,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 32000,
-                    "description": "Positive cue words."
+                    "description": "Required. Describe the image to generate."
                   },
                   "negative_prompt": {
                     "type": "string",
@@ -114,13 +118,13 @@
                     "minimum": 1,
                     "maximum": 4,
                     "default": 1,
-                    "description": "Number of images generated."
+                    "description": "Number of generated images. Allowed counts depend on the selected model."
                   },
                   "size": {
                     "type": "string",
                     "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
                     "default": "1024x1024",
-                    "description": "Output dimensions, converted by gateway to width and height."
+                    "description": "Output size as WIDTHxHEIGHT, or auto for the model default. Supported sizes depend on the selected model."
                   },
                   "seed": {
                     "oneOf": [
@@ -195,26 +199,51 @@
                               "maximum": 1
                             }
                           },
-                          "additionalProperties": false
+                          "additionalProperties": false,
+                          "x-apifox-orders": [
+                            "x",
+                            "y"
+                          ]
                         }
                       },
-                      "additionalProperties": false
+                      "additionalProperties": false,
+                      "x-apifox-orders": [
+                        "prompt",
+                        "uc",
+                        "center"
+                      ]
                     }
                   },
                   "response_format": {
                     "type": "string",
-                    "description": "Fixed returning Base64 image so that the response conforms to the Response Schema of this interface.",
-                    "default": "b64_json",
+                    "description": "Response format: url returns image URLs; b64_json returns Base64 image data.",
+                    "default": "url",
                     "enum": [
                       "b64_json",
                       "url"
                     ]
                   }
                 },
-                "additionalProperties": false
+                "additionalProperties": false,
+                "x-apifox-orders": [
+                  "model",
+                  "images",
+                  "prompt",
+                  "negative_prompt",
+                  "n",
+                  "size",
+                  "seed",
+                  "steps",
+                  "scale",
+                  "quality_toggle",
+                  "sampler",
+                  "noise_schedule",
+                  "character_prompts",
+                  "response_format"
+                ]
               },
               "examples": {
-                "Text to image": {
+                "text-to-image": {
                   "value": {
                     "model": "diffusion-4-5-full",
                     "prompt": "A serene Japanese garden at dawn, mist above a koi pond, cinematic lighting, highly detailed",
@@ -225,10 +254,9 @@
                     "scale": 5,
                     "sampler": "Euler Ancestral",
                     "noise_schedule": "karras"
-                  },
-                  "summary": "Vincentian picture"
+                  }
                 },
-                "Image to image": {
+                "reference-image": {
                   "value": {
                     "model": "diffusion-4-5-full",
                     "prompt": "Turn this scene into an evening watercolor painting, warm lantern light, delicate brush strokes",
@@ -243,10 +271,9 @@
                         "fidelity": 0.8
                       }
                     ]
-                  },
-                  "summary": "Tu Sheng Tu"
+                  }
                 },
-                "Style reference": {
+                "reference-image-3": {
                   "value": {
                     "model": "diffusion-4-5-full",
                     "prompt": "A futuristic city street in the rain, a lone traveler under an umbrella",
@@ -260,10 +287,9 @@
                         "strength": 0.7
                       }
                     ]
-                  },
-                  "summary": "style reference"
+                  }
                 },
-                "Character reference": {
+                "reference-image-4": {
                   "value": {
                     "model": "diffusion-4-5-full",
                     "prompt": "The referenced character reads a book in a quiet library, soft afternoon sunlight",
@@ -279,13 +305,11 @@
                         "fidelity": 0.5
                       }
                     ]
-                  },
-                  "summary": "Character reference"
+                  }
                 }
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {

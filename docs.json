@@ -97,12 +97,19 @@
                   {
                     "group": "OpenAI 协议",
                     "openapi": "zh/apis/chat-completions/openai-openapi.json",
-                    "pages": ["POST /v1/chat/completions", "POST /v1/responses", "GET /v1/models"]
+                    "pages": [
+                      "POST /v1/chat/completions",
+                      "POST /v1/responses",
+                      "zh/apis/chat-completions/openai-openapi-models.json GET /v1/models"
+                    ]
                   },
                   {
                     "group": "Anthropic 协议",
                     "openapi": "zh/apis/chat-completions/anthropic-openapi.json",
-                    "pages": ["POST /v1/messages"]
+                    "pages": [
+                      "POST /v1/messages",
+                      "zh/apis/chat-completions/anthropic-openapi-models.json GET /anthropic/v1/models"
+                    ]
                   },
                   {
                     "group": "Gemini 协议",
@@ -110,6 +117,7 @@
                     "pages": [
                       "POST /v1beta/models/{model}:generateContent",
                       "POST /v1beta/models/{model}:streamGenerateContent",
+                      "zh/apis/chat-completions/gemini-openapi-models.json GET /v1beta/models",
                       "POST /v1beta/cachedContents",
                       "GET /v1beta/cachedContents/{id}",
                       "DELETE /v1beta/cachedContents/{id}"
@@ -149,10 +157,7 @@
                   {
                     "group": "MAI Image",
                     "openapi": "zh/apis/images/mai-openapi.json",
-                    "pages": [
-                      "POST /v1/images/generations",
-                      "POST /v1/images/edits"
-                    ]
+                    "pages": ["POST /v1/images/generations"]
                   },
                   {
                     "group": "Novel",
@@ -168,6 +173,32 @@
                     "group": "Grok",
                     "openapi": "zh/apis/images/grok-openapi.json",
                     "pages": ["POST /v1/images/generations"]
+                  }
+                ]
+              },
+              {
+                "group": "Midjourney",
+                "pages": [
+                  "zh/apis/images/midjourney-guide",
+                  {
+                    "group": "图片生成",
+                    "openapi": "zh/apis/images/mi-gen-openapi.json",
+                    "pages": ["POST /v1/images/generations"]
+                  },
+                  {
+                    "group": "任务操作",
+                    "openapi": "zh/apis/images/mi-action-openapi.json",
+                    "pages": ["POST /v1/images/generations"]
+                  },
+                  {
+                    "group": "局部重绘",
+                    "openapi": "zh/apis/images/mi-vary-region-openapi.json",
+                    "pages": ["POST /v1/images/generations"]
+                  },
+                  {
+                    "group": "任务查询",
+                    "openapi": "zh/apis/images/mj-query-openapi.json",
+                    "pages": ["GET /v1/images/{id}"]
                   }
                 ]
               },
@@ -214,10 +245,7 @@
               {
                 "group": "向量嵌入",
                 "openapi": "zh/apis/embeddings/openapi.json",
-                "pages": [
-                  "POST /v1/embeddings",
-                  "POST /v1beta/models/google/gemini-embedding-2-preview:embedContent"
-                ]
+                "pages": ["POST /v1/embeddings", "POST /v1beta/models/google/{model}:embedContent"]
               },
               {
                 "group": "语音转写",
@@ -247,7 +275,7 @@
                 ]
               },
               {
-                "group": "判断",
+                "group": "决策评估",
                 "pages": [
                   {
                     "group": "OpenAI",
@@ -264,11 +292,6 @@
               {
                 "group": "实用接口",
                 "pages": [
-                  {
-                    "group": "协议转换预览",
-                    "openapi": "zh/apis/utilities/convert-openapi.json",
-                    "pages": ["POST /convert/{source}/{target}"]
-                  },
                   {
                     "group": "余额查询",
                     "openapi": "zh/apis/utilities/balance-openapi.json",
@@ -317,12 +340,19 @@
                   {
                     "group": "OpenAI protocol",
                     "openapi": "en/apis/chat-completions/openai-openapi.json",
-                    "pages": ["POST /v1/chat/completions", "POST /v1/responses", "GET /v1/models"]
+                    "pages": [
+                      "POST /v1/chat/completions",
+                      "POST /v1/responses",
+                      "en/apis/chat-completions/openai-openapi-models.json GET /v1/models"
+                    ]
                   },
                   {
                     "group": "Anthropic protocol",
                     "openapi": "en/apis/chat-completions/anthropic-openapi.json",
-                    "pages": ["POST /v1/messages"]
+                    "pages": [
+                      "POST /v1/messages",
+                      "en/apis/chat-completions/anthropic-openapi-models.json GET /anthropic/v1/models"
+                    ]
                   },
                   {
                     "group": "Gemini protocol",
@@ -330,6 +360,7 @@
                     "pages": [
                       "POST /v1beta/models/{model}:generateContent",
                       "POST /v1beta/models/{model}:streamGenerateContent",
+                      "en/apis/chat-completions/gemini-openapi-models.json GET /v1beta/models",
                       "POST /v1beta/cachedContents",
                       "GET /v1beta/cachedContents/{id}",
                       "DELETE /v1beta/cachedContents/{id}"
@@ -343,12 +374,18 @@
                   {
                     "group": "GPT Image",
                     "openapi": "en/apis/images/gpt-openapi.json",
-                    "pages": ["POST /v1/images/generations", "POST /v1/images/edits"]
+                    "pages": [
+                      "POST /v1/images/generations",
+                      "POST /v1/images/edits"
+                    ]
                   },
                   {
                     "group": "Nano Banana",
                     "openapi": "en/apis/images/nano-banana-openapi.json",
-                    "pages": ["POST /v1/images/generations", "POST /v1beta/models/{model}:generateContent"]
+                    "pages": [
+                      "POST /v1/images/generations",
+                      "POST /v1beta/models/{model}:generateContent"
+                    ]
                   },
                   {
                     "group": "Qwen Image",
@@ -363,7 +400,7 @@
                   {
                     "group": "MAI Image",
                     "openapi": "en/apis/images/mai-openapi.json",
-                    "pages": ["POST /v1/images/generations", "POST /v1/images/edits"]
+                    "pages": ["POST /v1/images/generations"]
                   },
                   {
                     "group": "Novel",
@@ -425,7 +462,7 @@
               {
                 "group": "Embeddings",
                 "openapi": "en/apis/embeddings/openapi.json",
-                "pages": ["POST /v1/embeddings", "POST /v1beta/models/google/gemini-embedding-2-preview:embedContent"]
+                "pages": ["POST /v1/embeddings", "POST /v1beta/models/google/{model}:embedContent"]
               },
               {
                 "group": "Transcriptions",
@@ -472,11 +509,6 @@
               {
                 "group": "Utilities",
                 "pages": [
-                  {
-                    "group": "Conversion preview",
-                    "openapi": "en/apis/utilities/convert-openapi.json",
-                    "pages": ["POST /convert/{source}/{target}"]
-                  },
                   {
                     "group": "Balance",
                     "openapi": "en/apis/utilities/balance-openapi.json",
