@@ -1,0 +1,453 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Gemini 模型列表",
+    "description": "获取平台全部可调用模型，以 Gemini 协议返回，并包含 aliases、architecture 和 capabilities。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "对话补全"
+    },
+    {
+      "name": "对话补全/Gemini协议"
+    }
+  ],
+  "paths": {
+    "/v1beta/models": {
+      "get": {
+        "summary": "Get Models",
+        "deprecated": false,
+        "description": "返回与 GET /v1/models 相同的完整可调用模型目录，覆盖全部供应商、文本、图片、视频、语音、嵌入和决策模型，不按当前协议隐式过滤。保留当前协议的外层响应结构和分页；可用 provider、mode、type 显式筛选。\n\n每个模型都包含 aliases、architecture、capabilities.endpoints、capabilities.parameters 和 capabilities.reasoning_efforts，取值与 OpenAI 列表一致。参数读取方式：common 与端点路径数组取并集。列表展示不表示每个模型都能使用当前协议生成内容，实际可调用路径以 capabilities.endpoints 为准。",
+        "operationId": "getModels",
+        "tags": [
+          "对话补全/Gemini协议"
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "description": "按模型类型筛选，省略返回全部。支持 text/image/video/music/embedding，忽略大小写和周围空格。多个类型逗号分隔或重复 type，未知或空值返回 400。",
+            "required": false,
+            "example": "image,video",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "text",
+                "image",
+                "video",
+                "music",
+                "embedding",
+                "image,video"
+              ]
+            }
+          },
+          {
+            "name": "x-provider-route",
+            "in": "header",
+            "description": "上游速度cost、stable、fast",
+            "example": "cost",
+            "schema": {
+              "type": "string",
+              "default": "cost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "当前可调用模型目录；示例能力值仅用于展示结构，实际以返回值为准。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "GeminiModelsResponse",
+                  "description": "GET /v1beta/models 的 HTTP 200 响应。模型范围与 OpenAI 列表相同，保留 Gemini 分页格式。实际可调用接口以 capabilities.endpoints 为准。",
+                  "type": "object",
+                  "required": [
+                    "models"
+                  ],
+                  "properties": {
+                    "models": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "baseModelId",
+                          "version",
+                          "displayName",
+                          "description",
+                          "inputTokenLimit",
+                          "contextLength",
+                          "supportedParameters",
+                          "supportedGenerationMethods",
+                          "thinking",
+                          "aliases",
+                          "architecture",
+                          "capabilities"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "pattern": "^models/.+",
+                            "description": "models/ 加完整平台模型 ID，例如 models/google/gemini-3.8-flash，保留供应商命名空间以区分同名模型。",
+                            "minLength": 8
+                          },
+                          "baseModelId": {
+                            "type": "string",
+                            "description": "去掉供应商命名空间后的基础模型 ID。"
+                          },
+                          "version": {
+                            "type": "string",
+                            "description": "由模型 ID 推导的版本字符串，无法推导时为 unknown。"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "inputTokenLimit": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0,
+                            "description": "输入 token 上限，未配置时为 null。"
+                          },
+                          "contextLength": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0,
+                            "description": "上下文 token 上限，当前与 inputTokenLimit 相同。"
+                          },
+                          "outputTokenLimit": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "输出 token 上限；配置或参数定义中可推导时返回，否则省略。"
+                          },
+                          "supportedParameters": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Gemini 原生参数名；没有 Gemini 参数配置时为空数组。"
+                          },
+                          "supportedGenerationMethods": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "模型的 Gemini 协议方法；没有 Gemini 协议能力时为空数组。完整目录中的模型应按 capabilities.endpoints 选择调用接口。"
+                          },
+                          "thinking": {
+                            "type": "boolean",
+                            "description": "是否存在 Gemini thinkingConfig 参数配置。"
+                          },
+                          "temperature": {
+                            "type": "number",
+                            "description": "配置的默认温度，未配置或无法读取时省略。"
+                          },
+                          "maxTemperature": {
+                            "type": "number",
+                            "description": "配置的温度上限，未配置或无法读取时省略。"
+                          },
+                          "topP": {
+                            "type": "number",
+                            "description": "配置的默认 topP，未配置或无法读取时省略。"
+                          },
+                          "topK": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "配置的默认 topK，未配置或无法读取时省略。"
+                          },
+                          "aliases": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "模型的可用别名，来自当前平台配置；未配置时返回空数组。"
+                          },
+                          "architecture": {
+                            "type": "object",
+                            "required": [
+                              "input_modalities",
+                              "output_modalities"
+                            ],
+                            "properties": {
+                              "input_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "output_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "description": "模型可接受和可输出的模态，按平台配置及实际可调用端点生成。",
+                            "additionalProperties": false
+                          },
+                          "capabilities": {
+                            "type": "object",
+                            "required": [
+                              "reasoning_efforts",
+                              "endpoints",
+                              "parameters"
+                            ],
+                            "properties": {
+                              "reasoning_efforts": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "按实际端点参数配置汇总的推理档位；无可配置档位时返回空数组。"
+                              },
+                              "endpoints": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "minItems": 1,
+                                "description": "模型当前实际可调用的 API 路径，来自平台路由配置。"
+                              },
+                              "parameters": {
+                                "type": "object",
+                                "required": [
+                                  "common"
+                                ],
+                                "properties": {
+                                  "common": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "additionalProperties": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "description": "common 为所有可调用端点共有的参数，各端点路径下只列额外参数。该端点的完整参数集为 common 与端点数组的并集；单端点模型的参数可全部位于 common。",
+                                "examples": [
+                                  {
+                                    "/v1/videos": [],
+                                    "common": [
+                                      "seed",
+                                      "model",
+                                      "prompt",
+                                      "duration",
+                                      "extra_body",
+                                      "resolution",
+                                      "aspect_ratio",
+                                      "callback_url",
+                                      "frame_images",
+                                      "input_references"
+                                    ]
+                                  }
+                                ]
+                              }
+                            },
+                            "description": "当前平台定义的端点、参数和推理档位。与其他协议格式中的这组字段一致。",
+                            "additionalProperties": false
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    },
+                    "nextPageToken": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "存在下一页时返回；填入下次请求的 pageToken。最后一页省略，不返回 null。"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "examples": [
+                    {
+                      "models": [
+                        {
+                          "name": "models/happyhorse-1.0",
+                          "baseModelId": "happyhorse-1.0",
+                          "version": "1.0",
+                          "displayName": "HappyHorse 1.0",
+                          "description": "HappyHorse 1.0",
+                          "inputTokenLimit": null,
+                          "contextLength": null,
+                          "supportedParameters": [],
+                          "supportedGenerationMethods": [],
+                          "thinking": false,
+                          "aliases": [
+                            "happyhorse-1.0",
+                            "happyhorse-1.0-20260624"
+                          ],
+                          "architecture": {
+                            "input_modalities": [
+                              "text",
+                              "image",
+                              "video"
+                            ],
+                            "output_modalities": [
+                              "video"
+                            ]
+                          },
+                          "capabilities": {
+                            "endpoints": [
+                              "/v1/videos"
+                            ],
+                            "parameters": {
+                              "/v1/videos": [],
+                              "common": [
+                                "seed",
+                                "model",
+                                "prompt",
+                                "duration",
+                                "extra_body",
+                                "resolution",
+                                "aspect_ratio",
+                                "callback_url",
+                                "frame_images",
+                                "input_references"
+                              ]
+                            },
+                            "reasoning_efforts": []
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "example": {
+                  "models": [
+                    {
+                      "name": "models/happyhorse-1.0",
+                      "baseModelId": "happyhorse-1.0",
+                      "version": "1.0",
+                      "displayName": "HappyHorse 1.0",
+                      "description": "HappyHorse 1.0",
+                      "inputTokenLimit": null,
+                      "contextLength": null,
+                      "supportedParameters": [],
+                      "supportedGenerationMethods": [],
+                      "thinking": false,
+                      "aliases": [
+                        "happyhorse-1.0",
+                        "happyhorse-1.0-20260624"
+                      ],
+                      "architecture": {
+                        "input_modalities": [
+                          "text",
+                          "image",
+                          "video"
+                        ],
+                        "output_modalities": [
+                          "video"
+                        ]
+                      },
+                      "capabilities": {
+                        "endpoints": [
+                          "/v1/videos"
+                        ],
+                        "parameters": {
+                          "/v1/videos": [],
+                          "common": [
+                            "seed",
+                            "model",
+                            "prompt",
+                            "duration",
+                            "extra_body",
+                            "resolution",
+                            "aspect_ratio",
+                            "callback_url",
+                            "frame_images",
+                            "input_references"
+                          ]
+                        },
+                        "reasoning_efforts": []
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "type 包含未知类型或空值。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-mint": {
+          "href": "/zh/api-reference/chat/gemini/list-models",
+          "metadata": {
+            "sidebarTitle": "Get Models"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

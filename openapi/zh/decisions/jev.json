@@ -1,0 +1,941 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway Jev 决策评估 API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai"
+    }
+  ],
+  "tags": [
+    {
+      "name": "判断/Jev"
+    }
+  ],
+  "paths": {
+    "/v1/decisions": {
+      "post": {
+        "summary": "Jev - 决策评估",
+        "description": "OpenAI Decisions 格式：input + questions 数组；answers 顺序与问题一致，支持 predicate、choice、score 及 refusal。支持通过端点配置调用 TypeSafe Jev。跨协议时问题 name 必须唯一；字符串和布尔选项转换成同一个键时返回参数错误。\n\n示例模型 ID 必须已在目标环境配置，并关联可用账号和端点。",
+        "operationId": "createDecision",
+        "tags": [
+          "判断/Jev"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "类型化决策答案和用量。未返回输出 Token 的上游可省略 completion_tokens，转换为 TypeSafe 时补 0。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionsResponse"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "typesafe_backend",
+                    "value": {
+                      "model": "typesafe/jev-latest",
+                      "answers": [
+                        {
+                          "name": "urgent",
+                          "probability": 0.82,
+                          "type": "predicate"
+                        },
+                        {
+                          "choice": "billing",
+                          "confidence": 1,
+                          "name": "department",
+                          "probabilities": [
+                            {
+                              "probability": 1,
+                              "value": "billing"
+                            },
+                            {
+                              "probability": 0,
+                              "value": "technical"
+                            }
+                          ],
+                          "type": "choice"
+                        },
+                        {
+                          "confidence": 0.58,
+                          "legend": {
+                            "0": "Minor",
+                            "1": "Workaround available",
+                            "2": "Fully blocked"
+                          },
+                          "name": "severity",
+                          "probabilities": [
+                            {
+                              "label": "Minor",
+                              "probability": 0.74,
+                              "value": 0
+                            },
+                            {
+                              "label": "Workaround available",
+                              "probability": 0.24,
+                              "value": 1
+                            },
+                            {
+                              "label": "Fully blocked",
+                              "probability": 0.02,
+                              "value": 2
+                            }
+                          ],
+                          "score": 0.28,
+                          "type": "score"
+                        }
+                      ],
+                      "usage": {
+                        "completion_tokens": 61,
+                        "prompt_tokens": 375,
+                        "total_tokens": 436
+                      }
+                    }
+                  },
+                  "example2": {
+                    "summary": "openai",
+                    "value": {
+                      "model": "openai/gpt-6-luna",
+                      "answers": [
+                        {
+                          "name": "urgent",
+                          "probability": 0.82,
+                          "type": "predicate"
+                        },
+                        {
+                          "choice": "billing",
+                          "confidence": 1,
+                          "name": "department",
+                          "probabilities": [
+                            {
+                              "probability": 1,
+                              "value": "billing"
+                            },
+                            {
+                              "probability": 0,
+                              "value": "technical"
+                            }
+                          ],
+                          "type": "choice"
+                        },
+                        {
+                          "confidence": 0.58,
+                          "legend": {
+                            "0": "Minor",
+                            "1": "Workaround available",
+                            "2": "Fully blocked"
+                          },
+                          "name": "severity",
+                          "probabilities": [
+                            {
+                              "label": "Minor",
+                              "probability": 0.74,
+                              "value": 0
+                            },
+                            {
+                              "label": "Workaround available",
+                              "probability": 0.24,
+                              "value": 1
+                            },
+                            {
+                              "label": "Fully blocked",
+                              "probability": 0.02,
+                              "value": 2
+                            }
+                          ],
+                          "score": 0.28,
+                          "type": "score"
+                        }
+                      ],
+                      "usage": {
+                        "completion_tokens_details": {},
+                        "prompt_tokens": 383,
+                        "prompt_tokens_details": {
+                          "cache_write_tokens": 0,
+                          "cached_tokens": 0
+                        },
+                        "total_tokens": 383
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "其他网关错误；根据 HTTP 状态码和 error.message 排查。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "模型 ID。本网关示例为 typesafe/jev-latest；TypeSafe 官方接口示例为 jev-latest。",
+                    "examples": [
+                      "typesafe/jev-latest",
+                      "jev-latest"
+                    ]
+                  },
+                  "state": {
+                    "type": [
+                      "string",
+                      "object",
+                      "array"
+                    ],
+                    "description": "所有问题共享的待评估材料，可以是纯文本、结构化记录或数组。",
+                    "examples": [
+                      "我被重复扣款了两次，请今天帮我处理退款，其他功能还能正常使用。",
+                      {
+                        "ticket": {
+                          "message": "发票抬头写错了，需要重新开票。",
+                          "invoice_issued": true
+                        }
+                      },
+                      [
+                        {
+                          "role": "user",
+                          "content": "已经联系三次了，请安排人工处理退款。"
+                        }
+                      ]
+                    ]
+                  },
+                  "questions": {
+                    "type": "object",
+                    "minProperties": 1,
+                    "additionalProperties": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "const": "noul",
+                              "type": "string",
+                              "description": "判断一个是非问题，答案表示是的概率。"
+                            },
+                            "instructions": {
+                              "type": [
+                                "string",
+                                "object",
+                                "array"
+                              ],
+                              "description": "待判断的是非问题或命题。可使用结构化内容补充问题需要引用的数据。",
+                              "examples": [
+                                "用户是否明确要求当天处理？"
+                              ]
+                            },
+                            "criteria": {
+                              "type": "object",
+                              "properties": {
+                                "true": {
+                                  "type": [
+                                    "string",
+                                    "object",
+                                    "array"
+                                  ],
+                                  "description": "什么情况应判断为是。"
+                                },
+                                "false": {
+                                  "type": [
+                                    "string",
+                                    "object",
+                                    "array"
+                                  ],
+                                  "description": "什么情况应判断为否。"
+                                }
+                              },
+                              "additionalProperties": false,
+                              "description": "可选的判断标准，分别解释是和否的含义。",
+                              "examples": [
+                                {
+                                  "true": "用户明确提到今天、当天或具体的紧迫期限。",
+                                  "false": "用户没有表达处理期限。"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "instructions"
+                          ],
+                          "additionalProperties": true,
+                          "title": "Noul：是非判断"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "const": "choice",
+                              "type": "string",
+                              "description": "从给定选项中选择一项。"
+                            },
+                            "instructions": {
+                              "type": [
+                                "string",
+                                "object",
+                                "array"
+                              ],
+                              "description": "需要模型作出的选择及判断要求。",
+                              "examples": [
+                                "应该交给哪个部门处理？"
+                              ]
+                            },
+                            "criteria": {
+                              "type": "object",
+                              "minProperties": 2,
+                              "maxProperties": 255,
+                              "additionalProperties": {
+                                "type": [
+                                  "string",
+                                  "object",
+                                  "array",
+                                  "null"
+                                ]
+                              },
+                              "description": "以选项标识为键、选项说明为值的对象。本网关要求 2–255 个选项；不需要说明时可使用 null。",
+                              "examples": [
+                                {
+                                  "billing": "账单、扣款和退款问题",
+                                  "technical": "产品功能和技术故障",
+                                  "other": null
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "instructions",
+                            "criteria"
+                          ],
+                          "additionalProperties": true,
+                          "title": "Choice：选项判断"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "const": "score",
+                              "type": "string",
+                              "description": "根据有序等级评估输入。"
+                            },
+                            "instructions": {
+                              "type": [
+                                "string",
+                                "object",
+                                "array"
+                              ],
+                              "description": "需要评估的维度及评分要求。",
+                              "examples": [
+                                "按对正常使用的影响程度评估问题严重性。"
+                              ]
+                            },
+                            "criteria": {
+                              "type": "array",
+                              "items": {
+                                "type": [
+                                  "string",
+                                  "object",
+                                  "array"
+                                ]
+                              },
+                              "minItems": 2,
+                              "maxItems": 10,
+                              "description": "按从低到高的顺序排列的等级描述，序号从 0 开始，共 2–10 级。每级可使用文本、对象或数组。",
+                              "examples": [
+                                [
+                                  "轻微问题，其他功能仍可正常使用。",
+                                  "部分操作受阻，但存在临时替代方案。",
+                                  "核心流程完全无法继续，且没有替代方案。"
+                                ]
+                              ]
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "instructions",
+                            "criteria"
+                          ],
+                          "additionalProperties": true,
+                          "title": "Score：等级评分"
+                        }
+                      ]
+                    },
+                    "description": "以自定义问题 ID 为键的对象。答案按相同 ID 返回；问题 ID 不会提供给模型，判断要求必须写在 instructions 中。",
+                    "properties": {}
+                  }
+                },
+                "required": [
+                  "model",
+                  "state",
+                  "questions"
+                ],
+                "additionalProperties": true,
+                "title": "Jev 原生请求 Body",
+                "description": "用于 POST /v1/systemone，采用 TypeSafe 官方原生请求结构。调用本网关时使用模型广场中的 typesafe/jev-latest；直接调用 TypeSafe 官方接口时使用 jev-latest。字段依据 https://docs.typesafe.ai/api。",
+                "examples": [
+                  {
+                    "model": "typesafe/jev-latest",
+                    "state": "我被重复扣款了两次，请今天帮我处理退款，其他功能还能正常使用。",
+                    "questions": {
+                      "urgent": {
+                        "type": "noul",
+                        "instructions": "用户是否明确要求当天处理？",
+                        "criteria": {
+                          "true": "用户明确提到今天、当天或具体的紧迫期限。",
+                          "false": "用户没有表达处理期限。"
+                        }
+                      },
+                      "department": {
+                        "type": "choice",
+                        "instructions": "应该交给哪个部门处理？",
+                        "criteria": {
+                          "billing": "账单、扣款和退款问题",
+                          "technical": "产品功能和技术故障"
+                        }
+                      },
+                      "severity": {
+                        "type": "score",
+                        "instructions": "按对正常使用的影响程度评估问题严重性。",
+                        "criteria": [
+                          "轻微问题，其他功能仍可正常使用。",
+                          "部分操作受阻，但存在临时替代方案。",
+                          "核心流程完全无法继续，且没有替代方案。"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "model": "typesafe/jev-latest",
+                    "state": "请帮我取消下个月的自动续费。",
+                    "questions": {
+                      "cancel_subscription": {
+                        "type": "noul",
+                        "instructions": "用户是否要求取消订阅或关闭自动续费？"
+                      }
+                    }
+                  },
+                  {
+                    "model": "typesafe/jev-latest",
+                    "state": "发票抬头写错了，需要重新开票。",
+                    "questions": {
+                      "ticket_category": {
+                        "type": "choice",
+                        "instructions": "将工单分配到最合适的业务类别。",
+                        "criteria": {
+                          "invoice": "发票开具、修改或重开",
+                          "refund": "退款或重复扣款",
+                          "account": "登录、权限或账户资料",
+                          "other": null
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "model": "typesafe/jev-latest",
+                    "state": "页面加载有点慢，但刷新后可以正常完成操作。",
+                    "questions": {
+                      "impact": {
+                        "type": "score",
+                        "instructions": "评估故障对完成操作的影响。",
+                        "criteria": [
+                          "体验下降，但操作仍可完成。",
+                          "需要绕过故障才能完成操作。",
+                          "操作无法完成。"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "model": "typesafe/jev-latest",
+                    "state": {
+                      "ticket": {
+                        "message": "发票抬头写错了，需要重新开票。",
+                        "invoice_issued": true
+                      }
+                    },
+                    "questions": {
+                      "needs_reissue": {
+                        "type": "noul",
+                        "instructions": {
+                          "question": "根据 ticket.message 和 ticket.invoice_issued，是否需要重新开具已开出的发票？"
+                        },
+                        "criteria": {
+                          "true": "发票已经开出，且用户明确要求修改或重新开具。",
+                          "false": "尚未开票，或用户没有要求修改已有发票。"
+                        }
+                      },
+                      "department": {
+                        "type": "choice",
+                        "instructions": "根据 ticket.message 判断负责部门。",
+                        "criteria": {
+                          "billing": {
+                            "scope": [
+                              "开票",
+                              "付款",
+                              "退款"
+                            ]
+                          },
+                          "technical": {
+                            "scope": [
+                              "功能故障",
+                              "接口异常"
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "gpt6_luna_full": {
+                  "summary": "GPT-6 Luna：同时测试 predicate、choice、score",
+                  "value": {
+                    "model": "openai/gpt-6-luna",
+                    "input": "我被重复扣款了两次，请今天帮我处理退款，其他功能还能正常使用。",
+                    "questions": [
+                      {
+                        "name": "urgent",
+                        "type": "predicate",
+                        "instructions": "用户是否需要尽快处理？"
+                      },
+                      {
+                        "name": "department",
+                        "type": "choice",
+                        "instructions": "应该交给哪个部门？",
+                        "choices": [
+                          {
+                            "value": "billing",
+                            "description": "账单、扣款和退款问题"
+                          },
+                          {
+                            "value": "technical",
+                            "description": "产品功能和技术故障"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "severity",
+                        "type": "score",
+                        "instructions": "问题有多严重？",
+                        "levels": [
+                          {
+                            "label": "Minor"
+                          },
+                          {
+                            "label": "Workaround available"
+                          },
+                          {
+                            "label": "Fully blocked"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "jev_full": {
+                  "summary": "Jev：通过 OpenAI Decisions 格式调用",
+                  "value": {
+                    "model": "typesafe/jev-latest",
+                    "input": "我被重复扣款了两次，请今天帮我处理退款，其他功能还能正常使用。",
+                    "questions": [
+                      {
+                        "name": "urgent",
+                        "type": "predicate",
+                        "instructions": "用户是否需要尽快处理？"
+                      },
+                      {
+                        "name": "department",
+                        "type": "choice",
+                        "instructions": "应该交给哪个部门？",
+                        "choices": [
+                          {
+                            "value": "billing",
+                            "description": "账单、扣款和退款问题"
+                          },
+                          {
+                            "value": "technical",
+                            "description": "产品功能和技术故障"
+                          }
+                        ]
+                      },
+                      {
+                        "name": "severity",
+                        "type": "score",
+                        "instructions": "问题有多严重？",
+                        "levels": [
+                          {
+                            "label": "Minor"
+                          },
+                          {
+                            "label": "Workaround available"
+                          },
+                          {
+                            "label": "Fully blocked"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "gpt6_luna_minimal": {
+                  "summary": "GPT-6 Luna：最小判断请求",
+                  "value": {
+                    "model": "openai/gpt-6-luna",
+                    "input": "我被重复扣款了两次，请今天帮我处理退款，其他功能还能正常使用。",
+                    "questions": [
+                      {
+                        "name": "urgent",
+                        "type": "predicate",
+                        "instructions": "用户是否需要尽快处理？"
+                      }
+                    ]
+                  }
+                },
+                "jev_minimal": {
+                  "summary": "Jev：最小判断请求",
+                  "value": {
+                    "model": "typesafe/jev-latest",
+                    "input": "我被重复扣款了两次，请今天帮我处理退款，其他功能还能正常使用。",
+                    "questions": [
+                      {
+                        "name": "urgent",
+                        "type": "predicate",
+                        "instructions": "用户是否需要尽快处理？"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "href": "/zh/api-reference/decisions/jev/create",
+          "metadata": {
+            "sidebarTitle": "Jev - 决策评估"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "DecisionsResponse": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "const": "predicate"
+                    },
+                    "name": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "probability": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "name",
+                    "probability"
+                  ],
+                  "additionalProperties": true
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "const": "choice"
+                    },
+                    "name": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "choice": {
+                      "type": [
+                        "string",
+                        "boolean"
+                      ]
+                    },
+                    "confidence": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "probabilities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": [
+                              "string",
+                              "boolean"
+                            ]
+                          },
+                          "probability": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "probability"
+                        ],
+                        "additionalProperties": true
+                      }
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "name",
+                    "choice",
+                    "confidence",
+                    "probabilities"
+                  ],
+                  "additionalProperties": true
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "const": "score"
+                    },
+                    "name": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "score": {
+                      "type": "number"
+                    },
+                    "confidence": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "probabilities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "integer"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "probability": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "label",
+                          "probability"
+                        ],
+                        "additionalProperties": true
+                      }
+                    },
+                    "legend": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "properties": {}
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "name",
+                    "score",
+                    "confidence",
+                    "probabilities"
+                  ],
+                  "additionalProperties": true
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "const": "refusal"
+                    },
+                    "name": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "name"
+                  ],
+                  "additionalProperties": true
+                }
+              ]
+            }
+          },
+          "usage": {
+            "type": "object",
+            "properties": {
+              "prompt_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "completion_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "total_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "prompt_tokens_details": {
+                "type": "object",
+                "properties": {}
+              },
+              "completion_tokens_details": {
+                "type": "object",
+                "properties": {}
+              }
+            },
+            "required": [
+              "prompt_tokens",
+              "total_tokens"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "model",
+          "answers",
+          "usage"
+        ],
+        "additionalProperties": true,
+        "title": "DecisionsResponse"
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "code": {
+                "type": [
+                  "string",
+                  "integer",
+                  "null"
+                ]
+              },
+              "param": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "additionalProperties": true
+      }
+    }
+  }
+}

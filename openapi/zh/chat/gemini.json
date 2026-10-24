@@ -1,0 +1,3409 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mintlify",
+    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "对话补全"
+    },
+    {
+      "name": "对话补全/Gemini协议"
+    }
+  ],
+  "paths": {
+    "/v1beta/models/{model}:generateContent": {
+      "post": {
+        "summary": "Generate Content",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "对话补全/Gemini协议"
+        ],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "description": "模型名称，格式为 models/{model}。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "contents"
+                ],
+                "properties": {
+                  "contents": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "当前对话内容。单轮请求通常只有一个 Content；多轮对话按顺序包含历史与最新请求。",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "parts"
+                      ],
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "model"
+                          ],
+                          "description": "内容角色。省略时通常视为 user。"
+                        },
+                        "parts": {
+                          "type": "array",
+                          "minItems": 1,
+                          "description": "内容部分列表。",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "description": "文本输入。"
+                              },
+                              "inlineData": {
+                                "type": "object",
+                                "description": "内联 Base64 文件数据。",
+                                "properties": {
+                                  "mimeType": {
+                                    "type": "string",
+                                    "description": "MIME 类型，例如 image/jpeg。"
+                                  },
+                                  "data": {
+                                    "type": "string",
+                                    "description": "Base64 编码的数据。"
+                                  },
+                                  "displayName": {
+                                    "type": "string",
+                                    "description": "内联媒体的显示名称。"
+                                  }
+                                }
+                              },
+                              "fileData": {
+                                "type": "object",
+                                "description": "File API 中已上传文件的引用。",
+                                "properties": {
+                                  "mimeType": {
+                                    "type": "string",
+                                    "description": "文件 MIME 类型。"
+                                  },
+                                  "fileUri": {
+                                    "type": "string",
+                                    "description": "文件 URI。"
+                                  },
+                                  "displayName": {
+                                    "type": "string",
+                                    "description": "文件的显示名称。"
+                                  }
+                                }
+                              },
+                              "functionCall": {
+                                "type": "object",
+                                "description": "上一轮模型生成的函数调用。",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "description": "函数名称。"
+                                  },
+                                  "args": {
+                                    "type": "object",
+                                    "description": "函数参数。",
+                                    "properties": {}
+                                  }
+                                }
+                              },
+                              "functionResponse": {
+                                "type": "object",
+                                "description": "客户端对函数调用的执行结果。",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "description": "函数名称。"
+                                  },
+                                  "response": {
+                                    "type": "object",
+                                    "description": "函数执行返回值。",
+                                    "properties": {}
+                                  }
+                                }
+                              },
+                              "executableCode": {
+                                "type": "object",
+                                "description": "可执行代码。",
+                                "properties": {
+                                  "language": {
+                                    "type": "string",
+                                    "description": "编程语言。"
+                                  },
+                                  "code": {
+                                    "type": "string",
+                                    "description": "代码内容。"
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "description": "可执行代码块 ID。"
+                                  }
+                                }
+                              },
+                              "codeExecutionResult": {
+                                "type": "object",
+                                "description": "代码执行结果。",
+                                "properties": {
+                                  "outcome": {
+                                    "type": "string",
+                                    "description": "执行结果状态。"
+                                  },
+                                  "output": {
+                                    "type": "string",
+                                    "description": "执行输出。"
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "description": "对应的代码块 ID。"
+                                  }
+                                }
+                              },
+                              "thought": {
+                                "type": "boolean",
+                                "description": "该部分是否属于模型思考内容。"
+                              },
+                              "thoughtSignature": {
+                                "type": "string",
+                                "description": "思考内容签名；回传时保持原样。"
+                              },
+                              "partMetadata": {
+                                "type": "object",
+                                "description": "内容块关联的自定义元数据。",
+                                "additionalProperties": true
+                              },
+                              "mediaResolution": {
+                                "type": "object",
+                                "description": "此媒体内容块的解析度。",
+                                "properties": {
+                                  "level": {
+                                    "type": "string",
+                                    "enum": [
+                                      "MEDIA_RESOLUTION_UNSPECIFIED",
+                                      "MEDIA_RESOLUTION_LOW",
+                                      "MEDIA_RESOLUTION_MEDIUM",
+                                      "MEDIA_RESOLUTION_HIGH"
+                                    ]
+                                  }
+                                }
+                              },
+                              "mediaProcessing": {
+                                "type": "string",
+                                "description": "视频内容的处理方式。"
+                              },
+                              "audioTranscription": {
+                                "type": "object",
+                                "description": "音频转录信息。",
+                                "properties": {}
+                              },
+                              "speechMetadata": {
+                                "type": "object",
+                                "description": "语音合成相关元数据。",
+                                "properties": {}
+                              },
+                              "toolCall": {
+                                "type": "object",
+                                "description": "需要客户端回传的服务端工具调用。",
+                                "properties": {}
+                              },
+                              "toolResponse": {
+                                "type": "object",
+                                "description": "服务端工具调用的执行结果。",
+                                "properties": {}
+                              },
+                              "videoMetadata": {
+                                "type": "object",
+                                "description": "视频内容元数据。",
+                                "properties": {}
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "systemInstruction": {
+                    "type": "object",
+                    "description": "开发者设定的系统指令，目前应使用纯文本部分。",
+                    "required": [
+                      "parts"
+                    ],
+                    "properties": {
+                      "parts": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "text": {
+                              "type": "string",
+                              "description": "系统指令文本。"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "tools": {
+                    "type": "array",
+                    "description": "模型可使用的工具列表，例如函数调用或代码执行。",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "functionDeclarations": {
+                          "type": "array",
+                          "description": "函数声明列表。",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "description": "函数名称。"
+                              },
+                              "description": {
+                                "type": "string",
+                                "description": "函数用途说明。"
+                              },
+                              "parameters": {
+                                "type": "object",
+                                "description": "函数参数 JSON Schema。",
+                                "properties": {}
+                              },
+                              "response": {
+                                "type": "object",
+                                "description": "函数响应 JSON Schema。",
+                                "properties": {}
+                              },
+                              "behavior": {
+                                "type": "string",
+                                "enum": [
+                                  "UNSPECIFIED",
+                                  "BLOCKING",
+                                  "NON_BLOCKING"
+                                ]
+                              },
+                              "parametersJsonSchema": {
+                                "description": "函数参数的 JSON Schema；与 parameters 互斥。"
+                              },
+                              "responseJsonSchema": {
+                                "description": "函数响应的 JSON Schema；与 response 互斥。"
+                              }
+                            },
+                            "required": [
+                              "name",
+                              "description"
+                            ]
+                          }
+                        },
+                        "codeExecution": {
+                          "type": "object",
+                          "description": "启用代码执行工具。",
+                          "properties": {}
+                        },
+                        "googleSearch": {
+                          "type": "object",
+                          "description": "启用 Google 搜索工具。",
+                          "properties": {}
+                        },
+                        "urlContext": {
+                          "type": "object",
+                          "description": "启用 URL 上下文工具。",
+                          "properties": {}
+                        },
+                        "googleSearchRetrieval": {
+                          "type": "object",
+                          "description": "Google Search 检索配置。",
+                          "properties": {}
+                        },
+                        "computerUse": {
+                          "type": "object",
+                          "description": "计算机操作工具配置。",
+                          "properties": {}
+                        },
+                        "fileSearch": {
+                          "type": "object",
+                          "description": "文件搜索工具配置。",
+                          "properties": {}
+                        },
+                        "mcpServers": {
+                          "type": "array",
+                          "description": "可连接的 MCP 服务器。",
+                          "items": {
+                            "type": "object",
+                            "properties": {}
+                          }
+                        },
+                        "googleMaps": {
+                          "type": "object",
+                          "description": "地理位置搜索工具配置。",
+                          "properties": {}
+                        }
+                      }
+                    }
+                  },
+                  "toolConfig": {
+                    "type": "object",
+                    "description": "工具调用配置。",
+                    "properties": {
+                      "functionCallingConfig": {
+                        "type": "object",
+                        "properties": {
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "AUTO",
+                              "ANY",
+                              "NONE",
+                              "VALIDATED"
+                            ],
+                            "description": "函数调用模式。"
+                          },
+                          "allowedFunctionNames": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "允许自动调用的函数名。"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "safetySettings": {
+                    "type": "array",
+                    "description": "安全过滤规则；同一类别最多配置一次，覆盖该类别的默认阈值。",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "category": {
+                          "type": "string",
+                          "enum": [
+                            "HARM_CATEGORY_HATE_SPEECH",
+                            "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                            "HARM_CATEGORY_DANGEROUS_CONTENT",
+                            "HARM_CATEGORY_HARASSMENT",
+                            "HARM_CATEGORY_CIVIC_INTEGRITY",
+                            "HARM_CATEGORY_JAILBREAK"
+                          ],
+                          "description": "安全类别。"
+                        },
+                        "threshold": {
+                          "type": "string",
+                          "description": "阻止阈值。",
+                          "enum": [
+                            "HARM_BLOCK_THRESHOLD_UNSPECIFIED",
+                            "BLOCK_LOW_AND_ABOVE",
+                            "BLOCK_MEDIUM_AND_ABOVE",
+                            "BLOCK_ONLY_HIGH",
+                            "BLOCK_NONE",
+                            "OFF"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "category",
+                        "threshold"
+                      ]
+                    }
+                  },
+                  "generationConfig": {
+                    "type": "object",
+                    "description": "生成与输出配置。",
+                    "properties": {
+                      "temperature": {
+                        "type": "number",
+                        "description": "采样温度。",
+                        "minimum": 0,
+                        "maximum": 2
+                      },
+                      "topP": {
+                        "type": "number",
+                        "description": "核采样阈值。"
+                      },
+                      "topK": {
+                        "type": "integer",
+                        "description": "每步保留的最高概率候选数。"
+                      },
+                      "candidateCount": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "返回候选回复数量。"
+                      },
+                      "maxOutputTokens": {
+                        "type": "integer",
+                        "description": "最大输出词元数。"
+                      },
+                      "stopSequences": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "停止序列。",
+                        "maxItems": 5
+                      },
+                      "responseMimeType": {
+                        "type": "string",
+                        "enum": [
+                          "text/plain",
+                          "application/json",
+                          "text/x.enum"
+                        ],
+                        "description": "输出 MIME 类型。"
+                      },
+                      "responseSchema": {
+                        "type": "object",
+                        "description": "application/json 输出应遵循的 JSON Schema。",
+                        "properties": {},
+                        "deprecated": true
+                      },
+                      "responseJsonSchema": {
+                        "type": "object",
+                        "description": "JSON 输出的原始 JSON Schema。",
+                        "properties": {}
+                      },
+                      "responseModalities": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "MODALITY_UNSPECIFIED",
+                            "TEXT",
+                            "IMAGE",
+                            "AUDIO"
+                          ]
+                        },
+                        "description": "请求的输出模态。"
+                      },
+                      "thinkingConfig": {
+                        "type": "object",
+                        "properties": {
+                          "thinkingBudget": {
+                            "type": "integer",
+                            "description": "思考词元预算。"
+                          },
+                          "includeThoughts": {
+                            "type": "boolean",
+                            "description": "是否在响应中包含思考摘要。"
+                          },
+                          "thinkingLevel": {
+                            "type": "string",
+                            "enum": [
+                              "THINKING_LEVEL_UNSPECIFIED",
+                              "MINIMAL",
+                              "LOW",
+                              "MEDIUM",
+                              "HIGH"
+                            ],
+                            "description": "模型思考深度。"
+                          }
+                        }
+                      },
+                      "mediaResolution": {
+                        "type": "string",
+                        "description": "媒体输入解析度设置。",
+                        "enum": [
+                          "MEDIA_RESOLUTION_UNSPECIFIED",
+                          "MEDIA_RESOLUTION_LOW",
+                          "MEDIA_RESOLUTION_MEDIUM",
+                          "MEDIA_RESOLUTION_HIGH"
+                        ]
+                      },
+                      "seed": {
+                        "type": "integer",
+                        "description": "解码随机种子。"
+                      },
+                      "presencePenalty": {
+                        "type": "number",
+                        "description": "已出现词元的存在惩罚。"
+                      },
+                      "frequencyPenalty": {
+                        "type": "number",
+                        "description": "已出现词元的频率惩罚。"
+                      },
+                      "responseLogprobs": {
+                        "type": "boolean",
+                        "description": "是否在响应中返回词元对数概率。"
+                      },
+                      "logprobs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 20,
+                        "description": "返回的高概率候选词元数量；仅在 responseLogprobs 为 true 时有效。"
+                      },
+                      "enableEnhancedCivicAnswers": {
+                        "type": "boolean",
+                        "description": "启用增强的公民议题回答。"
+                      },
+                      "speechConfig": {
+                        "type": "object",
+                        "description": "语音生成配置。",
+                        "properties": {
+                          "voiceConfig": {
+                            "type": "object",
+                            "description": "单人声音配置。",
+                            "properties": {}
+                          },
+                          "multiSpeakerVoiceConfig": {
+                            "type": "object",
+                            "description": "多说话人声音配置。",
+                            "properties": {}
+                          },
+                          "languageCode": {
+                            "type": "string",
+                            "description": "语音的 BCP-47 语言代码。"
+                          }
+                        }
+                      },
+                      "imageConfig": {
+                        "type": "object",
+                        "description": "图像生成配置。",
+                        "properties": {
+                          "aspectRatio": {
+                            "type": "string",
+                            "description": "生成图像的宽高比。"
+                          },
+                          "imageSize": {
+                            "type": "string",
+                            "enum": [
+                              "512",
+                              "1K",
+                              "2K",
+                              "4K"
+                            ],
+                            "description": "生成图像尺寸。"
+                          }
+                        }
+                      },
+                      "enableAffectiveDialog": {
+                        "type": "boolean",
+                        "description": "根据检测到的情绪调整回答。"
+                      },
+                      "responseFormat": {
+                        "type": "object",
+                        "description": "分别配置文本、音频和图像输出格式。",
+                        "properties": {
+                          "text": {
+                            "type": "object",
+                            "properties": {
+                              "mimeType": {
+                                "type": "string",
+                                "enum": [
+                                  "MIME_TYPE_UNSPECIFIED",
+                                  "APPLICATION_JSON",
+                                  "TEXT_PLAIN"
+                                ]
+                              },
+                              "schema": {
+                                "description": "文本输出遵循的 JSON Schema。"
+                              }
+                            }
+                          },
+                          "audio": {
+                            "type": "object",
+                            "properties": {
+                              "mimeType": {
+                                "type": "string",
+                                "description": "音频 MIME 类型。"
+                              },
+                              "delivery": {
+                                "type": "string",
+                                "description": "音频返回方式。"
+                              },
+                              "sampleRate": {
+                                "type": "integer"
+                              },
+                              "bitRate": {
+                                "type": "integer"
+                              }
+                            }
+                          },
+                          "image": {
+                            "type": "object",
+                            "properties": {
+                              "mimeType": {
+                                "type": "string",
+                                "description": "图像 MIME 类型。"
+                              },
+                              "delivery": {
+                                "type": "string",
+                                "description": "图像返回方式。"
+                              },
+                              "aspectRatio": {
+                                "type": "string",
+                                "description": "图像宽高比。"
+                              },
+                              "imageSize": {
+                                "type": "string",
+                                "description": "图像尺寸。"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "translationConfig": {
+                        "type": "object",
+                        "description": "翻译配置。",
+                        "required": [
+                          "targetLanguageCode"
+                        ],
+                        "properties": {
+                          "targetLanguageCode": {
+                            "type": "string",
+                            "description": "目标语言的 BCP-47 代码。"
+                          },
+                          "echoTargetLanguage": {
+                            "type": "boolean"
+                          }
+                        }
+                      },
+                      "audioTranscriptionConfig": {
+                        "type": "object",
+                        "description": "音频转录配置。",
+                        "properties": {
+                          "languageCodes": {
+                            "type": "array",
+                            "description": "语言提示。",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "adaptationPhrases": {
+                            "type": "array",
+                            "description": "语音适配提示短语。",
+                            "items": {
+                              "type": "string"
+                            },
+                            "deprecated": true
+                          },
+                          "customVocabulary": {
+                            "type": "array",
+                            "description": "自定义术语。",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "wordTimestamp": {
+                            "type": "boolean"
+                          },
+                          "diarization": {
+                            "type": "boolean"
+                          },
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "VERBATIM",
+                              "SMART"
+                            ]
+                          },
+                          "languageAuto": {
+                            "type": "object",
+                            "description": "已弃用；使用 languageCodes。",
+                            "properties": {},
+                            "deprecated": true
+                          },
+                          "languageHints": {
+                            "type": "object",
+                            "description": "已弃用；使用 languageCodes。",
+                            "properties": {
+                              "languageCodes": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "deprecated": true
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "cachedContent": {
+                    "type": "string",
+                    "description": "作为上下文使用的缓存内容名称，格式为 cachedContents/{cachedContent}。"
+                  },
+                  "serviceTier": {
+                    "type": "string",
+                    "description": "请求服务层级。",
+                    "enum": [
+                      "unspecified",
+                      "standard",
+                      "flex",
+                      "priority"
+                    ]
+                  },
+                  "labels": {
+                    "type": "object",
+                    "description": "请求标签；可使用 safety_identifier 等键。",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "examples": [
+                  {
+                    "contents": [
+                      {
+                        "role": "user",
+                        "parts": [
+                          {
+                            "text": "Write a story about a magic backpack."
+                          }
+                        ]
+                      }
+                    ],
+                    "generationConfig": {
+                      "temperature": 1,
+                      "maxOutputTokens": 1024
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "文本输入": {
+                  "value": {
+                    "systemInstruction": {
+                      "parts": [
+                        {
+                          "text": "You are a helpful assistant."
+                        }
+                      ]
+                    },
+                    "contents": [
+                      {
+                        "role": "user",
+                        "parts": [
+                          {
+                            "text": "Write a short bedtime story about a unicorn."
+                          }
+                        ]
+                      }
+                    ],
+                    "generationConfig": {
+                      "maxOutputTokens": 1024
+                    }
+                  },
+                  "summary": "文本输入"
+                },
+                "图片输入": {
+                  "value": {
+                    "systemInstruction": {
+                      "parts": [
+                        {
+                          "text": "You are a helpful assistant."
+                        }
+                      ]
+                    },
+                    "contents": [
+                      {
+                        "role": "user",
+                        "parts": [
+                          {
+                            "inlineData": {
+                              "mimeType": "image/jpeg",
+                              "data": "<图片的Base64字符串>"
+                            }
+                          },
+                          {
+                            "text": "Describe this painting in Chinese, including its style, colors, and mood."
+                          }
+                        ]
+                      }
+                    ],
+                    "generationConfig": {
+                      "maxOutputTokens": 1024
+                    }
+                  },
+                  "summary": "图片输入"
+                },
+                "函数调用": {
+                  "value": {
+                    "contents": [
+                      {
+                        "role": "user",
+                        "parts": [
+                          {
+                            "text": "What's the weather in Shanghai today?"
+                          }
+                        ]
+                      }
+                    ],
+                    "tools": [
+                      {
+                        "functionDeclarations": [
+                          {
+                            "name": "get_weather",
+                            "description": "Get current weather for a city.",
+                            "parameters": {
+                              "type": "OBJECT",
+                              "properties": {
+                                "city": {
+                                  "type": "STRING",
+                                  "description": "City name, such as Shanghai."
+                                }
+                              },
+                              "required": [
+                                "city"
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "summary": "函数调用"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Gemini API：models.generateContent 普通响应。完全内联，适合导入 Apifox。",
+                  "properties": {
+                    "candidates": {
+                      "type": "array",
+                      "description": "模型生成的候选回复列表。",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "index": {
+                            "type": "integer",
+                            "description": "候选回复索引。"
+                          },
+                          "content": {
+                            "type": "object",
+                            "description": "候选回复内容。",
+                            "properties": {
+                              "role": {
+                                "type": "string",
+                                "enum": [
+                                  "model"
+                                ],
+                                "description": "角色，固定为 model。"
+                              },
+                              "parts": {
+                                "type": "array",
+                                "description": "回复内容部分。",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "text": {
+                                      "type": "string",
+                                      "description": "生成的文本。"
+                                    },
+                                    "inlineData": {
+                                      "type": "object",
+                                      "description": "内联生成的媒体数据。",
+                                      "properties": {
+                                        "mimeType": {
+                                          "type": "string"
+                                        },
+                                        "data": {
+                                          "type": "string",
+                                          "description": "Base64 编码数据。"
+                                        },
+                                        "displayName": {
+                                          "type": "string",
+                                          "description": "内联媒体的显示名称。"
+                                        }
+                                      }
+                                    },
+                                    "fileData": {
+                                      "type": "object",
+                                      "properties": {
+                                        "mimeType": {
+                                          "type": "string"
+                                        },
+                                        "fileUri": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string",
+                                          "description": "文件的显示名称。"
+                                        }
+                                      }
+                                    },
+                                    "functionCall": {
+                                      "type": "object",
+                                      "description": "模型请求调用函数。",
+                                      "properties": {
+                                        "name": {
+                                          "type": "string",
+                                          "description": "函数名称。"
+                                        },
+                                        "args": {
+                                          "type": "object",
+                                          "description": "函数参数。",
+                                          "properties": {}
+                                        },
+                                        "id": {
+                                          "type": "string",
+                                          "description": "函数调用 ID。"
+                                        }
+                                      }
+                                    },
+                                    "executableCode": {
+                                      "type": "object",
+                                      "properties": {
+                                        "language": {
+                                          "type": "string"
+                                        },
+                                        "code": {
+                                          "type": "string"
+                                        },
+                                        "id": {
+                                          "type": "string",
+                                          "description": "可执行代码块 ID。"
+                                        }
+                                      }
+                                    },
+                                    "codeExecutionResult": {
+                                      "type": "object",
+                                      "properties": {
+                                        "outcome": {
+                                          "type": "string"
+                                        },
+                                        "output": {
+                                          "type": "string"
+                                        },
+                                        "id": {
+                                          "type": "string",
+                                          "description": "对应的代码块 ID。"
+                                        }
+                                      }
+                                    },
+                                    "thought": {
+                                      "type": "boolean",
+                                      "description": "是否为思考内容。"
+                                    },
+                                    "thoughtSignature": {
+                                      "type": "string",
+                                      "description": "思考签名。"
+                                    },
+                                    "partMetadata": {
+                                      "type": "object",
+                                      "description": "内容块关联的自定义元数据。",
+                                      "additionalProperties": true
+                                    },
+                                    "mediaResolution": {
+                                      "type": "object",
+                                      "description": "此媒体内容块的解析度。",
+                                      "properties": {
+                                        "level": {
+                                          "type": "string",
+                                          "enum": [
+                                            "MEDIA_RESOLUTION_UNSPECIFIED",
+                                            "MEDIA_RESOLUTION_LOW",
+                                            "MEDIA_RESOLUTION_MEDIUM",
+                                            "MEDIA_RESOLUTION_HIGH"
+                                          ]
+                                        }
+                                      }
+                                    },
+                                    "mediaProcessing": {
+                                      "type": "string",
+                                      "description": "视频内容的处理方式。"
+                                    },
+                                    "audioTranscription": {
+                                      "type": "object",
+                                      "description": "音频转录信息。",
+                                      "properties": {}
+                                    },
+                                    "speechMetadata": {
+                                      "type": "object",
+                                      "description": "语音合成相关元数据。",
+                                      "properties": {}
+                                    },
+                                    "toolCall": {
+                                      "type": "object",
+                                      "description": "需要客户端回传的服务端工具调用。",
+                                      "properties": {}
+                                    },
+                                    "toolResponse": {
+                                      "type": "object",
+                                      "description": "服务端工具调用的执行结果。",
+                                      "properties": {}
+                                    },
+                                    "videoMetadata": {
+                                      "type": "object",
+                                      "description": "视频内容元数据。",
+                                      "properties": {}
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "finishReason": {
+                            "type": "string",
+                            "description": "候选回复的结束原因。"
+                          },
+                          "finishMessage": {
+                            "type": "string",
+                            "description": "结束原因的说明。"
+                          },
+                          "safetyRatings": {
+                            "type": "array",
+                            "description": "候选回复的安全评级。",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "category": {
+                                  "type": "string"
+                                },
+                                "probability": {
+                                  "type": "string"
+                                },
+                                "blocked": {
+                                  "type": "boolean"
+                                }
+                              }
+                            }
+                          },
+                          "citationMetadata": {
+                            "type": "object",
+                            "description": "引用元数据。",
+                            "properties": {}
+                          },
+                          "tokenCount": {
+                            "type": "integer",
+                            "description": "候选回复词元数。"
+                          },
+                          "avgLogprobs": {
+                            "type": "number",
+                            "description": "候选回复的平均对数概率。"
+                          },
+                          "logprobsResult": {
+                            "type": "object",
+                            "description": "词元对数概率结果。",
+                            "properties": {}
+                          },
+                          "urlContextMetadata": {
+                            "type": "object",
+                            "description": "URL 上下文元数据。",
+                            "properties": {}
+                          }
+                        }
+                      }
+                    },
+                    "promptFeedback": {
+                      "type": "object",
+                      "description": "提示词被阻止或过滤时的反馈。",
+                      "properties": {
+                        "blockReason": {
+                          "type": "string",
+                          "description": "阻止原因。"
+                        },
+                        "blockReasonMessage": {
+                          "type": "string",
+                          "description": "阻止原因说明。"
+                        },
+                        "safetyRatings": {
+                          "type": "array",
+                          "description": "提示词安全评级。",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "usageMetadata": {
+                      "type": "object",
+                      "description": "词元使用统计。",
+                      "properties": {
+                        "promptTokenCount": {
+                          "type": "integer",
+                          "description": "提示词词元数。"
+                        },
+                        "candidatesTokenCount": {
+                          "type": "integer",
+                          "description": "候选回复词元数。"
+                        },
+                        "totalTokenCount": {
+                          "type": "integer",
+                          "description": "总词元数。"
+                        },
+                        "cachedContentTokenCount": {
+                          "type": "integer",
+                          "description": "缓存内容词元数。"
+                        },
+                        "thoughtsTokenCount": {
+                          "type": "integer",
+                          "description": "思考词元数。"
+                        },
+                        "toolUsePromptTokenCount": {
+                          "type": "integer",
+                          "description": "工具使用提示词词元数。"
+                        }
+                      }
+                    },
+                    "modelVersion": {
+                      "type": "string",
+                      "description": "实际使用的模型版本。"
+                    },
+                    "responseId": {
+                      "type": "string",
+                      "description": "响应唯一 ID。"
+                    }
+                  },
+                  "examples": [
+                    {
+                      "candidates": [
+                        {
+                          "index": 0,
+                          "content": {
+                            "role": "model",
+                            "parts": [
+                              {
+                                "text": "Once upon a time, a magic backpack..."
+                              }
+                            ]
+                          },
+                          "finishReason": "STOP"
+                        }
+                      ],
+                      "usageMetadata": {
+                        "promptTokenCount": 10,
+                        "candidatesTokenCount": 12,
+                        "totalTokenCount": 22
+                      },
+                      "modelVersion": "gemini-2.0-flash"
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "geminiApiKey": []
+          }
+        ],
+        "x-mint": {
+          "href": "/zh/api-reference/chat/gemini/generate-content",
+          "metadata": {
+            "sidebarTitle": "Generate Content"
+          }
+        }
+      }
+    },
+    "/v1beta/models/{model}:streamGenerateContent": {
+      "post": {
+        "summary": "Stream Generate Content",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "对话补全/Gemini协议"
+        ],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "description": "模型名称，格式为 models/{model}。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "contents"
+                ],
+                "properties": {
+                  "contents": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "当前对话内容。单轮请求通常只有一个 Content；多轮对话按顺序包含历史与最新请求。",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "parts"
+                      ],
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "model"
+                          ],
+                          "description": "内容角色。省略时通常视为 user。"
+                        },
+                        "parts": {
+                          "type": "array",
+                          "minItems": 1,
+                          "description": "内容部分列表。",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "description": "文本输入。"
+                              },
+                              "inlineData": {
+                                "type": "object",
+                                "description": "内联 Base64 文件数据。",
+                                "properties": {
+                                  "mimeType": {
+                                    "type": "string",
+                                    "description": "MIME 类型，例如 image/jpeg。"
+                                  },
+                                  "data": {
+                                    "type": "string",
+                                    "description": "Base64 编码的数据。"
+                                  },
+                                  "displayName": {
+                                    "type": "string",
+                                    "description": "内联媒体的显示名称。"
+                                  }
+                                }
+                              },
+                              "fileData": {
+                                "type": "object",
+                                "description": "File API 中已上传文件的引用。",
+                                "properties": {
+                                  "mimeType": {
+                                    "type": "string",
+                                    "description": "文件 MIME 类型。"
+                                  },
+                                  "fileUri": {
+                                    "type": "string",
+                                    "description": "文件 URI。"
+                                  },
+                                  "displayName": {
+                                    "type": "string",
+                                    "description": "文件的显示名称。"
+                                  }
+                                }
+                              },
+                              "functionCall": {
+                                "type": "object",
+                                "description": "上一轮模型生成的函数调用。",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "description": "函数名称。"
+                                  },
+                                  "args": {
+                                    "type": "object",
+                                    "description": "函数参数。",
+                                    "properties": {}
+                                  }
+                                }
+                              },
+                              "functionResponse": {
+                                "type": "object",
+                                "description": "客户端对函数调用的执行结果。",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "description": "函数名称。"
+                                  },
+                                  "response": {
+                                    "type": "object",
+                                    "description": "函数执行返回值。",
+                                    "properties": {}
+                                  }
+                                }
+                              },
+                              "executableCode": {
+                                "type": "object",
+                                "description": "可执行代码。",
+                                "properties": {
+                                  "language": {
+                                    "type": "string",
+                                    "description": "编程语言。"
+                                  },
+                                  "code": {
+                                    "type": "string",
+                                    "description": "代码内容。"
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "description": "可执行代码块 ID。"
+                                  }
+                                }
+                              },
+                              "codeExecutionResult": {
+                                "type": "object",
+                                "description": "代码执行结果。",
+                                "properties": {
+                                  "outcome": {
+                                    "type": "string",
+                                    "description": "执行结果状态。"
+                                  },
+                                  "output": {
+                                    "type": "string",
+                                    "description": "执行输出。"
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "description": "对应的代码块 ID。"
+                                  }
+                                }
+                              },
+                              "thought": {
+                                "type": "boolean",
+                                "description": "该部分是否属于模型思考内容。"
+                              },
+                              "thoughtSignature": {
+                                "type": "string",
+                                "description": "思考内容签名；回传时保持原样。"
+                              },
+                              "partMetadata": {
+                                "type": "object",
+                                "description": "内容块关联的自定义元数据。",
+                                "additionalProperties": true
+                              },
+                              "mediaResolution": {
+                                "type": "object",
+                                "description": "此媒体内容块的解析度。",
+                                "properties": {
+                                  "level": {
+                                    "type": "string",
+                                    "enum": [
+                                      "MEDIA_RESOLUTION_UNSPECIFIED",
+                                      "MEDIA_RESOLUTION_LOW",
+                                      "MEDIA_RESOLUTION_MEDIUM",
+                                      "MEDIA_RESOLUTION_HIGH"
+                                    ]
+                                  }
+                                }
+                              },
+                              "mediaProcessing": {
+                                "type": "string",
+                                "description": "视频内容的处理方式。"
+                              },
+                              "audioTranscription": {
+                                "type": "object",
+                                "description": "音频转录信息。",
+                                "properties": {}
+                              },
+                              "speechMetadata": {
+                                "type": "object",
+                                "description": "语音合成相关元数据。",
+                                "properties": {}
+                              },
+                              "toolCall": {
+                                "type": "object",
+                                "description": "需要客户端回传的服务端工具调用。",
+                                "properties": {}
+                              },
+                              "toolResponse": {
+                                "type": "object",
+                                "description": "服务端工具调用的执行结果。",
+                                "properties": {}
+                              },
+                              "videoMetadata": {
+                                "type": "object",
+                                "description": "视频内容元数据。",
+                                "properties": {}
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "systemInstruction": {
+                    "type": "object",
+                    "description": "开发者设定的系统指令，目前应使用纯文本部分。",
+                    "required": [
+                      "parts"
+                    ],
+                    "properties": {
+                      "parts": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "text": {
+                              "type": "string",
+                              "description": "系统指令文本。"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "tools": {
+                    "type": "array",
+                    "description": "模型可使用的工具列表，例如函数调用或代码执行。",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "functionDeclarations": {
+                          "type": "array",
+                          "description": "函数声明列表。",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "description": "函数名称。"
+                              },
+                              "description": {
+                                "type": "string",
+                                "description": "函数用途说明。"
+                              },
+                              "parameters": {
+                                "type": "object",
+                                "description": "函数参数 JSON Schema。",
+                                "properties": {}
+                              },
+                              "response": {
+                                "type": "object",
+                                "description": "函数响应 JSON Schema。",
+                                "properties": {}
+                              },
+                              "behavior": {
+                                "type": "string",
+                                "enum": [
+                                  "UNSPECIFIED",
+                                  "BLOCKING",
+                                  "NON_BLOCKING"
+                                ]
+                              },
+                              "parametersJsonSchema": {
+                                "description": "函数参数的 JSON Schema；与 parameters 互斥。"
+                              },
+                              "responseJsonSchema": {
+                                "description": "函数响应的 JSON Schema；与 response 互斥。"
+                              }
+                            },
+                            "required": [
+                              "name",
+                              "description"
+                            ]
+                          }
+                        },
+                        "codeExecution": {
+                          "type": "object",
+                          "description": "启用代码执行工具。",
+                          "properties": {}
+                        },
+                        "googleSearch": {
+                          "type": "object",
+                          "description": "启用 Google 搜索工具。",
+                          "properties": {}
+                        },
+                        "urlContext": {
+                          "type": "object",
+                          "description": "启用 URL 上下文工具。",
+                          "properties": {}
+                        },
+                        "googleSearchRetrieval": {
+                          "type": "object",
+                          "description": "Google Search 检索配置。",
+                          "properties": {}
+                        },
+                        "computerUse": {
+                          "type": "object",
+                          "description": "计算机操作工具配置。",
+                          "properties": {}
+                        },
+                        "fileSearch": {
+                          "type": "object",
+                          "description": "文件搜索工具配置。",
+                          "properties": {}
+                        },
+                        "mcpServers": {
+                          "type": "array",
+                          "description": "可连接的 MCP 服务器。",
+                          "items": {
+                            "type": "object",
+                            "properties": {}
+                          }
+                        },
+                        "googleMaps": {
+                          "type": "object",
+                          "description": "地理位置搜索工具配置。",
+                          "properties": {}
+                        }
+                      }
+                    }
+                  },
+                  "toolConfig": {
+                    "type": "object",
+                    "description": "工具调用配置。",
+                    "properties": {
+                      "functionCallingConfig": {
+                        "type": "object",
+                        "properties": {
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "AUTO",
+                              "ANY",
+                              "NONE",
+                              "VALIDATED"
+                            ],
+                            "description": "函数调用模式。"
+                          },
+                          "allowedFunctionNames": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "允许自动调用的函数名。"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "safetySettings": {
+                    "type": "array",
+                    "description": "安全过滤规则；同一类别最多配置一次，覆盖该类别的默认阈值。",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "category": {
+                          "type": "string",
+                          "enum": [
+                            "HARM_CATEGORY_HATE_SPEECH",
+                            "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                            "HARM_CATEGORY_DANGEROUS_CONTENT",
+                            "HARM_CATEGORY_HARASSMENT",
+                            "HARM_CATEGORY_CIVIC_INTEGRITY",
+                            "HARM_CATEGORY_JAILBREAK"
+                          ],
+                          "description": "安全类别。"
+                        },
+                        "threshold": {
+                          "type": "string",
+                          "description": "阻止阈值。",
+                          "enum": [
+                            "HARM_BLOCK_THRESHOLD_UNSPECIFIED",
+                            "BLOCK_LOW_AND_ABOVE",
+                            "BLOCK_MEDIUM_AND_ABOVE",
+                            "BLOCK_ONLY_HIGH",
+                            "BLOCK_NONE",
+                            "OFF"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "category",
+                        "threshold"
+                      ]
+                    }
+                  },
+                  "generationConfig": {
+                    "type": "object",
+                    "description": "生成与输出配置。",
+                    "properties": {
+                      "temperature": {
+                        "type": "number",
+                        "description": "采样温度。",
+                        "minimum": 0,
+                        "maximum": 2
+                      },
+                      "topP": {
+                        "type": "number",
+                        "description": "核采样阈值。"
+                      },
+                      "topK": {
+                        "type": "integer",
+                        "description": "每步保留的最高概率候选数。"
+                      },
+                      "candidateCount": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "返回候选回复数量。"
+                      },
+                      "maxOutputTokens": {
+                        "type": "integer",
+                        "description": "最大输出词元数。"
+                      },
+                      "stopSequences": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "停止序列。",
+                        "maxItems": 5
+                      },
+                      "responseMimeType": {
+                        "type": "string",
+                        "enum": [
+                          "text/plain",
+                          "application/json",
+                          "text/x.enum"
+                        ],
+                        "description": "输出 MIME 类型。"
+                      },
+                      "responseSchema": {
+                        "type": "object",
+                        "description": "application/json 输出应遵循的 JSON Schema。",
+                        "properties": {},
+                        "deprecated": true
+                      },
+                      "responseJsonSchema": {
+                        "type": "object",
+                        "description": "JSON 输出的原始 JSON Schema。",
+                        "properties": {}
+                      },
+                      "responseModalities": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "MODALITY_UNSPECIFIED",
+                            "TEXT",
+                            "IMAGE",
+                            "AUDIO"
+                          ]
+                        },
+                        "description": "请求的输出模态。"
+                      },
+                      "thinkingConfig": {
+                        "type": "object",
+                        "properties": {
+                          "thinkingBudget": {
+                            "type": "integer",
+                            "description": "思考词元预算。"
+                          },
+                          "includeThoughts": {
+                            "type": "boolean",
+                            "description": "是否在响应中包含思考摘要。"
+                          },
+                          "thinkingLevel": {
+                            "type": "string",
+                            "enum": [
+                              "THINKING_LEVEL_UNSPECIFIED",
+                              "MINIMAL",
+                              "LOW",
+                              "MEDIUM",
+                              "HIGH"
+                            ],
+                            "description": "模型思考深度。"
+                          }
+                        }
+                      },
+                      "mediaResolution": {
+                        "type": "string",
+                        "description": "媒体输入解析度设置。",
+                        "enum": [
+                          "MEDIA_RESOLUTION_UNSPECIFIED",
+                          "MEDIA_RESOLUTION_LOW",
+                          "MEDIA_RESOLUTION_MEDIUM",
+                          "MEDIA_RESOLUTION_HIGH"
+                        ]
+                      },
+                      "seed": {
+                        "type": "integer",
+                        "description": "解码随机种子。"
+                      },
+                      "presencePenalty": {
+                        "type": "number",
+                        "description": "已出现词元的存在惩罚。"
+                      },
+                      "frequencyPenalty": {
+                        "type": "number",
+                        "description": "已出现词元的频率惩罚。"
+                      },
+                      "responseLogprobs": {
+                        "type": "boolean",
+                        "description": "是否在响应中返回词元对数概率。"
+                      },
+                      "logprobs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 20,
+                        "description": "返回的高概率候选词元数量；仅在 responseLogprobs 为 true 时有效。"
+                      },
+                      "enableEnhancedCivicAnswers": {
+                        "type": "boolean",
+                        "description": "启用增强的公民议题回答。"
+                      },
+                      "speechConfig": {
+                        "type": "object",
+                        "description": "语音生成配置。",
+                        "properties": {
+                          "voiceConfig": {
+                            "type": "object",
+                            "description": "单人声音配置。",
+                            "properties": {}
+                          },
+                          "multiSpeakerVoiceConfig": {
+                            "type": "object",
+                            "description": "多说话人声音配置。",
+                            "properties": {}
+                          },
+                          "languageCode": {
+                            "type": "string",
+                            "description": "语音的 BCP-47 语言代码。"
+                          }
+                        }
+                      },
+                      "imageConfig": {
+                        "type": "object",
+                        "description": "图像生成配置。",
+                        "properties": {
+                          "aspectRatio": {
+                            "type": "string",
+                            "description": "生成图像的宽高比。"
+                          },
+                          "imageSize": {
+                            "type": "string",
+                            "enum": [
+                              "512",
+                              "1K",
+                              "2K",
+                              "4K"
+                            ],
+                            "description": "生成图像尺寸。"
+                          }
+                        }
+                      },
+                      "enableAffectiveDialog": {
+                        "type": "boolean",
+                        "description": "根据检测到的情绪调整回答。"
+                      },
+                      "responseFormat": {
+                        "type": "object",
+                        "description": "分别配置文本、音频和图像输出格式。",
+                        "properties": {
+                          "text": {
+                            "type": "object",
+                            "properties": {
+                              "mimeType": {
+                                "type": "string",
+                                "enum": [
+                                  "MIME_TYPE_UNSPECIFIED",
+                                  "APPLICATION_JSON",
+                                  "TEXT_PLAIN"
+                                ]
+                              },
+                              "schema": {
+                                "description": "文本输出遵循的 JSON Schema。"
+                              }
+                            }
+                          },
+                          "audio": {
+                            "type": "object",
+                            "properties": {
+                              "mimeType": {
+                                "type": "string",
+                                "description": "音频 MIME 类型。"
+                              },
+                              "delivery": {
+                                "type": "string",
+                                "description": "音频返回方式。"
+                              },
+                              "sampleRate": {
+                                "type": "integer"
+                              },
+                              "bitRate": {
+                                "type": "integer"
+                              }
+                            }
+                          },
+                          "image": {
+                            "type": "object",
+                            "properties": {
+                              "mimeType": {
+                                "type": "string",
+                                "description": "图像 MIME 类型。"
+                              },
+                              "delivery": {
+                                "type": "string",
+                                "description": "图像返回方式。"
+                              },
+                              "aspectRatio": {
+                                "type": "string",
+                                "description": "图像宽高比。"
+                              },
+                              "imageSize": {
+                                "type": "string",
+                                "description": "图像尺寸。"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "translationConfig": {
+                        "type": "object",
+                        "description": "翻译配置。",
+                        "required": [
+                          "targetLanguageCode"
+                        ],
+                        "properties": {
+                          "targetLanguageCode": {
+                            "type": "string",
+                            "description": "目标语言的 BCP-47 代码。"
+                          },
+                          "echoTargetLanguage": {
+                            "type": "boolean"
+                          }
+                        }
+                      },
+                      "audioTranscriptionConfig": {
+                        "type": "object",
+                        "description": "音频转录配置。",
+                        "properties": {
+                          "languageCodes": {
+                            "type": "array",
+                            "description": "语言提示。",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "adaptationPhrases": {
+                            "type": "array",
+                            "description": "语音适配提示短语。",
+                            "items": {
+                              "type": "string"
+                            },
+                            "deprecated": true
+                          },
+                          "customVocabulary": {
+                            "type": "array",
+                            "description": "自定义术语。",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "wordTimestamp": {
+                            "type": "boolean"
+                          },
+                          "diarization": {
+                            "type": "boolean"
+                          },
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "VERBATIM",
+                              "SMART"
+                            ]
+                          },
+                          "languageAuto": {
+                            "type": "object",
+                            "description": "已弃用；使用 languageCodes。",
+                            "properties": {},
+                            "deprecated": true
+                          },
+                          "languageHints": {
+                            "type": "object",
+                            "description": "已弃用；使用 languageCodes。",
+                            "properties": {
+                              "languageCodes": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "deprecated": true
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "cachedContent": {
+                    "type": "string",
+                    "description": "作为上下文使用的缓存内容名称，格式为 cachedContents/{cachedContent}。"
+                  },
+                  "serviceTier": {
+                    "type": "string",
+                    "description": "请求服务层级。",
+                    "enum": [
+                      "unspecified",
+                      "standard",
+                      "flex",
+                      "priority"
+                    ]
+                  },
+                  "labels": {
+                    "type": "object",
+                    "description": "请求标签；可使用 safety_identifier 等键。",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "examples": [
+                  {
+                    "contents": [
+                      {
+                        "role": "user",
+                        "parts": [
+                          {
+                            "text": "Write a story about a magic backpack."
+                          }
+                        ]
+                      }
+                    ],
+                    "generationConfig": {
+                      "temperature": 1,
+                      "maxOutputTokens": 1024
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "流式输出": {
+                  "value": {
+                    "systemInstruction": {
+                      "parts": [
+                        {
+                          "text": "You are a helpful assistant."
+                        }
+                      ]
+                    },
+                    "contents": [
+                      {
+                        "role": "user",
+                        "parts": [
+                          {
+                            "text": "Write a short bedtime story about a unicorn."
+                          }
+                        ]
+                      }
+                    ],
+                    "generationConfig": {
+                      "maxOutputTokens": 1024
+                    }
+                  },
+                  "summary": "流式输出"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Gemini API：models.generateContent 普通响应。完全内联，适合导入 Apifox。",
+                  "properties": {
+                    "candidates": {
+                      "type": "array",
+                      "description": "模型生成的候选回复列表。",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "index": {
+                            "type": "integer",
+                            "description": "候选回复索引。"
+                          },
+                          "content": {
+                            "type": "object",
+                            "description": "候选回复内容。",
+                            "properties": {
+                              "role": {
+                                "type": "string",
+                                "enum": [
+                                  "model"
+                                ],
+                                "description": "角色，固定为 model。"
+                              },
+                              "parts": {
+                                "type": "array",
+                                "description": "回复内容部分。",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "text": {
+                                      "type": "string",
+                                      "description": "生成的文本。"
+                                    },
+                                    "inlineData": {
+                                      "type": "object",
+                                      "description": "内联生成的媒体数据。",
+                                      "properties": {
+                                        "mimeType": {
+                                          "type": "string"
+                                        },
+                                        "data": {
+                                          "type": "string",
+                                          "description": "Base64 编码数据。"
+                                        },
+                                        "displayName": {
+                                          "type": "string",
+                                          "description": "内联媒体的显示名称。"
+                                        }
+                                      }
+                                    },
+                                    "fileData": {
+                                      "type": "object",
+                                      "properties": {
+                                        "mimeType": {
+                                          "type": "string"
+                                        },
+                                        "fileUri": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string",
+                                          "description": "文件的显示名称。"
+                                        }
+                                      }
+                                    },
+                                    "functionCall": {
+                                      "type": "object",
+                                      "description": "模型请求调用函数。",
+                                      "properties": {
+                                        "name": {
+                                          "type": "string",
+                                          "description": "函数名称。"
+                                        },
+                                        "args": {
+                                          "type": "object",
+                                          "description": "函数参数。",
+                                          "properties": {}
+                                        },
+                                        "id": {
+                                          "type": "string",
+                                          "description": "函数调用 ID。"
+                                        }
+                                      }
+                                    },
+                                    "executableCode": {
+                                      "type": "object",
+                                      "properties": {
+                                        "language": {
+                                          "type": "string"
+                                        },
+                                        "code": {
+                                          "type": "string"
+                                        },
+                                        "id": {
+                                          "type": "string",
+                                          "description": "可执行代码块 ID。"
+                                        }
+                                      }
+                                    },
+                                    "codeExecutionResult": {
+                                      "type": "object",
+                                      "properties": {
+                                        "outcome": {
+                                          "type": "string"
+                                        },
+                                        "output": {
+                                          "type": "string"
+                                        },
+                                        "id": {
+                                          "type": "string",
+                                          "description": "对应的代码块 ID。"
+                                        }
+                                      }
+                                    },
+                                    "thought": {
+                                      "type": "boolean",
+                                      "description": "是否为思考内容。"
+                                    },
+                                    "thoughtSignature": {
+                                      "type": "string",
+                                      "description": "思考签名。"
+                                    },
+                                    "partMetadata": {
+                                      "type": "object",
+                                      "description": "内容块关联的自定义元数据。",
+                                      "additionalProperties": true
+                                    },
+                                    "mediaResolution": {
+                                      "type": "object",
+                                      "description": "此媒体内容块的解析度。",
+                                      "properties": {
+                                        "level": {
+                                          "type": "string",
+                                          "enum": [
+                                            "MEDIA_RESOLUTION_UNSPECIFIED",
+                                            "MEDIA_RESOLUTION_LOW",
+                                            "MEDIA_RESOLUTION_MEDIUM",
+                                            "MEDIA_RESOLUTION_HIGH"
+                                          ]
+                                        }
+                                      }
+                                    },
+                                    "mediaProcessing": {
+                                      "type": "string",
+                                      "description": "视频内容的处理方式。"
+                                    },
+                                    "audioTranscription": {
+                                      "type": "object",
+                                      "description": "音频转录信息。",
+                                      "properties": {}
+                                    },
+                                    "speechMetadata": {
+                                      "type": "object",
+                                      "description": "语音合成相关元数据。",
+                                      "properties": {}
+                                    },
+                                    "toolCall": {
+                                      "type": "object",
+                                      "description": "需要客户端回传的服务端工具调用。",
+                                      "properties": {}
+                                    },
+                                    "toolResponse": {
+                                      "type": "object",
+                                      "description": "服务端工具调用的执行结果。",
+                                      "properties": {}
+                                    },
+                                    "videoMetadata": {
+                                      "type": "object",
+                                      "description": "视频内容元数据。",
+                                      "properties": {}
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "finishReason": {
+                            "type": "string",
+                            "description": "候选回复的结束原因。"
+                          },
+                          "finishMessage": {
+                            "type": "string",
+                            "description": "结束原因的说明。"
+                          },
+                          "safetyRatings": {
+                            "type": "array",
+                            "description": "候选回复的安全评级。",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "category": {
+                                  "type": "string"
+                                },
+                                "probability": {
+                                  "type": "string"
+                                },
+                                "blocked": {
+                                  "type": "boolean"
+                                }
+                              }
+                            }
+                          },
+                          "citationMetadata": {
+                            "type": "object",
+                            "description": "引用元数据。",
+                            "properties": {}
+                          },
+                          "tokenCount": {
+                            "type": "integer",
+                            "description": "候选回复词元数。"
+                          },
+                          "avgLogprobs": {
+                            "type": "number",
+                            "description": "候选回复的平均对数概率。"
+                          },
+                          "logprobsResult": {
+                            "type": "object",
+                            "description": "词元对数概率结果。",
+                            "properties": {}
+                          },
+                          "urlContextMetadata": {
+                            "type": "object",
+                            "description": "URL 上下文元数据。",
+                            "properties": {}
+                          }
+                        }
+                      }
+                    },
+                    "promptFeedback": {
+                      "type": "object",
+                      "description": "提示词被阻止或过滤时的反馈。",
+                      "properties": {
+                        "blockReason": {
+                          "type": "string",
+                          "description": "阻止原因。"
+                        },
+                        "blockReasonMessage": {
+                          "type": "string",
+                          "description": "阻止原因说明。"
+                        },
+                        "safetyRatings": {
+                          "type": "array",
+                          "description": "提示词安全评级。",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "usageMetadata": {
+                      "type": "object",
+                      "description": "词元使用统计。",
+                      "properties": {
+                        "promptTokenCount": {
+                          "type": "integer",
+                          "description": "提示词词元数。"
+                        },
+                        "candidatesTokenCount": {
+                          "type": "integer",
+                          "description": "候选回复词元数。"
+                        },
+                        "totalTokenCount": {
+                          "type": "integer",
+                          "description": "总词元数。"
+                        },
+                        "cachedContentTokenCount": {
+                          "type": "integer",
+                          "description": "缓存内容词元数。"
+                        },
+                        "thoughtsTokenCount": {
+                          "type": "integer",
+                          "description": "思考词元数。"
+                        },
+                        "toolUsePromptTokenCount": {
+                          "type": "integer",
+                          "description": "工具使用提示词词元数。"
+                        }
+                      }
+                    },
+                    "modelVersion": {
+                      "type": "string",
+                      "description": "实际使用的模型版本。"
+                    },
+                    "responseId": {
+                      "type": "string",
+                      "description": "响应唯一 ID。"
+                    }
+                  },
+                  "examples": [
+                    {
+                      "candidates": [
+                        {
+                          "index": 0,
+                          "content": {
+                            "role": "model",
+                            "parts": [
+                              {
+                                "text": "Once upon a time, a magic backpack..."
+                              }
+                            ]
+                          },
+                          "finishReason": "STOP"
+                        }
+                      ],
+                      "usageMetadata": {
+                        "promptTokenCount": 10,
+                        "candidatesTokenCount": 12,
+                        "totalTokenCount": 22
+                      },
+                      "modelVersion": "gemini-2.0-flash"
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "geminiApiKey": []
+          }
+        ],
+        "x-mint": {
+          "href": "/zh/api-reference/chat/gemini/stream-generate-content",
+          "metadata": {
+            "sidebarTitle": "Stream Generate Content"
+          }
+        }
+      }
+    },
+    "/v1beta/cachedContents": {
+      "post": {
+        "summary": "Create Cached Content",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "对话补全/Gemini协议"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "创建缓存内容的请求体。缓存内容经过预处理后，可以在后续生成请求中重复使用。缓存只能用于创建它时指定的模型。",
+                "required": [
+                  "model"
+                ],
+                "properties": {
+                  "contents": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "需要缓存的内容列表。可以包含单轮内容，也可以按照对话顺序包含多轮历史内容。该字段仅用于输入，缓存创建后不可修改。",
+                    "items": {
+                      "type": "object",
+                      "description": "一条对话内容，由角色和一个或多个内容部分组成。",
+                      "required": [
+                        "parts"
+                      ],
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "model"
+                          ],
+                          "description": "内容所属角色。user 表示用户内容，model 表示模型生成的历史内容。"
+                        },
+                        "parts": {
+                          "type": "array",
+                          "minItems": 1,
+                          "description": "组成当前内容的部分列表。每个 Part 可表示文本、内联文件、已上传文件、函数调用、函数响应或代码执行信息。",
+                          "items": {
+                            "type": "object",
+                            "description": "内容的一个组成部分。text、inlineData、fileData、functionCall、functionResponse、executableCode、codeExecutionResult 通常只设置其中一种。",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "description": "纯文本内容。"
+                              },
+                              "inlineData": {
+                                "type": "object",
+                                "description": "直接嵌入请求中的二进制数据，数据需要使用 Base64 编码。",
+                                "required": [
+                                  "mimeType",
+                                  "data"
+                                ],
+                                "properties": {
+                                  "mimeType": {
+                                    "type": "string",
+                                    "description": "内联数据的 MIME 类型，例如 text/plain、image/jpeg、application/pdf。"
+                                  },
+                                  "data": {
+                                    "type": "string",
+                                    "format": "byte",
+                                    "description": "经过 Base64 编码的文件内容。"
+                                  },
+                                  "displayName": {
+                                    "type": "string",
+                                    "description": "内联媒体的显示名称。"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "fileData": {
+                                "type": "object",
+                                "description": "通过 Gemini File API 上传后得到的文件引用。",
+                                "required": [
+                                  "mimeType",
+                                  "fileUri"
+                                ],
+                                "properties": {
+                                  "mimeType": {
+                                    "type": "string",
+                                    "description": "被引用文件的 MIME 类型，例如 text/plain、image/jpeg、application/pdf。"
+                                  },
+                                  "fileUri": {
+                                    "type": "string",
+                                    "description": "File API 返回的文件 URI。"
+                                  },
+                                  "displayName": {
+                                    "type": "string",
+                                    "description": "文件的显示名称。"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "functionCall": {
+                                "type": "object",
+                                "description": "模型在历史对话中生成的函数调用信息。",
+                                "required": [
+                                  "name",
+                                  "args"
+                                ],
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "description": "需要调用的函数名称，应与 tools.functionDeclarations 中声明的函数名称一致。"
+                                  },
+                                  "args": {
+                                    "type": "object",
+                                    "description": "调用函数时使用的参数，结构由对应函数的 parameters JSON Schema 决定。",
+                                    "additionalProperties": true,
+                                    "properties": {}
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "functionResponse": {
+                                "type": "object",
+                                "description": "客户端执行函数后返回给模型的结果。",
+                                "required": [
+                                  "name",
+                                  "response"
+                                ],
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "description": "已执行函数的名称，应与对应的 functionCall.name 一致。"
+                                  },
+                                  "response": {
+                                    "type": "object",
+                                    "description": "函数执行结果。可以包含函数返回的数据、状态或错误信息。",
+                                    "additionalProperties": true,
+                                    "properties": {}
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "executableCode": {
+                                "type": "object",
+                                "description": "由模型生成、可以交给代码执行环境运行的代码。",
+                                "required": [
+                                  "language",
+                                  "code"
+                                ],
+                                "properties": {
+                                  "language": {
+                                    "type": "string",
+                                    "enum": [
+                                      "LANGUAGE_UNSPECIFIED",
+                                      "PYTHON"
+                                    ],
+                                    "description": "代码使用的编程语言。LANGUAGE_UNSPECIFIED 表示未指定，PYTHON 表示 Python。"
+                                  },
+                                  "code": {
+                                    "type": "string",
+                                    "description": "需要执行的源代码。"
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "description": "可执行代码块 ID。"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "codeExecutionResult": {
+                                "type": "object",
+                                "description": "代码执行环境返回的执行结果。",
+                                "required": [
+                                  "outcome"
+                                ],
+                                "properties": {
+                                  "outcome": {
+                                    "type": "string",
+                                    "enum": [
+                                      "OUTCOME_UNSPECIFIED",
+                                      "OUTCOME_OK",
+                                      "OUTCOME_FAILED",
+                                      "OUTCOME_DEADLINE_EXCEEDED"
+                                    ],
+                                    "description": "代码执行状态。OUTCOME_OK 表示成功，OUTCOME_FAILED 表示失败，OUTCOME_DEADLINE_EXCEEDED 表示执行超时。"
+                                  },
+                                  "output": {
+                                    "type": "string",
+                                    "description": "代码执行产生的标准输出、错误信息或其他文本结果。"
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "description": "对应的代码块 ID。"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "thought": {
+                                "type": "boolean",
+                                "description": "表示当前 Part 是否属于模型的思考内容。通常由服务端生成，回传历史内容时应保持原值。"
+                              },
+                              "thoughtSignature": {
+                                "type": "string",
+                                "format": "byte",
+                                "description": "模型思考内容的签名。回传模型历史内容时应保持原样，不应由客户端修改或自行生成。"
+                              },
+                              "partMetadata": {
+                                "type": "object",
+                                "description": "内容块关联的自定义元数据。",
+                                "additionalProperties": true
+                              },
+                              "mediaResolution": {
+                                "type": "object",
+                                "description": "此媒体内容块的解析度。",
+                                "properties": {
+                                  "level": {
+                                    "type": "string",
+                                    "enum": [
+                                      "MEDIA_RESOLUTION_UNSPECIFIED",
+                                      "MEDIA_RESOLUTION_LOW",
+                                      "MEDIA_RESOLUTION_MEDIUM",
+                                      "MEDIA_RESOLUTION_HIGH"
+                                    ]
+                                  }
+                                }
+                              },
+                              "mediaProcessing": {
+                                "type": "string",
+                                "description": "视频内容的处理方式。"
+                              },
+                              "audioTranscription": {
+                                "type": "object",
+                                "description": "音频转录信息。",
+                                "properties": {}
+                              },
+                              "speechMetadata": {
+                                "type": "object",
+                                "description": "语音合成相关元数据。",
+                                "properties": {}
+                              },
+                              "toolCall": {
+                                "type": "object",
+                                "description": "需要客户端回传的服务端工具调用。",
+                                "properties": {}
+                              },
+                              "toolResponse": {
+                                "type": "object",
+                                "description": "服务端工具调用的执行结果。",
+                                "properties": {}
+                              },
+                              "videoMetadata": {
+                                "type": "object",
+                                "description": "视频内容元数据。",
+                                "properties": {}
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "tools": {
+                    "type": "array",
+                    "description": "模型在后续生成内容时可以使用的工具列表。该字段仅用于输入，缓存创建后不可修改。",
+                    "items": {
+                      "type": "object",
+                      "description": "一个工具声明。可以声明客户端函数、代码执行工具或其他模型支持的工具。",
+                      "properties": {
+                        "functionDeclarations": {
+                          "type": "array",
+                          "minItems": 1,
+                          "description": "客户端提供给模型使用的函数声明列表。",
+                          "items": {
+                            "type": "object",
+                            "description": "一个可由模型调用的函数定义。",
+                            "required": [
+                              "name",
+                              "description"
+                            ],
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "description": "函数名称。名称应唯一，并符合服务端支持的命名规则。"
+                              },
+                              "description": {
+                                "type": "string",
+                                "description": "函数用途和调用场景说明，模型将根据该说明判断是否调用函数。"
+                              },
+                              "parameters": {
+                                "type": "object",
+                                "description": "函数参数的 JSON Schema。通常根节点的 type 为 object，并通过 properties 声明参数。",
+                                "additionalProperties": true,
+                                "properties": {}
+                              },
+                              "response": {
+                                "type": "object",
+                                "description": "函数返回值的 JSON Schema，用于描述函数执行结果的结构。",
+                                "additionalProperties": true,
+                                "properties": {}
+                              },
+                              "behavior": {
+                                "type": "string",
+                                "enum": [
+                                  "UNSPECIFIED",
+                                  "BLOCKING",
+                                  "NON_BLOCKING"
+                                ],
+                                "description": "函数调用的执行方式。"
+                              },
+                              "parametersJsonSchema": {
+                                "description": "函数参数的 JSON Schema；与 parameters 互斥。"
+                              },
+                              "responseJsonSchema": {
+                                "description": "函数响应的 JSON Schema；与 response 互斥。"
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        },
+                        "codeExecution": {
+                          "type": "object",
+                          "description": "启用模型代码执行能力。当前配置对象通常为空。",
+                          "additionalProperties": false,
+                          "properties": {}
+                        },
+                        "googleSearchRetrieval": {
+                          "type": "object",
+                          "description": "Google Search 检索配置。",
+                          "properties": {}
+                        },
+                        "googleSearch": {
+                          "type": "object",
+                          "description": "Google Search 工具配置。",
+                          "properties": {}
+                        },
+                        "computerUse": {
+                          "type": "object",
+                          "description": "计算机操作工具配置。",
+                          "properties": {}
+                        },
+                        "urlContext": {
+                          "type": "object",
+                          "description": "URL 上下文工具配置。",
+                          "properties": {}
+                        },
+                        "fileSearch": {
+                          "type": "object",
+                          "description": "文件搜索工具配置。",
+                          "properties": {}
+                        },
+                        "mcpServers": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {}
+                          },
+                          "description": "可连接的 MCP 服务器。"
+                        },
+                        "googleMaps": {
+                          "type": "object",
+                          "description": "地理位置搜索工具配置。",
+                          "properties": {}
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "expireTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "缓存失效的绝对时间，使用 RFC 3339 格式。服务端输出时会规范化为 UTC 时间。该字段与 ttl 互斥，最多设置其中一个。",
+                    "examples": [
+                      "2026-09-08T12:00:00Z",
+                      "2026-09-08T12:00:00.123Z"
+                    ]
+                  },
+                  "ttl": {
+                    "type": "string",
+                    "pattern": "^[0-9]+(?:\\.[0-9]{1,9})?s$",
+                    "description": "缓存的相对有效时长，以秒为单位，最多支持 9 位小数，并以 s 结尾。该字段仅用于输入，与 expireTime 互斥。",
+                    "examples": [
+                      "300s",
+                      "3600s",
+                      "3.5s"
+                    ]
+                  },
+                  "displayName": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "description": "用户为缓存内容设置的可读名称，最多包含 128 个 Unicode 字符。该字段在缓存创建后不可修改。"
+                  },
+                  "model": {
+                    "type": "string",
+                    "pattern": "^models/[^/]+$",
+                    "description": "用于创建和使用该缓存的模型资源名称。缓存只能用于这里指定的模型，格式为 models/{model}。该字段为必填项，创建后不可修改。",
+                    "examples": [
+                      "models/gemini-1.5-flash-001",
+                      "models/gemini-2.5-flash"
+                    ]
+                  },
+                  "systemInstruction": {
+                    "type": "object",
+                    "description": "由开发者设置的系统指令。当前仅支持纯文本 Part。该字段仅用于输入，缓存创建后不可修改。",
+                    "required": [
+                      "parts"
+                    ],
+                    "properties": {
+                      "role": {
+                        "type": "string",
+                        "enum": [
+                          "user",
+                          "model"
+                        ],
+                        "description": "系统指令内容的角色。通常可以省略该字段。"
+                      },
+                      "parts": {
+                        "type": "array",
+                        "minItems": 1,
+                        "description": "组成系统指令的文本部分列表。",
+                        "items": {
+                          "type": "object",
+                          "description": "系统指令中的一个文本部分。",
+                          "required": [
+                            "text"
+                          ],
+                          "properties": {
+                            "text": {
+                              "type": "string",
+                              "description": "系统指令文本，用于定义模型的身份、行为、任务要求或输出规则。"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "toolConfig": {
+                    "type": "object",
+                    "description": "工具调用配置。该配置由所有 tools 共享，仅用于输入，缓存创建后不可修改。",
+                    "properties": {
+                      "functionCallingConfig": {
+                        "type": "object",
+                        "description": "函数调用行为配置。",
+                        "properties": {
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "MODE_UNSPECIFIED",
+                              "AUTO",
+                              "ANY",
+                              "NONE",
+                              "VALIDATED"
+                            ],
+                            "default": "AUTO",
+                            "description": "函数调用模式。MODE_UNSPECIFIED 表示未指定且不建议使用；AUTO 表示模型自行决定返回文本或调用函数；ANY 表示模型必须调用函数；NONE 表示禁止函数调用；VALIDATED 表示模型可返回文本或调用经过约束验证的函数。"
+                          },
+                          "allowedFunctionNames": {
+                            "type": "array",
+                            "minItems": 1,
+                            "description": "允许模型调用的函数名称列表。仅应在 mode 为 ANY 或 VALIDATED 时设置，名称必须与 functionDeclarations 中的函数名称一致。",
+                            "items": {
+                              "type": "string",
+                              "description": "允许调用的函数名称。"
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "retrievalConfig": {
+                        "type": "object",
+                        "description": "检索工具使用的上下文配置。",
+                        "properties": {
+                          "latLng": {
+                            "type": "object",
+                            "description": "用户所在位置的经纬度，遵循 WGS84 坐标标准。",
+                            "required": [
+                              "latitude",
+                              "longitude"
+                            ],
+                            "properties": {
+                              "latitude": {
+                                "type": "number",
+                                "minimum": -90,
+                                "maximum": 90,
+                                "description": "纬度，单位为度，取值范围为 -90 到 90。"
+                              },
+                              "longitude": {
+                                "type": "number",
+                                "minimum": -180,
+                                "maximum": 180,
+                                "description": "经度，单位为度，取值范围为 -180 到 180。"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "languageCode": {
+                            "type": "string",
+                            "description": "用户内容使用的语言代码，应使用 BCP 47 语言标签，例如 zh-CN、en-US。"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "includeServerSideToolInvocations": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "是否在模型响应的 Content 中包含服务端工具调用及其响应。设为 true 后，客户端可以观察服务端工具的调用过程。"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "not": {
+                  "required": [
+                    "expireTime",
+                    "ttl"
+                  ]
+                },
+                "additionalProperties": false
+              },
+              "examples": {
+                "默认": {
+                  "value": {
+                    "model": "models/gemini-2.5-flash",
+                    "displayName": "unicorn-story-context",
+                    "systemInstruction": {
+                      "parts": [
+                        {
+                          "text": "You are a creative bedtime-story assistant. Keep stories gentle and suitable for children."
+                        }
+                      ]
+                    },
+                    "contents": [
+                      {
+                        "role": "user",
+                        "parts": [
+                          {
+                            "text": "Reference material: Unicorns are magical horses with a single horn. They live in enchanted forests and help kind-hearted people."
+                          }
+                        ]
+                      }
+                    ],
+                    "ttl": "3600s"
+                  },
+                  "summary": "默认"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "创建成功后返回的缓存内容资源。响应主要包含缓存标识、模型、创建时间、更新时间、实际过期时间和令牌用量。",
+                  "required": [
+                    "name",
+                    "model",
+                    "expireTime"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "pattern": "^cachedContents/[^/]+$",
+                      "description": "缓存内容的唯一资源名称，由服务端生成，格式为 cachedContents/{id}。",
+                      "examples": [
+                        "cachedContents/abc123def456"
+                      ]
+                    },
+                    "displayName": {
+                      "type": "string",
+                      "maxLength": 128,
+                      "description": "创建缓存时设置的可读名称。未设置时可能不返回该字段。"
+                    },
+                    "model": {
+                      "type": "string",
+                      "pattern": "^models/[^/]+$",
+                      "description": "该缓存绑定的模型资源名称。缓存只能用于此模型。",
+                      "examples": [
+                        "models/gemini-1.5-flash-001"
+                      ]
+                    },
+                    "createTime": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "缓存资源的创建时间，由服务端生成，采用 RFC 3339 格式并通常规范化为 UTC 时间。",
+                      "examples": [
+                        "2026-09-08T10:00:00Z"
+                      ]
+                    },
+                    "updateTime": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "缓存资源最后一次更新的时间，由服务端生成，采用 RFC 3339 格式并通常规范化为 UTC 时间。",
+                      "examples": [
+                        "2026-09-08T10:00:00Z"
+                      ]
+                    },
+                    "expireTime": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "缓存实际失效的绝对时间。无论请求中使用 expireTime 还是 ttl，服务端都会在响应中返回该字段。",
+                      "examples": [
+                        "2026-09-08T11:00:00Z"
+                      ]
+                    },
+                    "usageMetadata": {
+                      "type": "object",
+                      "description": "缓存内容的令牌用量信息。",
+                      "properties": {
+                        "totalTokenCount": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "当前缓存内容占用的令牌总数。"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "example": {
+                  "name": "cachedContents/abc123xyz",
+                  "displayName": "starry-night-reference",
+                  "model": "models/gemini-2.5-flash",
+                  "createTime": "2026-09-10T08:30:00.123456Z",
+                  "updateTime": "2026-09-10T08:30:00.123456Z",
+                  "expireTime": "2026-09-10T09:30:00.123456Z",
+                  "usageMetadata": {
+                    "totalTokenCount": 1864
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "geminiApiKey": []
+          }
+        ],
+        "x-mint": {
+          "href": "/zh/api-reference/chat/gemini/create-cache",
+          "metadata": {
+            "sidebarTitle": "Create Cached Content"
+          }
+        }
+      }
+    },
+    "/v1beta/cachedContents/{id}": {
+      "get": {
+        "summary": "Get Cached Content",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "对话补全/Gemini协议"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "缓存内容 ID，对应资源名 cachedContents/{id}。",
+            "required": true,
+            "example": "1357412997877727232",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "geminiApiKey": []
+          }
+        ],
+        "x-mint": {
+          "href": "/zh/api-reference/chat/gemini/get-cache",
+          "metadata": {
+            "sidebarTitle": "Get Cached Content"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Cached Content",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "对话补全/Gemini协议"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "缓存内容 ID，对应资源名 cachedContents/{id}。",
+            "required": true,
+            "example": "1357412997877727232",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "geminiApiKey": []
+          }
+        ],
+        "x-mint": {
+          "href": "/zh/api-reference/chat/gemini/delete-cache",
+          "metadata": {
+            "sidebarTitle": "Delete Cached Content"
+          }
+        }
+      }
+    },
+    "/v1beta/models": {
+      "get": {
+        "summary": "Gemini 模型列表",
+        "operationId": "listGeminiModels",
+        "description": "返回与 GET /v1/models 相同的完整可调用模型目录，覆盖全部供应商、文本、图片、视频、语音、嵌入和决策模型，不按当前协议隐式过滤。保留当前协议的外层响应结构和分页；可用 provider、mode、type 显式筛选。\n\n每个模型都包含 aliases、architecture、capabilities.endpoints、capabilities.parameters 和 capabilities.reasoning_efforts，取值与 OpenAI 列表一致。参数读取方式：common 与端点路径数组取并集。列表展示不表示每个模型都能使用当前协议生成内容，实际可调用路径以 capabilities.endpoints 为准。",
+        "tags": [
+          "对话补全/Gemini协议"
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "query",
+            "description": "按模型 ID 的供应商命名空间精确筛选，例如 google。省略时返回全部供应商。",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "description": "按模式筛选：chat、image_generation、video_generation、embedding、transcription、audio_generation、decision 或 music_generation。多个值用逗号分隔，或重复传入，取并集。",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "按类型筛选：text、image、video、music、embedding、audio 或 decision。支持逗号分隔或重复传入；与 provider、mode 同时使用时取交集。",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 50
+            },
+            "description": "每页数量，默认 50，最大 1000。"
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "上一页返回的 nextPageToken；省略时从第一页开始。"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "完整目录中的一页，包含平台定义的模型元数据。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "models"
+                  ],
+                  "properties": {
+                    "models": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "baseModelId",
+                          "displayName",
+                          "supportedGenerationMethods",
+                          "aliases",
+                          "architecture",
+                          "capabilities"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "pattern": "^models/.+",
+                            "description": "models/ 加完整平台模型 ID，例如 models/google/gemini-3.8-flash。保留命名空间以区分同名模型。"
+                          },
+                          "baseModelId": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "inputTokenLimit": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0
+                          },
+                          "contextLength": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0
+                          },
+                          "outputTokenLimit": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "supportedParameters": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Gemini 原生参数名；没有 Gemini 参数配置时为空数组。"
+                          },
+                          "supportedGenerationMethods": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "模型的 Gemini 协议方法；没有 Gemini 协议能力时为空数组。完整目录中的模型应按 capabilities.endpoints 选择调用接口。"
+                          },
+                          "thinking": {
+                            "type": "boolean"
+                          },
+                          "temperature": {
+                            "type": "number"
+                          },
+                          "maxTemperature": {
+                            "type": "number"
+                          },
+                          "topP": {
+                            "type": "number"
+                          },
+                          "topK": {
+                            "type": "number"
+                          },
+                          "aliases": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "模型的可用别名，来自当前平台配置；未配置时返回空数组。"
+                          },
+                          "architecture": {
+                            "type": "object",
+                            "required": [
+                              "input_modalities",
+                              "output_modalities"
+                            ],
+                            "properties": {
+                              "input_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "output_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "description": "模型可接受和可输出的模态，按平台配置及实际可调用端点生成。"
+                          },
+                          "capabilities": {
+                            "type": "object",
+                            "required": [
+                              "reasoning_efforts",
+                              "endpoints",
+                              "parameters"
+                            ],
+                            "properties": {
+                              "reasoning_efforts": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "按实际端点参数配置汇总的推理档位；无可配置档位时返回空数组。"
+                              },
+                              "endpoints": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "parameters": {
+                                "type": "object",
+                                "required": [
+                                  "common"
+                                ],
+                                "properties": {
+                                  "common": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "additionalProperties": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "description": "common 为所有可调用端点共有的参数，各端点路径下只列额外参数。该端点的完整参数集为 common 与端点数组的并集；单端点模型的参数可全部位于 common。"
+                              }
+                            },
+                            "description": "当前平台定义的端点、参数和推理档位。与其他协议格式中的这组字段一致。"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    },
+                    "nextPageToken": {
+                      "type": "string",
+                      "description": "还有下一页时返回，作为下次请求的 pageToken。"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "examples": {
+                  "catalog_metadata": {
+                    "summary": "视频模型也包含在目录中",
+                    "value": {
+                      "models": [
+                        {
+                          "name": "models/happyhorse-1.0",
+                          "baseModelId": "happyhorse-1.0",
+                          "displayName": "HappyHorse 1.0",
+                          "description": "HappyHorse 1.0",
+                          "inputTokenLimit": null,
+                          "contextLength": null,
+                          "supportedParameters": [],
+                          "supportedGenerationMethods": [],
+                          "thinking": false,
+                          "aliases": [
+                            "happyhorse-1.0",
+                            "happyhorse-1.0-20260624"
+                          ],
+                          "architecture": {
+                            "input_modalities": [
+                              "text",
+                              "image",
+                              "video"
+                            ],
+                            "output_modalities": [
+                              "video"
+                            ]
+                          },
+                          "capabilities": {
+                            "endpoints": [
+                              "/v1/videos"
+                            ],
+                            "parameters": {
+                              "/v1/videos": [],
+                              "common": [
+                                "seed",
+                                "model",
+                                "prompt",
+                                "duration",
+                                "extra_body",
+                                "resolution",
+                                "aspect_ratio",
+                                "callback_url",
+                                "frame_images",
+                                "input_references"
+                              ]
+                            },
+                            "reasoning_efforts": []
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "筛选参数或分页参数无效。"
+          }
+        },
+        "x-mint": {
+          "href": "/zh/api-reference/chat/gemini/models",
+          "metadata": {
+            "sidebarTitle": "Gemini 模型列表"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "geminiApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-goog-api-key",
+        "description": "Tikway API Key。按 Gemini 原生协议通过 x-goog-api-key 请求头传递。"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": [
+    {
+      "geminiApiKey": []
+    }
+  ]
+}

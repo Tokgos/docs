@@ -1,0 +1,496 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenAI model list",
+    "description": "List all callable platform models in the OpenAI format, including aliases, architecture, and capabilities.",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "Chat completions"
+    },
+    {
+      "name": "Chat completions/OpenAI protocol"
+    }
+  ],
+  "paths": {
+    "/v1/models": {
+      "get": {
+        "summary": "Get Models",
+        "deprecated": false,
+        "description": "List models with callable endpoints on the current gateway. All types are included by default. Use type to filter by text, image, video, music, or embedding. Separate multiple types with commas or repeat type to combine them with OR.\n\nThe response uses the OpenAI object=list/data structure and includes aliases, architecture, capabilities, and video_attributes for video models. capabilities.parameters.common lists parameters shared by all callable endpoints. Endpoint arrays list only additional parameters. Combine common with an endpoint array for its complete parameter set.\n\nThis page describes the OpenAI format. Sending the anthropic-version header switches to the Anthropic model-list format; parse that response with the corresponding protocol client.",
+        "operationId": "getModels",
+        "tags": [
+          "Chat completions/OpenAI protocol"
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by model type, or omit to include all types. Supports text/image/video/music/embedding, ignoring case and surrounding whitespace. Separate multiple types with commas or repeat type to combine them with OR. Unknown or empty values return 400.",
+            "required": false,
+            "example": "image,video",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "examples": [
+                "text",
+                "image",
+                "video",
+                "music",
+                "embedding",
+                "image,video"
+              ]
+            }
+          },
+          {
+            "name": "x-provider-route",
+            "in": "header",
+            "description": "Upstream routing preference: cost, stable, or fast.",
+            "example": "cost",
+            "schema": {
+              "type": "string",
+              "default": "cost"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The currently callable model catalog. Example capability values illustrate the response structure; use the values returned by the API.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "OpenAIModelsResponse",
+                  "description": "HTTP 200 response for GET /v1/models. Returns the full callable platform catalog with shared metadata from platform configuration.",
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "data"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "name",
+                          "aliases",
+                          "context_length",
+                          "architecture",
+                          "capabilities",
+                          "object",
+                          "created",
+                          "owned_by"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Platform model ID, including the provider namespace when present, for example google/gemini-3.8-flash.",
+                            "minLength": 1
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Model display name."
+                          },
+                          "aliases": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Available model aliases from platform configuration. Returns an empty array when none are configured."
+                          },
+                          "context_length": {
+                            "type": [
+                              "integer",
+                              "null"
+                            ],
+                            "minimum": 0,
+                            "description": "Context token limit, or null when not configured."
+                          },
+                          "max_output_tokens": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Maximum output tokens. Included when configured; otherwise omitted."
+                          },
+                          "architecture": {
+                            "type": "object",
+                            "required": [
+                              "input_modalities",
+                              "output_modalities"
+                            ],
+                            "properties": {
+                              "input_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "output_modalities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "description": "Input and output modalities derived from platform configuration and the endpoints available for this model.",
+                            "additionalProperties": false
+                          },
+                          "capabilities": {
+                            "type": "object",
+                            "required": [
+                              "reasoning_efforts",
+                              "endpoints",
+                              "parameters"
+                            ],
+                            "properties": {
+                              "reasoning_efforts": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "Reasoning effort levels collected from the endpoint parameter configuration. Returns an empty array when no configurable levels are available."
+                              },
+                              "endpoints": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "minItems": 1,
+                                "description": "Currently callable API paths for this model, from platform routing configuration."
+                              },
+                              "parameters": {
+                                "type": "object",
+                                "required": [
+                                  "common"
+                                ],
+                                "properties": {
+                                  "common": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "additionalProperties": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "description": "common lists parameters shared by all callable endpoints. Each endpoint path lists only its additional parameters. Combine common with the endpoint array for its complete parameter set. For a model with one endpoint, all parameters may be in common.",
+                                "examples": [
+                                  {
+                                    "/v1/videos": [],
+                                    "common": [
+                                      "seed",
+                                      "model",
+                                      "prompt",
+                                      "duration",
+                                      "extra_body",
+                                      "resolution",
+                                      "aspect_ratio",
+                                      "callback_url",
+                                      "frame_images",
+                                      "input_references"
+                                    ]
+                                  }
+                                ]
+                              }
+                            },
+                            "description": "Endpoints, parameters, and reasoning effort levels defined by the platform. These fields match the metadata returned in the other protocol formats.",
+                            "additionalProperties": false
+                          },
+                          "object": {
+                            "type": "string",
+                            "const": "model"
+                          },
+                          "owned_by": {
+                            "type": "string",
+                            "description": "Model family name. Falls back to the provider namespace in the model ID when not configured."
+                          },
+                          "video_attributes": {
+                            "type": "object",
+                            "required": [
+                              "modes",
+                              "resolutions",
+                              "default_resolution",
+                              "min_duration_seconds",
+                              "max_duration_seconds",
+                              "supports_audio",
+                              "aspect_ratios"
+                            ],
+                            "properties": {
+                              "modes": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "resolutions": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "default_resolution": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "min_duration_seconds": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
+                              "max_duration_seconds": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
+                              "supports_audio": {
+                                "type": [
+                                  "boolean",
+                                  "null"
+                                ]
+                              },
+                              "aspect_ratios": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "description": "Included only for video models. Unconfigured scalar values are null and lists may be empty. Input combinations must still follow the model API limits.",
+                            "additionalProperties": false
+                          },
+                          "created": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "Model creation time in Unix seconds. Currently returns 0 when not configured.",
+                            "examples": [
+                              0
+                            ]
+                          },
+                          "top_provider": {
+                            "type": "object",
+                            "required": [
+                              "max_completion_tokens"
+                            ],
+                            "properties": {
+                              "max_completion_tokens": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "description": "Maximum output tokens, matching max_output_tokens."
+                              }
+                            },
+                            "additionalProperties": false,
+                            "description": "Included when max_output_tokens is configured."
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "examples": [
+                    {
+                      "object": "list",
+                      "data": [
+                        {
+                          "id": "happyhorse-1.0",
+                          "name": "HappyHorse 1.0",
+                          "aliases": [
+                            "happyhorse-1.0",
+                            "happyhorse-1.0-20260624"
+                          ],
+                          "architecture": {
+                            "input_modalities": [
+                              "text",
+                              "image",
+                              "video"
+                            ],
+                            "output_modalities": [
+                              "video"
+                            ]
+                          },
+                          "capabilities": {
+                            "endpoints": [
+                              "/v1/videos"
+                            ],
+                            "parameters": {
+                              "/v1/videos": [],
+                              "common": [
+                                "seed",
+                                "model",
+                                "prompt",
+                                "duration",
+                                "extra_body",
+                                "resolution",
+                                "aspect_ratio",
+                                "callback_url",
+                                "frame_images",
+                                "input_references"
+                              ]
+                            },
+                            "reasoning_efforts": []
+                          },
+                          "context_length": null,
+                          "object": "model",
+                          "created": 0,
+                          "owned_by": "HappyHorse",
+                          "video_attributes": {
+                            "modes": [],
+                            "resolutions": [],
+                            "default_resolution": null,
+                            "min_duration_seconds": null,
+                            "max_duration_seconds": null,
+                            "supports_audio": null,
+                            "aspect_ratios": []
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "example": {
+                  "object": "list",
+                  "data": [
+                    {
+                      "id": "happyhorse-1.0",
+                      "name": "HappyHorse 1.0",
+                      "aliases": [
+                        "happyhorse-1.0",
+                        "happyhorse-1.0-20260624"
+                      ],
+                      "architecture": {
+                        "input_modalities": [
+                          "text",
+                          "image",
+                          "video"
+                        ],
+                        "output_modalities": [
+                          "video"
+                        ]
+                      },
+                      "capabilities": {
+                        "endpoints": [
+                          "/v1/videos"
+                        ],
+                        "parameters": {
+                          "/v1/videos": [],
+                          "common": [
+                            "seed",
+                            "model",
+                            "prompt",
+                            "duration",
+                            "extra_body",
+                            "resolution",
+                            "aspect_ratio",
+                            "callback_url",
+                            "frame_images",
+                            "input_references"
+                          ]
+                        },
+                        "reasoning_efforts": []
+                      },
+                      "context_length": null,
+                      "object": "model",
+                      "created": 0,
+                      "owned_by": "HappyHorse",
+                      "video_attributes": {
+                        "modes": [],
+                        "resolutions": [],
+                        "default_resolution": null,
+                        "min_duration_seconds": null,
+                        "max_duration_seconds": null,
+                        "supports_audio": null,
+                        "aspect_ratios": []
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "type contains an unknown type or an empty value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-mint": {
+          "href": "/en/api-reference/chat/openai/list-models",
+          "metadata": {
+            "sidebarTitle": "Get Models"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

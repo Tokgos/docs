@@ -1,0 +1,3674 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mintlify",
+    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "图片生成"
+    },
+    {
+      "name": "图片生成/Midjoruney"
+    },
+    {
+      "name": "Midjourney"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "图片生成",
+        "deprecated": false,
+        "description": "model 可用模型库 ID 或已支持的别名；模型与 prompt 中的版本参数必须一致。此操作只描述首次生图，不包含同路径的任务动作。",
+        "operationId": "submitMidjourneyImageGeneration",
+        "tags": [
+          "图片生成/Midjoruney",
+          "Midjourney"
+        ],
+        "parameters": [
+          {
+            "name": "x-provider-route",
+            "in": "header",
+            "description": "上游速度cost、stable、fast",
+            "example": "cost",
+            "schema": {
+              "type": "string",
+              "default": "cost"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "title": "Niji 5",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "model"
+                    ],
+                    "anyOf": [
+                      {
+                        "required": [
+                          "prompt"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "images"
+                        ]
+                      }
+                    ],
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "enum": [
+                          "midjourney/niji-5",
+                          "NIJI5",
+                          "niji 5"
+                        ],
+                        "description": "Niji 5；推荐使用模型库 ID midjourney/niji-5。"
+                      },
+                      "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "文本提示词，可带 Midjourney CLI 参数；显式 parameters 优先。"
+                      },
+                      "parameters": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "version": {
+                            "type": "string",
+                            "enum": [
+                              "niji 5"
+                            ],
+                            "default": "niji 5",
+                            "description": "原生模型版本；必须与顶层 model 一致。"
+                          },
+                          "channel": {
+                            "type": "string",
+                            "enum": [
+                              "DISCORD",
+                              "WEB"
+                            ],
+                            "default": "DISCORD",
+                            "description": "生成通道；默认 DISCORD。部分功能仅支持 WEB。"
+                          },
+                          "aspect": {
+                            "type": "string",
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                            "default": "1:1",
+                            "x-aspect-ratio": {
+                              "maximum": null,
+                              "hdMaximum": null,
+                              "unbounded": true
+                            },
+                            "examples": [
+                              "1:1",
+                              "2:3",
+                              "3:2",
+                              "9:16",
+                              "16:9"
+                            ],
+                            "description": "宽高比，与顶层 aspect_ratio 二选一；一般最大长短边比 14:1，V8 HD 为 4:1。"
+                          },
+                          "chaos": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "default": 0,
+                            "description": "变化程度。"
+                          },
+                          "stylize": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格化强度。"
+                          },
+                          "quality": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "default": 1,
+                            "enum": [
+                              0.25,
+                              0.5,
+                              1
+                            ],
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "Midjourney 原生数值质量，不是顶层质量档位。"
+                          },
+                          "style": {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+                            "enum": [
+                              "expressive",
+                              "cute",
+                              "original",
+                              "scenic"
+                            ],
+                            "description": "模型专属风格。"
+                          },
+                          "seed": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 4294967295,
+                            "x-default-strategy": "random",
+                            "description": "随机种子；Turbo 模式下种子锁定不可靠。"
+                          },
+                          "tile": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "无缝平铺。"
+                          },
+                          "no": {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "\\S",
+                            "description": "排除内容。"
+                          },
+                          "ref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 4,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^https?://\\S+$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "图片提示词 URL 列表；也可以通过 images 的 image_reference 传入。"
+                          },
+                          "iw": {
+                            "type": "number",
+                            "minimum": 0.2,
+                            "default": 1,
+                            "maximum": 2,
+                            "description": "图片提示词权重，需提供 ref 或 image_reference。"
+                          },
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "fast",
+                              "relax"
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "生成速度模式；顶层 mode 优先。当前代理不接受 turbo。"
+                          },
+                          "repeat": {
+                            "type": "integer",
+                            "minimum": 2,
+                            "maximum": 40,
+                            "x-default-strategy": "single-job-when-omitted",
+                            "x-plan-limits": {
+                              "basic": {
+                                "minimum": 2,
+                                "maximum": 4
+                              },
+                              "standard": {
+                                "minimum": 2,
+                                "maximum": 10
+                              },
+                              "pro": {
+                                "minimum": 2,
+                                "maximum": 40
+                              },
+                              "mega": {
+                                "minimum": 2,
+                                "maximum": 40
+                              }
+                            },
+                            "description": "重复次数；受订阅方案限制，Relax 模式不可用。"
+                          },
+                          "stop": {
+                            "type": "integer",
+                            "minimum": 10,
+                            "maximum": 100,
+                            "default": 100,
+                            "description": "提前停止的完成百分比。"
+                          }
+                        },
+                        "description": "Niji 5 的结构化原生参数；只列出当前启用的参数。"
+                      },
+                      "images": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "type",
+                            "image_url"
+                          ],
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image_reference"
+                              ]
+                            },
+                            "image_url": {
+                              "type": "string",
+                              "pattern": "^(https?://|data:image/)",
+                              "minLength": 1,
+                              "description": "HTTP(S) URL 或带 MIME 前缀的图片 data URL。"
+                            }
+                          }
+                        },
+                        "minItems": 1,
+                        "description": "参考图；每类数量按 parameters.ref/sref/cref/oref 的上限校验。",
+                        "allOf": [
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "image_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 4
+                          }
+                        ]
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "relax",
+                          "fast"
+                        ],
+                        "default": "relax",
+                        "description": "代理当前接受 relax 和 fast；turbo 上游不支持。"
+                      },
+                      "quality": {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "low",
+                          "medium",
+                          "standard"
+                        ],
+                        "description": "平台质量档位。auto 表示不显式设置原生 quality。"
+                      },
+                      "aspect_ratio": {
+                        "type": "string",
+                        "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                        "description": "宽高比；一般最大 14:1，V8 HD 最大 4:1。"
+                      },
+                      "size": {
+                        "type": "string",
+                        "anyOf": [
+                          {
+                            "const": "auto"
+                          },
+                          {
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$"
+                          }
+                        ],
+                        "description": "兼容字段：auto 或宽高比；不接受像素尺寸。"
+                      },
+                      "webhook_url": {
+                        "type": "string",
+                        "pattern": "^https?://",
+                        "description": "任务通知回调 URL。"
+                      },
+                      "notify_progress_image": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "是否向 webhook_url 通知过程图。"
+                      }
+                    },
+                    "description": "模型 Niji 5，版本 niji 5。只包含当前项目中启用的参数。"
+                  },
+                  {
+                    "title": "Niji 6",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "model"
+                    ],
+                    "anyOf": [
+                      {
+                        "required": [
+                          "prompt"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "images"
+                        ]
+                      }
+                    ],
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "enum": [
+                          "midjourney/niji-6",
+                          "NIJI6",
+                          "niji 6"
+                        ],
+                        "description": "Niji 6；推荐使用模型库 ID midjourney/niji-6。"
+                      },
+                      "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "文本提示词，可带 Midjourney CLI 参数；显式 parameters 优先。"
+                      },
+                      "parameters": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "version": {
+                            "type": "string",
+                            "enum": [
+                              "niji 6"
+                            ],
+                            "default": "niji 6",
+                            "description": "原生模型版本；必须与顶层 model 一致。"
+                          },
+                          "channel": {
+                            "type": "string",
+                            "enum": [
+                              "DISCORD",
+                              "WEB"
+                            ],
+                            "default": "DISCORD",
+                            "description": "生成通道；默认 DISCORD。部分功能仅支持 WEB。"
+                          },
+                          "aspect": {
+                            "type": "string",
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                            "default": "1:1",
+                            "x-aspect-ratio": {
+                              "maximum": 14,
+                              "hdMaximum": null,
+                              "unbounded": false
+                            },
+                            "examples": [
+                              "1:1",
+                              "2:3",
+                              "3:2",
+                              "9:16",
+                              "16:9"
+                            ],
+                            "description": "宽高比，与顶层 aspect_ratio 二选一；一般最大长短边比 14:1，V8 HD 为 4:1。"
+                          },
+                          "chaos": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "default": 0,
+                            "description": "变化程度。"
+                          },
+                          "stylize": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格化强度。"
+                          },
+                          "weird": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3000,
+                            "default": 0,
+                            "description": "怪异程度。"
+                          },
+                          "quality": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "default": 1,
+                            "enum": [
+                              0.25,
+                              0.5,
+                              1
+                            ],
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "Midjourney 原生数值质量，不是顶层质量档位。"
+                          },
+                          "seed": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 4294967295,
+                            "x-default-strategy": "random",
+                            "description": "随机种子；Turbo 模式下种子锁定不可靠。"
+                          },
+                          "raw": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "Raw 模式。"
+                          },
+                          "tile": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "无缝平铺。"
+                          },
+                          "no": {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "\\S",
+                            "description": "排除内容。"
+                          },
+                          "ref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 4,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^https?://\\S+$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "图片提示词 URL 列表；也可以通过 images 的 image_reference 传入。"
+                          },
+                          "iw": {
+                            "type": "number",
+                            "minimum": 0,
+                            "default": 1,
+                            "maximum": 3,
+                            "description": "图片提示词权重，需提供 ref 或 image_reference。"
+                          },
+                          "sref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 3,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(?:https?://\\S+|[0-9]+(?:::[0-9]+(?:\\.[0-9]+)?)?|random)$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "风格参考 URL／代码列表；也可以通过 images 的 style_reference 传入。"
+                          },
+                          "sw": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格参考权重，需与 sref 或 style_reference 配合。"
+                          },
+                          "sv": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4,
+                            "default": 4,
+                            "enum": [
+                              1,
+                              2,
+                              3,
+                              4
+                            ],
+                            "description": "风格参考算法版本。"
+                          },
+                          "cref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 3,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^https?://\\S+$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "description": "角色参考 URL 列表；也可以通过 images 的 character_reference 传入。"
+                          },
+                          "cw": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "default": 100,
+                            "description": "角色参考权重，需与 cref 或 character_reference 配合。"
+                          },
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "fast",
+                              "relax"
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "生成速度模式；顶层 mode 优先。当前代理不接受 turbo。"
+                          },
+                          "profile": {
+                            "anyOf": [
+                              {
+                                "const": true
+                              },
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*(?: [A-Za-z0-9][A-Za-z0-9_-]*)*$"
+                              }
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "个性化配置；true 使用账号默认配置。"
+                          },
+                          "repeat": {
+                            "type": "integer",
+                            "minimum": 2,
+                            "maximum": 40,
+                            "x-default-strategy": "single-job-when-omitted",
+                            "x-plan-limits": {
+                              "basic": {
+                                "minimum": 2,
+                                "maximum": 4
+                              },
+                              "standard": {
+                                "minimum": 2,
+                                "maximum": 10
+                              },
+                              "pro": {
+                                "minimum": 2,
+                                "maximum": 40
+                              },
+                              "mega": {
+                                "minimum": 2,
+                                "maximum": 40
+                              }
+                            },
+                            "description": "重复次数；受订阅方案限制，Relax 模式不可用。"
+                          },
+                          "stop": {
+                            "type": "integer",
+                            "minimum": 10,
+                            "maximum": 100,
+                            "default": 100,
+                            "description": "提前停止的完成百分比。"
+                          }
+                        },
+                        "description": "Niji 6 的结构化原生参数；只列出当前启用的参数。"
+                      },
+                      "images": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "type",
+                            "image_url"
+                          ],
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image_reference",
+                                "style_reference",
+                                "character_reference"
+                              ]
+                            },
+                            "image_url": {
+                              "type": "string",
+                              "pattern": "^(https?://|data:image/)",
+                              "minLength": 1,
+                              "description": "HTTP(S) URL 或带 MIME 前缀的图片 data URL。"
+                            }
+                          }
+                        },
+                        "minItems": 1,
+                        "description": "参考图；每类数量按 parameters.ref/sref/cref/oref 的上限校验。",
+                        "allOf": [
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "image_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 4
+                          },
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "style_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 3
+                          },
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "character_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 3
+                          }
+                        ]
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "relax",
+                          "fast"
+                        ],
+                        "default": "relax",
+                        "description": "代理当前接受 relax 和 fast；turbo 上游不支持。"
+                      },
+                      "quality": {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "low",
+                          "medium",
+                          "standard"
+                        ],
+                        "description": "平台质量档位。auto 表示不显式设置原生 quality。"
+                      },
+                      "aspect_ratio": {
+                        "type": "string",
+                        "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                        "description": "宽高比；一般最大 14:1，V8 HD 最大 4:1。"
+                      },
+                      "size": {
+                        "type": "string",
+                        "anyOf": [
+                          {
+                            "const": "auto"
+                          },
+                          {
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$"
+                          }
+                        ],
+                        "description": "兼容字段：auto 或宽高比；不接受像素尺寸。"
+                      },
+                      "webhook_url": {
+                        "type": "string",
+                        "pattern": "^https?://",
+                        "description": "任务通知回调 URL。"
+                      },
+                      "notify_progress_image": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "是否向 webhook_url 通知过程图。"
+                      }
+                    },
+                    "description": "模型 Niji 6，版本 niji 6。只包含当前项目中启用的参数。"
+                  },
+                  {
+                    "title": "Niji 7",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "model"
+                    ],
+                    "anyOf": [
+                      {
+                        "required": [
+                          "prompt"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "images"
+                        ]
+                      }
+                    ],
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "enum": [
+                          "midjourney/niji-7",
+                          "NIJI7",
+                          "niji 7"
+                        ],
+                        "description": "Niji 7；推荐使用模型库 ID midjourney/niji-7。"
+                      },
+                      "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "文本提示词，可带 Midjourney CLI 参数；显式 parameters 优先。"
+                      },
+                      "parameters": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "version": {
+                            "type": "string",
+                            "enum": [
+                              "niji 7"
+                            ],
+                            "default": "niji 7",
+                            "description": "原生模型版本；必须与顶层 model 一致。"
+                          },
+                          "channel": {
+                            "type": "string",
+                            "enum": [
+                              "DISCORD",
+                              "WEB"
+                            ],
+                            "default": "DISCORD",
+                            "description": "生成通道；默认 DISCORD。部分功能仅支持 WEB。"
+                          },
+                          "aspect": {
+                            "type": "string",
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                            "default": "1:1",
+                            "x-aspect-ratio": {
+                              "maximum": 14,
+                              "hdMaximum": null,
+                              "unbounded": false
+                            },
+                            "examples": [
+                              "1:1",
+                              "2:3",
+                              "3:2",
+                              "9:16",
+                              "16:9"
+                            ],
+                            "description": "宽高比，与顶层 aspect_ratio 二选一；一般最大长短边比 14:1，V8 HD 为 4:1。"
+                          },
+                          "chaos": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "default": 0,
+                            "description": "变化程度。"
+                          },
+                          "stylize": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格化强度。"
+                          },
+                          "weird": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3000,
+                            "default": 0,
+                            "description": "怪异程度。"
+                          },
+                          "quality": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "x-constraint-status": {
+                              "status": "partially-documented",
+                              "unknown": [
+                                "enum",
+                                "maximum",
+                                "default"
+                              ],
+                              "reason": "No exhaustive Niji 7 quality values are published in the referenced official documentation.",
+                              "sources": [
+                                "https://docs.midjourney.com/hc/en-us/articles/32199405667853-Version"
+                              ]
+                            },
+                            "description": "Midjourney 原生数值质量，不是顶层质量档位。 官方未确认的上限或枚举保持开放，详见 x-constraint-status。",
+                            "minimum": 0
+                          },
+                          "seed": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 4294967295,
+                            "x-default-strategy": "random",
+                            "description": "随机种子；Turbo 模式下种子锁定不可靠。"
+                          },
+                          "raw": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "Raw 模式。"
+                          },
+                          "tile": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "无缝平铺。"
+                          },
+                          "no": {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "\\S",
+                            "description": "排除内容。"
+                          },
+                          "ref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 4,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^https?://\\S+$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "图片提示词 URL 列表；也可以通过 images 的 image_reference 传入。"
+                          },
+                          "iw": {
+                            "type": "number",
+                            "minimum": 0,
+                            "default": 1,
+                            "maximum": 2,
+                            "description": "图片提示词权重，需提供 ref 或 image_reference。"
+                          },
+                          "sref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 3,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(?:https?://\\S+|[0-9]+(?:::[0-9]+(?:\\.[0-9]+)?)?|random)$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "风格参考 URL／代码列表；也可以通过 images 的 style_reference 传入。"
+                          },
+                          "sw": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格参考权重，需与 sref 或 style_reference 配合。"
+                          },
+                          "sv": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "examples": [
+                              4
+                            ],
+                            "x-constraint-status": {
+                              "status": "partially-documented",
+                              "unknown": [
+                                "enum",
+                                "maximum",
+                                "default"
+                              ],
+                              "reason": "Niji confirms --sv 4 support, but does not publish an exhaustive version list.",
+                              "sources": [
+                                "https://nijijourney.com/en/blog/niji-7"
+                              ]
+                            },
+                            "description": "风格参考算法版本。 官方未确认的上限或枚举保持开放，详见 x-constraint-status。"
+                          },
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "fast",
+                              "relax"
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "生成速度模式；顶层 mode 优先。当前代理不接受 turbo。"
+                          },
+                          "profile": {
+                            "anyOf": [
+                              {
+                                "const": true
+                              },
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*(?: [A-Za-z0-9][A-Za-z0-9_-]*)*$"
+                              }
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "个性化配置；true 使用账号默认配置。"
+                          },
+                          "repeat": {
+                            "type": "integer",
+                            "minimum": 2,
+                            "maximum": 40,
+                            "x-default-strategy": "single-job-when-omitted",
+                            "x-plan-limits": {
+                              "basic": {
+                                "minimum": 2,
+                                "maximum": 4
+                              },
+                              "standard": {
+                                "minimum": 2,
+                                "maximum": 10
+                              },
+                              "pro": {
+                                "minimum": 2,
+                                "maximum": 40
+                              },
+                              "mega": {
+                                "minimum": 2,
+                                "maximum": 40
+                              }
+                            },
+                            "description": "重复次数；受订阅方案限制，Relax 模式不可用。"
+                          }
+                        },
+                        "description": "Niji 7 的结构化原生参数；只列出当前启用的参数。"
+                      },
+                      "images": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "type",
+                            "image_url"
+                          ],
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image_reference",
+                                "style_reference"
+                              ]
+                            },
+                            "image_url": {
+                              "type": "string",
+                              "pattern": "^(https?://|data:image/)",
+                              "minLength": 1,
+                              "description": "HTTP(S) URL 或带 MIME 前缀的图片 data URL。"
+                            }
+                          }
+                        },
+                        "minItems": 1,
+                        "description": "参考图；每类数量按 parameters.ref/sref/cref/oref 的上限校验。",
+                        "allOf": [
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "image_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 4
+                          },
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "style_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 3
+                          }
+                        ]
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "relax",
+                          "fast"
+                        ],
+                        "default": "relax",
+                        "description": "代理当前接受 relax 和 fast；turbo 上游不支持。"
+                      },
+                      "quality": {
+                        "type": "string",
+                        "enum": [
+                          "auto"
+                        ],
+                        "description": "平台质量档位。auto 表示不显式设置原生 quality。"
+                      },
+                      "aspect_ratio": {
+                        "type": "string",
+                        "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                        "description": "宽高比；一般最大 14:1，V8 HD 最大 4:1。"
+                      },
+                      "size": {
+                        "type": "string",
+                        "anyOf": [
+                          {
+                            "const": "auto"
+                          },
+                          {
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$"
+                          }
+                        ],
+                        "description": "兼容字段：auto 或宽高比；不接受像素尺寸。"
+                      },
+                      "webhook_url": {
+                        "type": "string",
+                        "pattern": "^https?://",
+                        "description": "任务通知回调 URL。"
+                      },
+                      "notify_progress_image": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "是否向 webhook_url 通知过程图。"
+                      }
+                    },
+                    "description": "模型 Niji 7，版本 niji 7。只包含当前项目中启用的参数。"
+                  },
+                  {
+                    "title": "V 5.2",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "model"
+                    ],
+                    "anyOf": [
+                      {
+                        "required": [
+                          "prompt"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "images"
+                        ]
+                      }
+                    ],
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "enum": [
+                          "midjourney/v5.2",
+                          "V5.2",
+                          "v 5.2"
+                        ],
+                        "description": "V 5.2；推荐使用模型库 ID midjourney/v5.2。"
+                      },
+                      "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "文本提示词，可带 Midjourney CLI 参数；显式 parameters 优先。"
+                      },
+                      "parameters": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "version": {
+                            "type": "string",
+                            "enum": [
+                              "v 5.2"
+                            ],
+                            "default": "v 5.2",
+                            "description": "原生模型版本；必须与顶层 model 一致。"
+                          },
+                          "channel": {
+                            "type": "string",
+                            "enum": [
+                              "DISCORD",
+                              "WEB"
+                            ],
+                            "default": "DISCORD",
+                            "description": "生成通道；默认 DISCORD。部分功能仅支持 WEB。"
+                          },
+                          "aspect": {
+                            "type": "string",
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                            "default": "1:1",
+                            "x-aspect-ratio": {
+                              "maximum": null,
+                              "hdMaximum": null,
+                              "unbounded": true
+                            },
+                            "examples": [
+                              "1:1",
+                              "2:3",
+                              "3:2",
+                              "9:16",
+                              "16:9"
+                            ],
+                            "description": "宽高比，与顶层 aspect_ratio 二选一；一般最大长短边比 14:1，V8 HD 为 4:1。"
+                          },
+                          "chaos": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "default": 0,
+                            "description": "变化程度。"
+                          },
+                          "stylize": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格化强度。"
+                          },
+                          "weird": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3000,
+                            "default": 0,
+                            "description": "怪异程度。"
+                          },
+                          "quality": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "default": 1,
+                            "enum": [
+                              0.25,
+                              0.5,
+                              1
+                            ],
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "Midjourney 原生数值质量，不是顶层质量档位。"
+                          },
+                          "style": {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+                            "description": "模型专属风格。"
+                          },
+                          "seed": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 4294967295,
+                            "x-default-strategy": "random",
+                            "description": "随机种子；Turbo 模式下种子锁定不可靠。"
+                          },
+                          "raw": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "Raw 模式。"
+                          },
+                          "tile": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "无缝平铺。"
+                          },
+                          "no": {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "\\S",
+                            "description": "排除内容。"
+                          },
+                          "ref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 4,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^https?://\\S+$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "图片提示词 URL 列表；也可以通过 images 的 image_reference 传入。"
+                          },
+                          "iw": {
+                            "type": "number",
+                            "minimum": 0.5,
+                            "default": 1,
+                            "maximum": 2,
+                            "description": "图片提示词权重，需提供 ref 或 image_reference。"
+                          },
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "fast",
+                              "relax"
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "生成速度模式；顶层 mode 优先。当前代理不接受 turbo。"
+                          },
+                          "repeat": {
+                            "type": "integer",
+                            "minimum": 2,
+                            "maximum": 40,
+                            "x-default-strategy": "single-job-when-omitted",
+                            "x-plan-limits": {
+                              "basic": {
+                                "minimum": 2,
+                                "maximum": 4
+                              },
+                              "standard": {
+                                "minimum": 2,
+                                "maximum": 10
+                              },
+                              "pro": {
+                                "minimum": 2,
+                                "maximum": 40
+                              },
+                              "mega": {
+                                "minimum": 2,
+                                "maximum": 40
+                              }
+                            },
+                            "description": "重复次数；受订阅方案限制，Relax 模式不可用。"
+                          },
+                          "stop": {
+                            "type": "integer",
+                            "minimum": 10,
+                            "maximum": 100,
+                            "default": 100,
+                            "description": "提前停止的完成百分比。"
+                          }
+                        },
+                        "description": "V 5.2 的结构化原生参数；只列出当前启用的参数。"
+                      },
+                      "images": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "type",
+                            "image_url"
+                          ],
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image_reference"
+                              ]
+                            },
+                            "image_url": {
+                              "type": "string",
+                              "pattern": "^(https?://|data:image/)",
+                              "minLength": 1,
+                              "description": "HTTP(S) URL 或带 MIME 前缀的图片 data URL。"
+                            }
+                          }
+                        },
+                        "minItems": 1,
+                        "description": "参考图；每类数量按 parameters.ref/sref/cref/oref 的上限校验。",
+                        "allOf": [
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "image_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 4
+                          }
+                        ]
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "relax",
+                          "fast"
+                        ],
+                        "default": "relax",
+                        "description": "代理当前接受 relax 和 fast；turbo 上游不支持。"
+                      },
+                      "quality": {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "low",
+                          "medium",
+                          "standard"
+                        ],
+                        "description": "平台质量档位。auto 表示不显式设置原生 quality。"
+                      },
+                      "aspect_ratio": {
+                        "type": "string",
+                        "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                        "description": "宽高比；一般最大 14:1，V8 HD 最大 4:1。"
+                      },
+                      "size": {
+                        "type": "string",
+                        "anyOf": [
+                          {
+                            "const": "auto"
+                          },
+                          {
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$"
+                          }
+                        ],
+                        "description": "兼容字段：auto 或宽高比；不接受像素尺寸。"
+                      },
+                      "webhook_url": {
+                        "type": "string",
+                        "pattern": "^https?://",
+                        "description": "任务通知回调 URL。"
+                      },
+                      "notify_progress_image": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "是否向 webhook_url 通知过程图。"
+                      }
+                    },
+                    "description": "模型 V 5.2，版本 v 5.2。只包含当前项目中启用的参数。"
+                  },
+                  {
+                    "title": "V 6",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "model"
+                    ],
+                    "anyOf": [
+                      {
+                        "required": [
+                          "prompt"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "images"
+                        ]
+                      }
+                    ],
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "enum": [
+                          "midjourney/v6",
+                          "V6",
+                          "v 6"
+                        ],
+                        "description": "V 6；推荐使用模型库 ID midjourney/v6。"
+                      },
+                      "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "文本提示词，可带 Midjourney CLI 参数；显式 parameters 优先。"
+                      },
+                      "parameters": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "version": {
+                            "type": "string",
+                            "enum": [
+                              "v 6"
+                            ],
+                            "default": "v 6",
+                            "description": "原生模型版本；必须与顶层 model 一致。"
+                          },
+                          "channel": {
+                            "type": "string",
+                            "enum": [
+                              "DISCORD",
+                              "WEB"
+                            ],
+                            "default": "DISCORD",
+                            "description": "生成通道；默认 DISCORD。部分功能仅支持 WEB。"
+                          },
+                          "aspect": {
+                            "type": "string",
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                            "default": "1:1",
+                            "x-aspect-ratio": {
+                              "maximum": 14,
+                              "hdMaximum": null,
+                              "unbounded": false
+                            },
+                            "examples": [
+                              "1:1",
+                              "2:3",
+                              "3:2",
+                              "9:16",
+                              "16:9"
+                            ],
+                            "description": "宽高比，与顶层 aspect_ratio 二选一；一般最大长短边比 14:1，V8 HD 为 4:1。"
+                          },
+                          "chaos": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "default": 0,
+                            "description": "变化程度。"
+                          },
+                          "stylize": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格化强度。"
+                          },
+                          "weird": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3000,
+                            "default": 0,
+                            "description": "怪异程度。"
+                          },
+                          "quality": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "default": 1,
+                            "enum": [
+                              0.25,
+                              0.5,
+                              1
+                            ],
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "Midjourney 原生数值质量，不是顶层质量档位。"
+                          },
+                          "seed": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 4294967295,
+                            "x-default-strategy": "random",
+                            "description": "随机种子；Turbo 模式下种子锁定不可靠。"
+                          },
+                          "raw": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "Raw 模式。"
+                          },
+                          "tile": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "无缝平铺。"
+                          },
+                          "no": {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "\\S",
+                            "description": "排除内容。"
+                          },
+                          "ref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 4,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^https?://\\S+$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "图片提示词 URL 列表；也可以通过 images 的 image_reference 传入。"
+                          },
+                          "iw": {
+                            "type": "number",
+                            "minimum": 0,
+                            "default": 1,
+                            "maximum": 3,
+                            "description": "图片提示词权重，需提供 ref 或 image_reference。"
+                          },
+                          "sref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 3,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(?:https?://\\S+|[0-9]+(?:::[0-9]+(?:\\.[0-9]+)?)?|random)$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "风格参考 URL／代码列表；也可以通过 images 的 style_reference 传入。"
+                          },
+                          "sw": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格参考权重，需与 sref 或 style_reference 配合。"
+                          },
+                          "sv": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4,
+                            "default": 4,
+                            "enum": [
+                              1,
+                              2,
+                              3,
+                              4
+                            ],
+                            "description": "风格参考算法版本。"
+                          },
+                          "cref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 3,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^https?://\\S+$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "description": "角色参考 URL 列表；也可以通过 images 的 character_reference 传入。"
+                          },
+                          "cw": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "default": 100,
+                            "description": "角色参考权重，需与 cref 或 character_reference 配合。"
+                          },
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "fast",
+                              "relax"
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "生成速度模式；顶层 mode 优先。当前代理不接受 turbo。"
+                          },
+                          "profile": {
+                            "anyOf": [
+                              {
+                                "const": true
+                              },
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*(?: [A-Za-z0-9][A-Za-z0-9_-]*)*$"
+                              }
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "个性化配置；true 使用账号默认配置。"
+                          },
+                          "repeat": {
+                            "type": "integer",
+                            "minimum": 2,
+                            "maximum": 40,
+                            "x-default-strategy": "single-job-when-omitted",
+                            "x-plan-limits": {
+                              "basic": {
+                                "minimum": 2,
+                                "maximum": 4
+                              },
+                              "standard": {
+                                "minimum": 2,
+                                "maximum": 10
+                              },
+                              "pro": {
+                                "minimum": 2,
+                                "maximum": 40
+                              },
+                              "mega": {
+                                "minimum": 2,
+                                "maximum": 40
+                              }
+                            },
+                            "description": "重复次数；受订阅方案限制，Relax 模式不可用。"
+                          },
+                          "stop": {
+                            "type": "integer",
+                            "minimum": 10,
+                            "maximum": 100,
+                            "default": 100,
+                            "description": "提前停止的完成百分比。"
+                          }
+                        },
+                        "description": "V 6 的结构化原生参数；只列出当前启用的参数。"
+                      },
+                      "images": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "type",
+                            "image_url"
+                          ],
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image_reference",
+                                "style_reference",
+                                "character_reference"
+                              ]
+                            },
+                            "image_url": {
+                              "type": "string",
+                              "pattern": "^(https?://|data:image/)",
+                              "minLength": 1,
+                              "description": "HTTP(S) URL 或带 MIME 前缀的图片 data URL。"
+                            }
+                          }
+                        },
+                        "minItems": 1,
+                        "description": "参考图；每类数量按 parameters.ref/sref/cref/oref 的上限校验。",
+                        "allOf": [
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "image_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 4
+                          },
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "style_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 3
+                          },
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "character_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 3
+                          }
+                        ]
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "relax",
+                          "fast"
+                        ],
+                        "default": "relax",
+                        "description": "代理当前接受 relax 和 fast；turbo 上游不支持。"
+                      },
+                      "quality": {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "low",
+                          "medium",
+                          "standard"
+                        ],
+                        "description": "平台质量档位。auto 表示不显式设置原生 quality。"
+                      },
+                      "aspect_ratio": {
+                        "type": "string",
+                        "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                        "description": "宽高比；一般最大 14:1，V8 HD 最大 4:1。"
+                      },
+                      "size": {
+                        "type": "string",
+                        "anyOf": [
+                          {
+                            "const": "auto"
+                          },
+                          {
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$"
+                          }
+                        ],
+                        "description": "兼容字段：auto 或宽高比；不接受像素尺寸。"
+                      },
+                      "webhook_url": {
+                        "type": "string",
+                        "pattern": "^https?://",
+                        "description": "任务通知回调 URL。"
+                      },
+                      "notify_progress_image": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "是否向 webhook_url 通知过程图。"
+                      }
+                    },
+                    "description": "模型 V 6，版本 v 6。只包含当前项目中启用的参数。"
+                  },
+                  {
+                    "title": "V 6.1",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "model"
+                    ],
+                    "anyOf": [
+                      {
+                        "required": [
+                          "prompt"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "images"
+                        ]
+                      }
+                    ],
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "enum": [
+                          "midjourney/v6.1",
+                          "V6.1",
+                          "v 6.1"
+                        ],
+                        "description": "V 6.1；推荐使用模型库 ID midjourney/v6.1。"
+                      },
+                      "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "文本提示词，可带 Midjourney CLI 参数；显式 parameters 优先。"
+                      },
+                      "parameters": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "version": {
+                            "type": "string",
+                            "enum": [
+                              "v 6.1"
+                            ],
+                            "default": "v 6.1",
+                            "description": "原生模型版本；必须与顶层 model 一致。"
+                          },
+                          "channel": {
+                            "type": "string",
+                            "enum": [
+                              "DISCORD",
+                              "WEB"
+                            ],
+                            "default": "DISCORD",
+                            "description": "生成通道；默认 DISCORD。部分功能仅支持 WEB。"
+                          },
+                          "aspect": {
+                            "type": "string",
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                            "default": "1:1",
+                            "x-aspect-ratio": {
+                              "maximum": 14,
+                              "hdMaximum": null,
+                              "unbounded": false
+                            },
+                            "examples": [
+                              "1:1",
+                              "2:3",
+                              "3:2",
+                              "9:16",
+                              "16:9"
+                            ],
+                            "description": "宽高比，与顶层 aspect_ratio 二选一；一般最大长短边比 14:1，V8 HD 为 4:1。"
+                          },
+                          "chaos": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "default": 0,
+                            "description": "变化程度。"
+                          },
+                          "stylize": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格化强度。"
+                          },
+                          "weird": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3000,
+                            "default": 0,
+                            "description": "怪异程度。"
+                          },
+                          "quality": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "default": 1,
+                            "enum": [
+                              0.5,
+                              1,
+                              2
+                            ],
+                            "minimum": 0,
+                            "maximum": 2,
+                            "description": "Midjourney 原生数值质量，不是顶层质量档位。"
+                          },
+                          "seed": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 4294967295,
+                            "x-default-strategy": "random",
+                            "description": "随机种子；Turbo 模式下种子锁定不可靠。"
+                          },
+                          "raw": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "Raw 模式。"
+                          },
+                          "tile": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "无缝平铺。"
+                          },
+                          "no": {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "\\S",
+                            "description": "排除内容。"
+                          },
+                          "ref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 4,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^https?://\\S+$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "图片提示词 URL 列表；也可以通过 images 的 image_reference 传入。"
+                          },
+                          "iw": {
+                            "type": "number",
+                            "minimum": 0,
+                            "default": 1,
+                            "maximum": 3,
+                            "description": "图片提示词权重，需提供 ref 或 image_reference。"
+                          },
+                          "sref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 3,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(?:https?://\\S+|[0-9]+(?:::[0-9]+(?:\\.[0-9]+)?)?|random)$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "风格参考 URL／代码列表；也可以通过 images 的 style_reference 传入。"
+                          },
+                          "sw": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格参考权重，需与 sref 或 style_reference 配合。"
+                          },
+                          "sv": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 4,
+                            "default": 4,
+                            "enum": [
+                              1,
+                              2,
+                              3,
+                              4
+                            ],
+                            "description": "风格参考算法版本。"
+                          },
+                          "cref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 3,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^https?://\\S+$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "description": "角色参考 URL 列表；也可以通过 images 的 character_reference 传入。"
+                          },
+                          "cw": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "default": 100,
+                            "description": "角色参考权重，需与 cref 或 character_reference 配合。"
+                          },
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "fast",
+                              "relax"
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "生成速度模式；顶层 mode 优先。当前代理不接受 turbo。"
+                          },
+                          "profile": {
+                            "anyOf": [
+                              {
+                                "const": true
+                              },
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*(?: [A-Za-z0-9][A-Za-z0-9_-]*)*$"
+                              }
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "个性化配置；true 使用账号默认配置。"
+                          },
+                          "repeat": {
+                            "type": "integer",
+                            "minimum": 2,
+                            "maximum": 40,
+                            "x-default-strategy": "single-job-when-omitted",
+                            "x-plan-limits": {
+                              "basic": {
+                                "minimum": 2,
+                                "maximum": 4
+                              },
+                              "standard": {
+                                "minimum": 2,
+                                "maximum": 10
+                              },
+                              "pro": {
+                                "minimum": 2,
+                                "maximum": 40
+                              },
+                              "mega": {
+                                "minimum": 2,
+                                "maximum": 40
+                              }
+                            },
+                            "description": "重复次数；受订阅方案限制，Relax 模式不可用。"
+                          },
+                          "stop": {
+                            "type": "integer",
+                            "minimum": 10,
+                            "maximum": 100,
+                            "default": 100,
+                            "description": "提前停止的完成百分比。"
+                          }
+                        },
+                        "description": "V 6.1 的结构化原生参数；只列出当前启用的参数。"
+                      },
+                      "images": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "type",
+                            "image_url"
+                          ],
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image_reference",
+                                "style_reference",
+                                "character_reference"
+                              ]
+                            },
+                            "image_url": {
+                              "type": "string",
+                              "pattern": "^(https?://|data:image/)",
+                              "minLength": 1,
+                              "description": "HTTP(S) URL 或带 MIME 前缀的图片 data URL。"
+                            }
+                          }
+                        },
+                        "minItems": 1,
+                        "description": "参考图；每类数量按 parameters.ref/sref/cref/oref 的上限校验。",
+                        "allOf": [
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "image_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 4
+                          },
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "style_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 3
+                          },
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "character_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 3
+                          }
+                        ]
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "relax",
+                          "fast"
+                        ],
+                        "default": "relax",
+                        "description": "代理当前接受 relax 和 fast；turbo 上游不支持。"
+                      },
+                      "quality": {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "medium",
+                          "standard",
+                          "high"
+                        ],
+                        "description": "平台质量档位。auto 表示不显式设置原生 quality。"
+                      },
+                      "aspect_ratio": {
+                        "type": "string",
+                        "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                        "description": "宽高比；一般最大 14:1，V8 HD 最大 4:1。"
+                      },
+                      "size": {
+                        "type": "string",
+                        "anyOf": [
+                          {
+                            "const": "auto"
+                          },
+                          {
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$"
+                          }
+                        ],
+                        "description": "兼容字段：auto 或宽高比；不接受像素尺寸。"
+                      },
+                      "webhook_url": {
+                        "type": "string",
+                        "pattern": "^https?://",
+                        "description": "任务通知回调 URL。"
+                      },
+                      "notify_progress_image": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "是否向 webhook_url 通知过程图。"
+                      }
+                    },
+                    "description": "模型 V 6.1，版本 v 6.1。只包含当前项目中启用的参数。"
+                  },
+                  {
+                    "title": "V 7",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "model"
+                    ],
+                    "anyOf": [
+                      {
+                        "required": [
+                          "prompt"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "images"
+                        ]
+                      }
+                    ],
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "enum": [
+                          "midjourney/v7",
+                          "V7",
+                          "v 7"
+                        ],
+                        "description": "V 7；推荐使用模型库 ID midjourney/v7。"
+                      },
+                      "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "文本提示词，可带 Midjourney CLI 参数；显式 parameters 优先。"
+                      },
+                      "parameters": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "version": {
+                            "type": "string",
+                            "enum": [
+                              "v 7"
+                            ],
+                            "default": "v 7",
+                            "description": "原生模型版本；必须与顶层 model 一致。"
+                          },
+                          "channel": {
+                            "type": "string",
+                            "enum": [
+                              "DISCORD",
+                              "WEB"
+                            ],
+                            "default": "DISCORD",
+                            "description": "生成通道；默认 DISCORD。部分功能仅支持 WEB。"
+                          },
+                          "aspect": {
+                            "type": "string",
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                            "default": "1:1",
+                            "x-aspect-ratio": {
+                              "maximum": 14,
+                              "hdMaximum": null,
+                              "unbounded": false
+                            },
+                            "examples": [
+                              "1:1",
+                              "2:3",
+                              "3:2",
+                              "9:16",
+                              "16:9"
+                            ],
+                            "description": "宽高比，与顶层 aspect_ratio 二选一；一般最大长短边比 14:1，V8 HD 为 4:1。"
+                          },
+                          "chaos": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "default": 0,
+                            "description": "变化程度。"
+                          },
+                          "stylize": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格化强度。"
+                          },
+                          "weird": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3000,
+                            "default": 0,
+                            "description": "怪异程度。"
+                          },
+                          "quality": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "default": 1,
+                            "enum": [
+                              1,
+                              2,
+                              4
+                            ],
+                            "minimum": 0,
+                            "maximum": 4,
+                            "description": "Midjourney 原生数值质量，不是顶层质量档位。"
+                          },
+                          "seed": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 4294967295,
+                            "x-default-strategy": "random",
+                            "description": "随机种子；Turbo 模式下种子锁定不可靠。"
+                          },
+                          "raw": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "Raw 模式。"
+                          },
+                          "tile": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "无缝平铺。"
+                          },
+                          "no": {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "\\S",
+                            "description": "排除内容。"
+                          },
+                          "ref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 4,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^https?://\\S+$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "图片提示词 URL 列表；也可以通过 images 的 image_reference 传入。"
+                          },
+                          "iw": {
+                            "type": "number",
+                            "minimum": 0,
+                            "default": 1,
+                            "maximum": 3,
+                            "description": "图片提示词权重，需提供 ref 或 image_reference。"
+                          },
+                          "sref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 3,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(?:https?://\\S+|[0-9]+(?:::[0-9]+(?:\\.[0-9]+)?)?|random)$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "风格参考 URL／代码列表；也可以通过 images 的 style_reference 传入。"
+                          },
+                          "sw": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格参考权重，需与 sref 或 style_reference 配合。"
+                          },
+                          "sv": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 6,
+                            "default": 6,
+                            "enum": [
+                              1,
+                              2,
+                              3,
+                              4,
+                              5,
+                              6
+                            ],
+                            "description": "风格参考算法版本。"
+                          },
+                          "oref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 1,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^https?://\\S+$"
+                            },
+                            "x-limit-source": "official",
+                            "description": "Omni 参考 URL；也可以通过 images 的 omni_reference 传入。"
+                          },
+                          "ow": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "Omni 参考权重，需与 oref 或 omni_reference 配合。"
+                          },
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "fast",
+                              "relax"
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "生成速度模式；顶层 mode 优先。当前代理不接受 turbo。"
+                          },
+                          "draft": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "草稿模式；V8.x 仅 WEB 通道。"
+                          },
+                          "profile": {
+                            "anyOf": [
+                              {
+                                "const": true
+                              },
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*(?: [A-Za-z0-9][A-Za-z0-9_-]*)*$"
+                              }
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "个性化配置；true 使用账号默认配置。"
+                          },
+                          "repeat": {
+                            "type": "integer",
+                            "minimum": 2,
+                            "maximum": 40,
+                            "x-default-strategy": "single-job-when-omitted",
+                            "x-plan-limits": {
+                              "basic": {
+                                "minimum": 2,
+                                "maximum": 4
+                              },
+                              "standard": {
+                                "minimum": 2,
+                                "maximum": 10
+                              },
+                              "pro": {
+                                "minimum": 2,
+                                "maximum": 40
+                              },
+                              "mega": {
+                                "minimum": 2,
+                                "maximum": 40
+                              }
+                            },
+                            "description": "重复次数；受订阅方案限制，Relax 模式不可用。"
+                          },
+                          "exp": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "default": 0,
+                            "description": "实验性美学强度。"
+                          }
+                        },
+                        "description": "V 7 的结构化原生参数；只列出当前启用的参数。"
+                      },
+                      "images": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "type",
+                            "image_url"
+                          ],
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image_reference",
+                                "style_reference",
+                                "omni_reference"
+                              ]
+                            },
+                            "image_url": {
+                              "type": "string",
+                              "pattern": "^(https?://|data:image/)",
+                              "minLength": 1,
+                              "description": "HTTP(S) URL 或带 MIME 前缀的图片 data URL。"
+                            }
+                          }
+                        },
+                        "minItems": 1,
+                        "description": "参考图；每类数量按 parameters.ref/sref/cref/oref 的上限校验。",
+                        "allOf": [
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "image_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 4
+                          },
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "style_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 3
+                          },
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "omni_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 1
+                          }
+                        ]
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "relax",
+                          "fast"
+                        ],
+                        "default": "relax",
+                        "description": "代理当前接受 relax 和 fast；turbo 上游不支持。"
+                      },
+                      "quality": {
+                        "type": "string",
+                        "enum": [
+                          "auto",
+                          "standard",
+                          "high",
+                          "xhigh"
+                        ],
+                        "description": "平台质量档位。auto 表示不显式设置原生 quality。"
+                      },
+                      "aspect_ratio": {
+                        "type": "string",
+                        "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                        "description": "宽高比；一般最大 14:1，V8 HD 最大 4:1。"
+                      },
+                      "size": {
+                        "type": "string",
+                        "anyOf": [
+                          {
+                            "const": "auto"
+                          },
+                          {
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$"
+                          }
+                        ],
+                        "description": "兼容字段：auto 或宽高比；不接受像素尺寸。"
+                      },
+                      "webhook_url": {
+                        "type": "string",
+                        "pattern": "^https?://",
+                        "description": "任务通知回调 URL。"
+                      },
+                      "notify_progress_image": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "是否向 webhook_url 通知过程图。"
+                      }
+                    },
+                    "description": "模型 V 7，版本 v 7。只包含当前项目中启用的参数。"
+                  },
+                  {
+                    "title": "V 8.1",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "model"
+                    ],
+                    "anyOf": [
+                      {
+                        "required": [
+                          "prompt"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "images"
+                        ]
+                      }
+                    ],
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "enum": [
+                          "midjourney/8.1",
+                          "V8.1",
+                          "v 8.1"
+                        ],
+                        "description": "V 8.1；推荐使用模型库 ID midjourney/8.1。"
+                      },
+                      "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "文本提示词，可带 Midjourney CLI 参数；显式 parameters 优先。"
+                      },
+                      "parameters": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "version": {
+                            "type": "string",
+                            "enum": [
+                              "v 8.1"
+                            ],
+                            "default": "v 8.1",
+                            "description": "原生模型版本；必须与顶层 model 一致。"
+                          },
+                          "channel": {
+                            "type": "string",
+                            "enum": [
+                              "DISCORD",
+                              "WEB"
+                            ],
+                            "default": "DISCORD",
+                            "description": "生成通道；默认 DISCORD。部分功能仅支持 WEB。"
+                          },
+                          "aspect": {
+                            "type": "string",
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                            "default": "1:1",
+                            "x-aspect-ratio": {
+                              "maximum": 14,
+                              "hdMaximum": 4,
+                              "unbounded": false
+                            },
+                            "examples": [
+                              "1:1",
+                              "2:3",
+                              "3:2",
+                              "9:16",
+                              "16:9"
+                            ],
+                            "description": "宽高比，与顶层 aspect_ratio 二选一；一般最大长短边比 14:1，V8 HD 为 4:1。"
+                          },
+                          "chaos": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "default": 0,
+                            "description": "变化程度。"
+                          },
+                          "stylize": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格化强度。"
+                          },
+                          "weird": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3000,
+                            "default": 0,
+                            "description": "怪异程度。"
+                          },
+                          "seed": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 4294967295,
+                            "x-default-strategy": "random",
+                            "description": "随机种子；Turbo 模式下种子锁定不可靠。"
+                          },
+                          "raw": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "Raw 模式。"
+                          },
+                          "tile": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "无缝平铺。"
+                          },
+                          "no": {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "\\S",
+                            "description": "排除内容。"
+                          },
+                          "ref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 4,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^https?://\\S+$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "图片提示词 URL 列表；也可以通过 images 的 image_reference 传入。"
+                          },
+                          "iw": {
+                            "type": "number",
+                            "minimum": 0,
+                            "default": 1,
+                            "maximum": 3,
+                            "description": "图片提示词权重，需提供 ref 或 image_reference。"
+                          },
+                          "sref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 3,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(?:https?://\\S+|[0-9]+(?:::[0-9]+(?:\\.[0-9]+)?)?|random)$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "风格参考 URL／代码列表；也可以通过 images 的 style_reference 传入。"
+                          },
+                          "sw": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格参考权重，需与 sref 或 style_reference 配合。"
+                          },
+                          "sv": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "x-constraint-status": {
+                              "status": "partially-documented",
+                              "unknown": [
+                                "enum",
+                                "maximum",
+                                "default"
+                              ],
+                              "reason": "No model-specific SV range/default is published; do not reuse V7 bounds as a claimed V8 limit.",
+                              "sources": [
+                                "https://docs.midjourney.com/hc/en-us/articles/32180011136653-Style-Reference"
+                              ]
+                            },
+                            "description": "风格参考算法版本。 官方未确认的上限或枚举保持开放，详见 x-constraint-status。"
+                          },
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "fast",
+                              "relax"
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "生成速度模式；顶层 mode 优先。当前代理不接受 turbo。"
+                          },
+                          "draft": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "x-channels": [
+                              "WEB"
+                            ],
+                            "description": "草稿模式；V8.x 仅 WEB 通道。"
+                          },
+                          "resolution": {
+                            "type": "string",
+                            "enum": [
+                              "sd",
+                              "hd"
+                            ],
+                            "default": "sd",
+                            "description": "V8.x 原生分辨率；HD 最大长短边比 4:1。"
+                          },
+                          "profile": {
+                            "anyOf": [
+                              {
+                                "const": true
+                              },
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*(?: [A-Za-z0-9][A-Za-z0-9_-]*)*$"
+                              }
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "个性化配置；true 使用账号默认配置。"
+                          },
+                          "repeat": {
+                            "type": "integer",
+                            "minimum": 2,
+                            "maximum": 40,
+                            "x-default-strategy": "single-job-when-omitted",
+                            "x-plan-limits": {
+                              "basic": {
+                                "minimum": 2,
+                                "maximum": 4
+                              },
+                              "standard": {
+                                "minimum": 2,
+                                "maximum": 10
+                              },
+                              "pro": {
+                                "minimum": 2,
+                                "maximum": 40
+                              },
+                              "mega": {
+                                "minimum": 2,
+                                "maximum": 40
+                              }
+                            },
+                            "description": "重复次数；受订阅方案限制，Relax 模式不可用。"
+                          },
+                          "exp": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "default": 0,
+                            "description": "实验性美学强度。"
+                          }
+                        },
+                        "description": "V 8.1 的结构化原生参数；只列出当前启用的参数。"
+                      },
+                      "images": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "type",
+                            "image_url"
+                          ],
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image_reference",
+                                "style_reference"
+                              ]
+                            },
+                            "image_url": {
+                              "type": "string",
+                              "pattern": "^(https?://|data:image/)",
+                              "minLength": 1,
+                              "description": "HTTP(S) URL 或带 MIME 前缀的图片 data URL。"
+                            }
+                          }
+                        },
+                        "minItems": 1,
+                        "description": "参考图；每类数量按 parameters.ref/sref/cref/oref 的上限校验。",
+                        "allOf": [
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "image_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 4
+                          },
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "style_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 3
+                          }
+                        ]
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "relax",
+                          "fast"
+                        ],
+                        "default": "relax",
+                        "description": "代理当前接受 relax 和 fast；turbo 上游不支持。"
+                      },
+                      "quality": {
+                        "type": "string",
+                        "enum": [
+                          "auto"
+                        ],
+                        "description": "平台质量档位。auto 表示不显式设置原生 quality。 本模型不支持原生 quality。"
+                      },
+                      "aspect_ratio": {
+                        "type": "string",
+                        "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                        "description": "宽高比；一般最大 14:1，V8 HD 最大 4:1。"
+                      },
+                      "size": {
+                        "type": "string",
+                        "anyOf": [
+                          {
+                            "const": "auto"
+                          },
+                          {
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$"
+                          }
+                        ],
+                        "description": "兼容字段：auto 或宽高比；不接受像素尺寸。"
+                      },
+                      "webhook_url": {
+                        "type": "string",
+                        "pattern": "^https?://",
+                        "description": "任务通知回调 URL。"
+                      },
+                      "notify_progress_image": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "是否向 webhook_url 通知过程图。"
+                      }
+                    },
+                    "description": "模型 V 8.1，版本 v 8.1。只包含当前项目中启用的参数。"
+                  },
+                  {
+                    "title": "V 8.2",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "model"
+                    ],
+                    "anyOf": [
+                      {
+                        "required": [
+                          "prompt"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "images"
+                        ]
+                      }
+                    ],
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "enum": [
+                          "midjourney/8.2",
+                          "V8.2",
+                          "v 8.2"
+                        ],
+                        "description": "V 8.2；推荐使用模型库 ID midjourney/8.2。"
+                      },
+                      "prompt": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "文本提示词，可带 Midjourney CLI 参数；显式 parameters 优先。"
+                      },
+                      "parameters": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "version": {
+                            "type": "string",
+                            "enum": [
+                              "v 8.2"
+                            ],
+                            "default": "v 8.2",
+                            "description": "原生模型版本；必须与顶层 model 一致。"
+                          },
+                          "channel": {
+                            "type": "string",
+                            "enum": [
+                              "DISCORD",
+                              "WEB"
+                            ],
+                            "default": "DISCORD",
+                            "description": "生成通道；默认 DISCORD。部分功能仅支持 WEB。"
+                          },
+                          "aspect": {
+                            "type": "string",
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                            "default": "1:1",
+                            "x-aspect-ratio": {
+                              "maximum": 14,
+                              "hdMaximum": 4,
+                              "unbounded": false
+                            },
+                            "examples": [
+                              "1:1",
+                              "2:3",
+                              "3:2",
+                              "9:16",
+                              "16:9"
+                            ],
+                            "description": "宽高比，与顶层 aspect_ratio 二选一；一般最大长短边比 14:1，V8 HD 为 4:1。"
+                          },
+                          "chaos": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "default": 0,
+                            "description": "变化程度。"
+                          },
+                          "stylize": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格化强度。"
+                          },
+                          "weird": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 3000,
+                            "default": 0,
+                            "description": "怪异程度。"
+                          },
+                          "seed": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 4294967295,
+                            "x-default-strategy": "random",
+                            "description": "随机种子；Turbo 模式下种子锁定不可靠。"
+                          },
+                          "raw": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "Raw 模式。"
+                          },
+                          "tile": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "description": "无缝平铺。"
+                          },
+                          "no": {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "\\S",
+                            "description": "排除内容。"
+                          },
+                          "ref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 4,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^https?://\\S+$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "图片提示词 URL 列表；也可以通过 images 的 image_reference 传入。"
+                          },
+                          "iw": {
+                            "type": "number",
+                            "minimum": 0,
+                            "default": 1,
+                            "x-constraint-status": {
+                              "status": "partially-documented",
+                              "unknown": [
+                                "maximum"
+                              ],
+                              "reason": "The current Image Prompts table specifies V8.1, V7 and Niji 7, but not this version.",
+                              "sources": [
+                                "https://docs.midjourney.com/hc/en-us/articles/32040250122381-Image-Prompts"
+                              ]
+                            },
+                            "description": "图片提示词权重，需提供 ref 或 image_reference。 官方未确认的上限或枚举保持开放，详见 x-constraint-status。"
+                          },
+                          "sref": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 3,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(?:https?://\\S+|[0-9]+(?:::[0-9]+(?:\\.[0-9]+)?)?|random)$"
+                            },
+                            "x-limit-source": "product-policy",
+                            "x-item-weight": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "minimum": 0
+                            },
+                            "description": "风格参考 URL／代码列表；也可以通过 images 的 style_reference 传入。"
+                          },
+                          "sw": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1000,
+                            "default": 100,
+                            "description": "风格参考权重，需与 sref 或 style_reference 配合。"
+                          },
+                          "sv": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "x-constraint-status": {
+                              "status": "partially-documented",
+                              "unknown": [
+                                "enum",
+                                "maximum",
+                                "default"
+                              ],
+                              "reason": "No model-specific SV range/default is published; do not reuse V7 bounds as a claimed V8 limit.",
+                              "sources": [
+                                "https://docs.midjourney.com/hc/en-us/articles/32180011136653-Style-Reference"
+                              ]
+                            },
+                            "description": "风格参考算法版本。 官方未确认的上限或枚举保持开放，详见 x-constraint-status。"
+                          },
+                          "mode": {
+                            "type": "string",
+                            "enum": [
+                              "fast",
+                              "relax"
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "生成速度模式；顶层 mode 优先。当前代理不接受 turbo。"
+                          },
+                          "draft": {
+                            "type": "boolean",
+                            "enum": [
+                              false,
+                              true
+                            ],
+                            "default": false,
+                            "x-channels": [
+                              "WEB"
+                            ],
+                            "description": "草稿模式；V8.x 仅 WEB 通道。"
+                          },
+                          "resolution": {
+                            "type": "string",
+                            "enum": [
+                              "sd",
+                              "hd"
+                            ],
+                            "default": "sd",
+                            "description": "V8.x 原生分辨率；HD 最大长短边比 4:1。"
+                          },
+                          "profile": {
+                            "anyOf": [
+                              {
+                                "const": true
+                              },
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*(?: [A-Za-z0-9][A-Za-z0-9_-]*)*$"
+                              }
+                            ],
+                            "x-default-strategy": "account-settings",
+                            "description": "个性化配置；true 使用账号默认配置。"
+                          },
+                          "repeat": {
+                            "type": "integer",
+                            "minimum": 2,
+                            "maximum": 40,
+                            "x-default-strategy": "single-job-when-omitted",
+                            "x-plan-limits": {
+                              "basic": {
+                                "minimum": 2,
+                                "maximum": 4
+                              },
+                              "standard": {
+                                "minimum": 2,
+                                "maximum": 10
+                              },
+                              "pro": {
+                                "minimum": 2,
+                                "maximum": 40
+                              },
+                              "mega": {
+                                "minimum": 2,
+                                "maximum": 40
+                              }
+                            },
+                            "description": "重复次数；受订阅方案限制，Relax 模式不可用。"
+                          },
+                          "exp": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 100,
+                            "default": 0,
+                            "description": "实验性美学强度。"
+                          }
+                        },
+                        "description": "V 8.2 的结构化原生参数；只列出当前启用的参数。"
+                      },
+                      "images": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "type",
+                            "image_url"
+                          ],
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image_reference",
+                                "style_reference"
+                              ]
+                            },
+                            "image_url": {
+                              "type": "string",
+                              "pattern": "^(https?://|data:image/)",
+                              "minLength": 1,
+                              "description": "HTTP(S) URL 或带 MIME 前缀的图片 data URL。"
+                            }
+                          }
+                        },
+                        "minItems": 1,
+                        "description": "参考图；每类数量按 parameters.ref/sref/cref/oref 的上限校验。",
+                        "allOf": [
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "image_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 4
+                          },
+                          {
+                            "contains": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "style_reference"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            "minContains": 0,
+                            "maxContains": 3
+                          }
+                        ]
+                      },
+                      "mode": {
+                        "type": "string",
+                        "enum": [
+                          "relax",
+                          "fast"
+                        ],
+                        "default": "relax",
+                        "description": "代理当前接受 relax 和 fast；turbo 上游不支持。"
+                      },
+                      "quality": {
+                        "type": "string",
+                        "enum": [
+                          "auto"
+                        ],
+                        "description": "平台质量档位。auto 表示不显式设置原生 quality。 本模型不支持原生 quality。"
+                      },
+                      "aspect_ratio": {
+                        "type": "string",
+                        "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$",
+                        "description": "宽高比；一般最大 14:1，V8 HD 最大 4:1。"
+                      },
+                      "size": {
+                        "type": "string",
+                        "anyOf": [
+                          {
+                            "const": "auto"
+                          },
+                          {
+                            "pattern": "^[1-9][0-9]{0,8}:[1-9][0-9]{0,8}$"
+                          }
+                        ],
+                        "description": "兼容字段：auto 或宽高比；不接受像素尺寸。"
+                      },
+                      "webhook_url": {
+                        "type": "string",
+                        "pattern": "^https?://",
+                        "description": "任务通知回调 URL。"
+                      },
+                      "notify_progress_image": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "是否向 webhook_url 通知过程图。"
+                      }
+                    },
+                    "description": "模型 V 8.2，版本 v 8.2。只包含当前项目中启用的参数。"
+                  }
+                ]
+              },
+              "examples": {
+                "v8_2_valid": {
+                  "value": {
+                    "model": "V8.2",
+                    "prompt": "a cute cat",
+                    "parameters": {
+                      "stylize": 1000,
+                      "chaos": 100,
+                      "weird": 1000,
+                      "seed": 1231231,
+                      "sw": 1000,
+                      "iw": 1,
+                      "no": "black cat",
+                      "aspect": "9:16",
+                      "raw": true,
+                      "tile": true
+                    },
+                    "images": [
+                      {
+                        "type": "style_reference",
+                        "image_url": "https://example.com/style.png"
+                      },
+                      {
+                        "type": "image_reference",
+                        "image_url": "https://example.com/reference.png"
+                      }
+                    ],
+                    "mode": "fast"
+                  },
+                  "summary": "V8.2 有效示例"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "任务已接受，使用 polling_url 查询结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "object",
+                    "model",
+                    "status",
+                    "polling_url",
+                    "data",
+                    "error"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "object": {
+                      "const": "image.generation"
+                    },
+                    "model": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "status": {
+                      "enum": [
+                        "pending",
+                        "in_progress",
+                        "completed",
+                        "failed"
+                      ]
+                    },
+                    "polling_url": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "parent_task_id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "prompt",
+                        "effective_prompt",
+                        "mode",
+                        "parameters",
+                        "progress",
+                        "actions"
+                      ],
+                      "properties": {
+                        "prompt": {
+                          "type": "string"
+                        },
+                        "effective_prompt": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "mode": {
+                          "enum": [
+                            "fast",
+                            "relax"
+                          ]
+                        },
+                        "parameters": {
+                          "type": "object",
+                          "properties": {}
+                        },
+                        "progress": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        "native_url": {
+                          "type": "object",
+                          "required": [
+                            "url"
+                          ],
+                          "additionalProperties": false,
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "split_image_urls": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "minItems": 4,
+                              "maxItems": 4
+                            }
+                          }
+                        },
+                        "image_url": {
+                          "type": "object",
+                          "required": [
+                            "url"
+                          ],
+                          "additionalProperties": false,
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "split_image_urls": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "minItems": 4,
+                              "maxItems": 4
+                            }
+                          }
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "error": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "status": {
+                            "const": "completed"
+                          }
+                        }
+                      },
+                      "then": {
+                        "properties": {
+                          "data": {
+                            "properties": {
+                              "progress": {
+                                "const": 100
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "请求参数或模型能力校验失败。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-mint": {
+          "href": "/zh/api-reference/images/midjourney/generate",
+          "metadata": {
+            "sidebarTitle": "图片生成"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

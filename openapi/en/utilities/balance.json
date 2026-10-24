@@ -1,0 +1,96 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway Balance API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Utilities"
+    }
+  ],
+  "paths": {
+    "/v1/user/balance": {
+      "get": {
+        "summary": "Get balance",
+        "description": "Balance through the Tikway gateway.",
+        "operationId": "operation516646140",
+        "tags": [
+          "Utilities"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "required": [
+                    "balance",
+                    "currency",
+                    "is_active",
+                    "total",
+                    "used"
+                  ],
+                  "properties": {
+                    "balance": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "is_active": {
+                      "type": "boolean"
+                    },
+                    "total": {
+                      "type": "number"
+                    },
+                    "used": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "none": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "href": "/en/api-reference/utilities/balance",
+          "metadata": {
+            "sidebarTitle": "Get balance"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

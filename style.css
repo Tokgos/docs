@@ -1,29 +1,115 @@
 @media (min-width: 1280px) {
-  /* API reference pages: use the viewport instead of Mintlify's max-w-8xl cap. */
-  html[data-current-path^="/api-reference/"] #content-container {
-    flex: 0 0 calc(65vw - 20rem) !important;
-    width: calc(100vw - 20rem) !important;
+  /* Center the sidebar and content together within 80% of the viewport. */
+  html[data-current-path*="/api-reference/"]
+    div:has(> #sidebar):has(> #content-container) {
+    width: 80% !important;
     max-width: none !important;
-  }
-
-  /* Give the parameter documentation the remaining space. */
-  html[data-current-path^="/api-reference/"]
-    #content-container
-    > div:has(> #content-area) {
+    margin-inline: auto !important;
+    padding-inline: 0 !important;
     gap: 2rem !important;
   }
 
-  html[data-current-path^="/api-reference/"] #content-area {
+  html[data-current-path*="/api-reference/"] #content-container {
     flex: 1 1 0 !important;
     width: auto !important;
     max-width: none !important;
     min-width: 0 !important;
   }
 
+  /* Give the parameter documentation the remaining space. */
+  html[data-current-path*="/api-reference/"]
+    #content-container
+    > div:has(> #content-area) {
+    gap: 2rem !important;
+  }
+
+  html[data-current-path*="/api-reference/"] #content-area {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+  }
+
   /* Keep the request/response code panel useful without letting it take 28rem. */
-  html[data-current-path^="/api-reference/"] #content-side-layout {
+  html[data-current-path*="/api-reference/"] #content-side-layout {
     flex: 0 0 22rem !important;
     width: 22rem !important;
     max-width: 22rem !important;
+  }
+
+  html[data-current-path*="/api-reference/"] #content-side-layout > div {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Parameter guides use a wider reading column with model details on demand. */
+html:is([data-current-path$="/api-reference/images/overview"], [data-current-path$="/api-reference/videos/overview"]) {
+  & #content {
+    max-width: none;
+  }
+
+  & #content table {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  & #content :is(th, td) {
+    min-width: 0 !important;
+    padding: 1rem 1.25rem;
+    vertical-align: top;
+    line-height: 1.85;
+    overflow-wrap: anywhere;
+  }
+
+  & #content th:first-child {
+    width: 32%;
+  }
+
+  & #content td code {
+    white-space: normal;
+    word-break: normal;
+  }
+
+  & #content [data-component-part="accordion-button"] {
+    padding-block: 1.25rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  html:is([data-current-path$="/api-reference/images/overview"], [data-current-path$="/api-reference/videos/overview"]) {
+    & div:has(> #sidebar):has(> #content-container) {
+      width: 80% !important;
+      max-width: none !important;
+      margin-inline: auto !important;
+      padding-inline: 0 !important;
+      gap: 2rem !important;
+    }
+
+    & #content-container {
+      flex: 1 1 0 !important;
+      min-width: 0 !important;
+    }
+
+    & #content-area {
+      width: 100% !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      margin-inline: 0 !important;
+      padding-inline: 0 !important;
+    }
+
+    & #table-of-contents-layout {
+      display: none !important;
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  html:is([data-current-path$="/api-reference/images/overview"], [data-current-path$="/api-reference/videos/overview"]) #content table {
+    min-width: 34rem;
   }
 }

@@ -1,0 +1,555 @@
+---
+title: "视频 API 参数总览"
+sidebarTitle: "参数与模型支持"
+description: "对比视频模型的时长、分辨率、参考素材数量、首尾帧与音频能力，查看参数组合限制和异步任务使用方法。"
+icon: "sliders"
+---
+
+视频 API 通过统一的 `POST /v1/videos` 创建任务，覆盖文生视频、图生视频、参考素材生成，以及部分模型的视频编辑和延长。选择模型后，再确定时长、分辨率和素材类型。
+
+<Note>
+本页按 Tikway 当前接口及网关支持范围整理。数量限制均指单次请求；同一模型的文生、参考、编辑和延长模式可能有不同限制。模型可用性以你的账号为准。
+</Note>
+
+## 调用方式与生成数量
+
+| 步骤 | 接口 / 字段 | 说明 |
+| --- | --- | --- |
+| 创建任务 | `POST /v1/videos` | 提交 JSON 请求，保存返回的 `id` 和 `polling_url` |
+| 查询任务 | `GET /v1/videos/{id}` | 查询进度与最终结果，也可请求返回的 `polling_url` |
+| 获取视频 | `data.video_url.url` | 仅在 `status="completed"` 时读取 |
+| 接收通知 | 创建时传 `callback_url` | HTTPS 回调地址，由 Tikway 通知任务状态变化 |
+
+**当前统一接口没有开放批量数量参数 `n`。** 一次创建请求对应一个任务，完成后返回结果对象；需要多个视频时，分别创建任务并保存各自的 ID。参考素材数量不是生成视频数量。
+
+## 模型速查
+
+这里只列生成规格，参考素材数量和扩展参数集中在下方的模型详情中。
+
+| 模型系列 | 生成时长 | 分辨率 |
+| --- | --- | --- |
+| Seedance | 2.5：4–30 秒；2.0 / Mini：4–15 秒 | 480p–4K，依版本而定 |
+| Wan | 3.0：2–30 秒；2.7 / 2.6：生成 2–15 秒 | 480p–1080p，依版本而定 |
+| HappyHorse | 3–15 秒 | 480p / 720p / 1080p |
+| MiniMax H3 | 4–15 秒 | 768p / 2K |
+| Veo | 4、6、8 秒 | 720p / 1080p |
+| Grok | Fast：6–30 秒；1.5 / 基础版：1–15 秒 | 480p–1080p，依版本而定 |
+| FLUX 3 Video | 5–20 秒或 `auto` | HD / FHD |
+
+编辑、参考和延长任务可能使用不同的时长限制，详见对应模型。
+
+## 按模型查看参数
+
+展开后可查看各版本的规格、素材数量、音频能力、宽高比和扩展字段。
+
+<AccordionGroup>
+
+<Accordion title="Seedance">
+
+**`seedance-2.5`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 时长 | 4–30 秒；编辑 / 延长可用 `-1` |
+| 分辨率 | 480p / 720p / 1080p |
+| 音频 | 可用 `generate_audio` 控制 |
+
+**`seedance-2.0`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 时长 | 4–15 秒；编辑 / 延长可用 `-1` |
+| 分辨率 | 480p / 720p / 1080p / 4K |
+| 音频 | 可用 `generate_audio` 控制 |
+
+**`seedance-2.0-mini`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 时长 | 4–15 秒 |
+| 分辨率 | 480p / 720p |
+| 音频 | 可用 `generate_audio` 控制 |
+
+### 生成模式与素材
+
+**Seedance 2.5**
+
+| 项目 | 说明 |
+| --- | --- |
+| 首尾帧 | 首帧 / 首尾帧，各类型最多 1 张 |
+| 参考素材 | 全模态参考，合计最多 50 项 |
+| 编辑 / 延长 | 支持编辑、延长 |
+
+**Seedance 2.0**
+
+| 项目 | 说明 |
+| --- | --- |
+| 首尾帧 | 首帧 / 首尾帧，各类型最多 1 张 |
+| 参考素材 | 全模态参考，合计最多 15 项 |
+| 编辑 / 延长 | 支持编辑、延长 |
+
+**Seedance 2.0 Mini**
+
+| 项目 | 说明 |
+| --- | --- |
+| 首尾帧 | 首帧 / 首尾帧，各类型最多 1 张 |
+| 参考素材 | 不支持全模态参考 |
+| 编辑 / 延长 | 不支持 |
+
+### 宽高比
+
+`adaptive`、`16:9`、`9:16`、`1:1`、`4:3`、`3:4`、`21:9`
+
+### 扩展参数
+
+以下字段放在 `extra_body` 内。
+
+| 项目 | 说明 |
+| --- | --- |
+| `camera_fixed` | boolean，固定摄像头 |
+| `watermark`、`return_last_frame` | boolean，水印 / 返回最后一帧 |
+| `omni_reference_task_type` | `auto / reference / edit / extend`；编辑与延长由网关自动设置 |
+| `output_format` | `mp4 / mov`，默认 `mp4` |
+| `service_tier`、`priority` | `default / flex`；优先级整数 `0–9` |
+
+</Accordion>
+
+<Accordion title="Wan">
+
+**`wan-3.0`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 时长 | 2–30 秒或 `-1` 智能时长 |
+| 分辨率 | 480p / 720p / 1080p |
+| 音频 | 支持，默认开启 |
+
+**`wan-2.7`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 时长 | 生成 2–15 秒；参考 / 编辑 2–10 秒 |
+| 分辨率 | 720p / 1080p |
+| 音频 | 支持，行为随模式变化 |
+
+**`wan-2.6`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 时长 | 生成 2–15 秒；参考 2–10 秒 |
+| 分辨率 | 720p / 1080p |
+| 音频 | 支持；兼容模式可能无声 |
+
+### 生成模式与素材
+
+**Wan 3.0**
+
+| 项目 | 说明 |
+| --- | --- |
+| 首尾帧 | 首帧 / 首尾帧 |
+| 参考素材 | 最多 10 图、5 视频、5 音频，另加 1 个文件或链接 |
+| 编辑 / 延长 | 不将普通视频参考等同于编辑 / 延长 |
+
+**Wan 2.7**
+
+| 项目 | 说明 |
+| --- | --- |
+| 首尾帧 | 首帧 / 首尾帧 |
+| 参考素材 | 数量随生成模式变化 |
+| 编辑 / 延长 | 支持续写、编辑 |
+
+**Wan 2.6**
+
+| 项目 | 说明 |
+| --- | --- |
+| 首尾帧 | 首帧；首尾帧使用兼容模型 |
+| 参考素材 | 参考生成共 1–5 个图片 / 视频 |
+| 编辑 / 延长 | 编辑使用兼容模型 |
+
+### 宽高比
+
+`adaptive`、`16:9`、`9:16`、`1:1`、`4:3`、`3:4`
+
+### 扩展参数
+
+以下字段放在 `extra_body` 内。
+
+| 项目 | 说明 |
+| --- | --- |
+| `prompt_extend`、`watermark` | boolean，提示词改写 / 水印 |
+| `shot_type` | `single / multi`，单镜头 / 多镜头 |
+| `audio_setting` | 编辑时使用 `auto / origin` |
+
+</Accordion>
+
+<Accordion title="HappyHorse">
+
+**`happyhorse-1.1`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 时长 | 3–15 秒 |
+| 分辨率 | 480p / 720p / 1080p |
+| 音频 | 上游有声输出，无独立开关 |
+
+**`happyhorse-1.0`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 时长 | 3–15 秒；编辑沿用输入视频时长 |
+| 分辨率 | 480p / 720p / 1080p；编辑仅 720p / 1080p |
+| 音频 | 编辑可用 `extra_body.audio_setting` |
+
+### 生成模式与素材
+
+**HappyHorse 1.1**
+
+| 项目 | 说明 |
+| --- | --- |
+| 首尾帧 | 仅 1 张首帧，不支持尾帧 |
+| 参考素材 | 1–9 张参考图 |
+| 编辑 / 延长 | 不支持 |
+
+**HappyHorse 1.0**
+
+| 项目 | 说明 |
+| --- | --- |
+| 首尾帧 | 仅 1 张首帧，不支持尾帧 |
+| 参考素材 | 参考生成 1–9 张图 |
+| 编辑 / 延长 | 编辑：1 个源视频 + 最多 5 张图；不支持延长 |
+
+### 宽高比
+
+`16:9`、`9:16`、`1:1`、`4:3`、`3:4`、`4:5`、`5:4`、`21:9`、`9:21`
+
+### 扩展参数
+
+以下字段放在 `extra_body` 内。
+
+| 项目 | 说明 |
+| --- | --- |
+| `watermark` | boolean |
+| `audio_setting` | 仅编辑：`auto` 自动处理，`origin` 保留原音频 |
+
+</Accordion>
+
+<Accordion title="MiniMax H3">
+
+**`minimax-h3`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 时长 | 4–15 秒，必填 |
+| 分辨率 | 768p / 2K，必填 |
+| 音频 | 原生有声输出，无独立开关 |
+
+### 生成模式与素材
+
+**MiniMax H3**
+
+| 项目 | 说明 |
+| --- | --- |
+| 首尾帧 | 首帧、尾帧或首尾帧 |
+| 参考素材 | 最多 9 图、3 视频、3 音频 |
+| 编辑 / 延长 | 未开放独立编辑 / 延长模式 |
+
+### 宽高比
+
+`adaptive`、`21:9`、`16:9`、`4:3`、`1:1`、`3:4`、`9:16`
+
+### 扩展参数
+
+以下字段放在 `extra_body` 内。
+
+| 项目 | 说明 |
+| --- | --- |
+| `watermark` | boolean |
+
+</Accordion>
+
+<Accordion title="Veo">
+
+**`veo-3.1-fast` / `quality` / `lite`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 时长 | 4、6、8 秒，默认 8 秒 |
+| 分辨率 | 720p / 1080p |
+| 音频 | 始终生成音频，不能关闭 |
+
+### 生成模式与素材
+
+**Veo 3.1 Fast / Quality**
+
+| 项目 | 说明 |
+| --- | --- |
+| 首尾帧 | 首帧 / 首尾帧 |
+| 参考素材 | 最多 3 张参考图 |
+| 编辑 / 延长 | 当前统一入口不支持视频输入 / 延长 |
+
+**Veo 3.1 Lite**
+
+| 项目 | 说明 |
+| --- | --- |
+| 首尾帧 | 首帧 / 首尾帧 |
+| 参考素材 | 不支持普通参考图模式 |
+| 编辑 / 延长 | 当前统一入口不支持视频输入 / 延长 |
+
+### 宽高比
+
+`16:9`、`9:16`
+
+### 扩展参数
+
+以下字段放在 `extra_body` 内。
+
+| 项目 | 说明 |
+| --- | --- |
+| `generation_type` | `frame / reference`，通常由素材字段自动决定，无需填写 |
+
+4 秒与 6 秒仅支持 720p；1080p 或普通参考图模式必须使用 8 秒。
+
+</Accordion>
+
+<Accordion title="Grok">
+
+**`grok-imagine-video-1.5-fast`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 时长 | 6–30 秒 |
+| 分辨率 | 480p / 720p |
+| 音频 | 默认有声，统一字段不能关闭 |
+
+**`grok-imagine-video-1.5`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 时长 | 1–15 秒 |
+| 分辨率 | 480p / 720p / 1080p |
+| 音频 | 默认有声，可参考预设音色 |
+
+**`grok-imagine-video`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 时长 | 生成 1–15 秒；延长 1–10 秒 |
+| 分辨率 | 480p / 720p |
+| 音频 | 默认有声，统一字段不能关闭 |
+
+### 生成模式与素材
+
+**Grok 1.5 Fast / 1.5**
+
+| 项目 | 说明 |
+| --- | --- |
+| 首尾帧 | 支持首尾帧 |
+| 参考素材 | 最多 7 张普通参考图、4 个定时关键帧；1.5 可加最多 3 个预设音色 |
+| 编辑 / 延长 | 不支持视频延长 |
+
+**Grok 基础版**
+
+| 项目 | 说明 |
+| --- | --- |
+| 首尾帧 | 支持首帧，不支持尾帧 |
+| 参考素材 | 最多 7 张普通参考图 |
+| 编辑 / 延长 | 延长：仅 1 个源视频 |
+
+### 宽高比
+
+`2:3`、`3:2`、`1:1`、`9:16`、`16:9`
+
+### 扩展参数
+
+以下字段放在 `extra_body` 内。
+
+| 项目 | 说明 |
+| --- | --- |
+| 无公开扩展字段 | 优先使用顶层统一参数，省略 `extra_body` |
+
+</Accordion>
+
+<Accordion title="FLUX 3 Video">
+
+**`flux-3-video`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 时长 | 5–20 秒或 `"auto"` |
+| 分辨率 | 480p / 720p 映射 HD；1080p 映射 FHD |
+| 音频 | 支持，默认开启 |
+
+### 生成模式与素材
+
+**FLUX 3 Video**
+
+| 项目 | 说明 |
+| --- | --- |
+| 首尾帧 | 首尾帧快捷写法，最多 2 张 |
+| 参考素材 | 1–10 张普通或定时关键帧 |
+| 编辑 / 延长 | 续写：仅 1 个源视频；另支持草稿增强 |
+
+### 宽高比
+
+`auto`、`21:9`、`2:1`、`16:9`、`4:3`、`1:1`、`3:4`、`9:16`
+
+### 扩展参数
+
+以下字段放在 `extra_body` 内。
+
+| 项目 | 说明 |
+| --- | --- |
+| `mode` | `text_to_video / image_to_video / video_to_video / draft_enhance` |
+| `keyframes`、`start_video` | 原生关键帧与续写素材；优先使用统一的 `input_references` |
+| `draft`、`draft_cache` | `draft` 默认 `false`；增强草稿时提供缓存 URL 或 Base64 |
+| `version` | `latest` |
+| `safety_tolerance` | 整数 `0–4`，默认 `2` |
+
+</Accordion>
+
+</AccordionGroup>
+
+`-1` 和 `"auto"` 是模型专属时长取值，不能互换。Seedance 的 50 / 15 项是参考素材总上限；Grok 的图片、关键帧和音色分别计数。
+
+## 素材字段怎么选
+
+
+| 参数 | 说明 |
+| --- | --- |
+| `frame_images` | 指定开始或结束画面。每项填 `type="first_frame"` 或 `"last_frame"`，以及 `image_url` |
+| `reference_image` | 主体、风格等图片参考。`input_references` 中填 `role` 与 `image_url` |
+| `reference_video` | 视频参考。填 `role` 与 `video_url`，仅对应模型支持时使用 |
+| `reference_audio` | 音频参考。支持音频素材的模型填 `audio_url`；Grok 1.5 用 `reference_voice` |
+| `source_video` | 待编辑的源视频。填 `video_url`；用于支持编辑的模型 |
+| `first_clip` | 要延长或续写的视频。填 `video_url`；用于支持延长的模型 |
+| `keyframe` | 指定时间点的画面。Grok 1.5 系列 / FLUX 使用 `image_url`、`seconds` |
+| `driving_audio` | 驱动音频。Wan 的相应模式使用 `audio_url` |
+| `file` / `link` | 文件或网页参考。Wan 3.0 使用 `file_url` / `link_url`，两者互斥 |
+
+每个参考项只放一种素材 URL。可选的 `type` 若填写，必须与 URL 字段一致，例如 `type="image_url"` 配合 `image_url`。Grok 预设音色是例外：只填 `role="reference_audio"` 与 `reference_voice`，不要附加 `audio_url` 或 `type`。
+
+## 请求参数详解
+
+| 参数 | 说明 |
+| --- | --- |
+| `model` | string。必填。模型 ID；Wan 3.0 还接受 `wan3.0-video` 别名 |
+| `prompt` | string。生成、编辑或续写指令。文生视频应填写；MiniMax、Veo、Grok 明确要求必填 |
+| `duration` | integer，部分模型支持 string。单位为秒；MiniMax 必填，其他模型的范围和特殊值见规格表 |
+| `resolution` | string。输出分辨率；MiniMax 必填。注意 `4K`、`2K` 与 `1080p` 是不同枚举 |
+| `aspect_ratio` | string。输出宽高比；图生视频时部分模式会跟随输入素材 |
+| `frame_images` | array。首尾帧数组；同一类型最多 1 张，且必须符合所选模型的能力 |
+| `input_references` | array。图片、视频、音频或关键帧参考；类型、角色与数量均有模型限制 |
+| `generate_audio` | boolean。Seedance、Wan、FLUX 支持；没有开关的模型应省略该字段 |
+| `seed` | integer。Seedance、Wan、HappyHorse 支持 `-1–2147483647`；固定种子不保证完全相同的结果 |
+| `negative_prompt` | string。Wan 2.6 / 2.7 可用；Wan 3.0 不支持此顶层字段 |
+| `size` | string。仅 Wan 2.6 支持精确像素尺寸，格式 `WIDTHxHEIGHT` 或 `WIDTH*HEIGHT` |
+| `callback_url` | string。HTTPS URL；由 Tikway 回调，不直接传给模型上游 |
+| `extra_body` | object。所选模型的扩展参数，见下表；不是任意字段的通用透传容器 |
+
+## 参数组合限制
+
+| 场景 | 约束 | 正确用法 |
+| --- | --- | --- |
+| Seedance / MiniMax 全模态参考 | 不能与首尾帧模式混用 | 在 `frame_images` 与 `input_references` 中选择一种模式 |
+| Wan 3.0 参考素材 | 不能与首尾帧混用；文件与链接互斥 | 最多 10 图 + 5 视频 + 5 音频，再选择 1 个文件或链接 |
+| Seedance 2.0 Mini | 不支持全模态参考、编辑或延长 | 使用文字或首尾帧生成 |
+| HappyHorse 编辑 | 仅 1.0 支持；忽略 `duration` | 提供源视频，可加最多 5 张参考图，分辨率用 720p / 1080p |
+| Veo 1080p / 普通参考图 | 时长必须为 8 秒 | 显式传 `duration=8`；Lite 不传普通参考图 |
+| Grok 视频延长 | 仅基础版，且只能有 1 个视频素材 | 使用 `source_video` 或 `first_clip`，时长 1–10 秒 |
+| Grok 预设音色 | 仅 1.5，最多 3 个 | 填 `reference_voice`，不上传音频 URL |
+| Grok 定时关键帧 | 最多 4 张，`seconds` 大于 0 | 为每张图填写 `role="keyframe"` 与目标秒数 |
+| FLUX 普通 / 定时关键帧 | 两种形式不能混用，总数 1–10 张 | 整组统一用 `reference_image` 或 `keyframe` |
+| FLUX 视频续写 | 必须且只能提供 1 个源视频 | 用 `source_video` 或 `first_clip`，不附带额外参考素材 |
+
+## 请求示例
+
+所有创建示例均提交到 `POST https://api.tikway.ai/v1/videos`，使用 `Authorization: Bearer YOUR_TIKWAY_API_KEY` 和 `Content-Type: application/json`。素材地址仅作示例，请替换成可访问的 URL。
+
+<Tabs>
+<Tab title="文生视频">
+
+```json
+{
+  "model": "seedance-2.5",
+  "prompt": "日落时分的海边，一只金毛犬沿沙滩奔跑，镜头平稳跟随",
+  "duration": 8,
+  "resolution": "1080p",
+  "aspect_ratio": "16:9",
+  "generate_audio": true
+}
+```
+
+</Tab>
+<Tab title="首尾帧">
+
+```json
+{
+  "model": "veo-3.1-quality",
+  "prompt": "从首帧自然过渡到尾帧，保持人物、服装和光线一致",
+  "duration": 8,
+  "resolution": "1080p",
+  "frame_images": [
+    { "type": "first_frame", "image_url": "https://example.com/first.jpg" },
+    { "type": "last_frame", "image_url": "https://example.com/last.jpg" }
+  ]
+}
+```
+
+</Tab>
+<Tab title="多模态参考">
+
+```json
+{
+  "model": "minimax-h3",
+  "prompt": "沿用图片中的人物形象与参考视频的运镜，生成街头行走镜头",
+  "duration": 10,
+  "resolution": "768p",
+  "input_references": [
+    { "role": "reference_image", "image_url": "https://example.com/person.jpg" },
+    { "role": "reference_video", "video_url": "https://example.com/camera.mp4" }
+  ]
+}
+```
+
+</Tab>
+<Tab title="定时关键帧">
+
+```json
+{
+  "model": "flux-3-video",
+  "prompt": "人物从远景走向镜头，第 5 秒呈现正面近景",
+  "duration": 8,
+  "resolution": "720p",
+  "input_references": [
+    { "role": "keyframe", "seconds": 5, "image_url": "https://example.com/front.jpg" }
+  ]
+}
+```
+
+</Tab>
+</Tabs>
+
+### 查询与结果处理
+
+创建成功后，用返回的任务 ID 查询：
+
+```bash
+curl https://api.tikway.ai/v1/videos/YOUR_TASK_ID \
+  -H "Authorization: Bearer YOUR_TIKWAY_API_KEY"
+```
+
+| `status` | 含义 | 接下来做什么 |
+| --- | --- | --- |
+| `pending` / `queue` | 等待处理 / 排队 | 稍后继续查询 |
+| `in_progress` | 正在生成或处理资源 | 继续等待，不读取最终 `data` |
+| `completed` | 视频与资源处理完成 | 读取 `data.video_url.url` |
+| `failed` | 任务失败 | 查看 `error`，修正参数或素材后再提交 |
+| `cancelled` / `expired` | 已取消 / 已过期 | 停止轮询，需要时重新创建任务 |
+
+最终 `data` 是对象，不是数组；未完成时省略整个 `data` 字段。不要把任务创建成功当成视频已经生成完成，也不要因为暂时没有 `data` 就重复提交同一个生成请求。
+
+## 接口详情
+
+- [Seedance](/zh/api-reference/videos/seedance/create) · [Wan](/zh/api-reference/videos/wan/create) · [HappyHorse](/zh/api-reference/videos/happyhorse/create)
+- [MiniMax H3](/zh/api-reference/videos/minimax/create) · [Veo](/zh/api-reference/videos/veo/create)
+- [Grok Imagine Video](/zh/api-reference/videos/grok/create) · [FLUX 3 Video](/zh/api-reference/videos/flux/create)

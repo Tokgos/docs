@@ -1,0 +1,850 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway Qwen Audio 语音合成 API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai"
+    }
+  ],
+  "tags": [
+    {
+      "name": "语音合成/Qwen Audio"
+    }
+  ],
+  "paths": {
+    "/v1/audio/speech": {
+      "post": {
+        "summary": "Qwen Audio - 文转语音",
+        "description": "通过平台标准语音字段调用 Qwen-Audio-TTS。音色须与所选模型匹配；音频扩展可置于 extra_body 或顶层，顶层优先。统一 speed、instructions 分别优先于原生 rate、instruction。",
+        "operationId": "createSpeech",
+        "tags": [
+          "语音合成/Qwen Audio"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "音频字节或统一 SSE 音频事件；支持的媒体类型见下方列表。",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "成功示例",
+                    "value": "data: {\"type\":\"speech.audio.delta\",\"audio\":\"AAABAA==\"}\n\ndata: {\"type\":\"speech.audio.done\",\"usage\":{\"input_tokens\":4,\"output_tokens\":2,\"total_tokens\":6}}\n\n"
+                  }
+                }
+              },
+              "audio/mpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "audio/wav": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "audio/pcm": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "audio/ogg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "其他网关错误；根据 HTTP 状态码和 error.message 排查。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "完整模型 ID 或唯一别名。示例模型需已在模型目录中配置。"
+                  },
+                  "input": {
+                    "type": "string",
+                    "maxLength": 4096,
+                    "description": "待朗读文本，当前平台统一请求最多 4096 字符。"
+                  },
+                  "voice": {
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "required": [
+                          "id"
+                        ],
+                        "additionalProperties": true
+                      }
+                    ],
+                    "description": "当前 Qwen-Audio 模型的音色名称或包含 id 的对象。音色版本后缀须与模型匹配，例如 3.1 Flash 的 longanhuan_v3.1。"
+                  },
+                  "instructions": {
+                    "type": "string",
+                    "maxLength": 4096,
+                    "description": "统一风格指令，映射到 Qwen-Audio instruction；与原生 instruction 同时传入时以 instructions 为准。"
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "enum": [
+                      "mp3",
+                      "pcm",
+                      "wav",
+                      "opus"
+                    ],
+                    "description": "Qwen-Audio 支持 MP3、PCM、WAV、Opus，默认 MP3。",
+                    "default": "mp3"
+                  },
+                  "speed": {
+                    "type": "number",
+                    "minimum": 0.5,
+                    "maximum": 2,
+                    "default": 1,
+                    "description": "统一语速参数，范围 0.5–2，默认 1；映射到 Qwen-Audio rate，并优先于原生 rate。"
+                  },
+                  "stream_format": {
+                    "type": "string",
+                    "enum": [
+                      "audio",
+                      "sse"
+                    ],
+                    "default": "audio",
+                    "description": "audio 返回音频字节；sse 返回 speech.audio.delta 和 speech.audio.done。WAV 封装需要完整音频长度，会缓冲合成结果。"
+                  },
+                  "extra_body": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "properties": {
+                      "sample_rate": {
+                        "type": "integer",
+                        "enum": [
+                          8000,
+                          12000,
+                          16000,
+                          22050,
+                          24000,
+                          44100,
+                          48000
+                        ],
+                        "description": "Qwen-Audio 采样率；opus 不支持 22050、44100。"
+                      },
+                      "volume": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0.5,
+                        "maximum": 2,
+                        "description": "Qwen-Audio 原生语速；同时传 speed 时以 speed 为准。"
+                      },
+                      "bit_rate": {
+                        "type": "integer",
+                        "minimum": 6,
+                        "maximum": 510
+                      },
+                      "pitch": {
+                        "type": "number",
+                        "minimum": 0.5,
+                        "maximum": 2
+                      },
+                      "enable_ssml": {
+                        "type": "boolean"
+                      },
+                      "word_timestamp_enabled": {
+                        "type": "boolean",
+                        "description": "Qwen-Audio 原生参数；统一语音响应仅返回音频及用量，不暴露原生时间戳事件。"
+                      },
+                      "seed": {
+                        "type": "integer",
+                        "description": "Qwen-Audio 随机种子，范围 0–65535。",
+                        "minimum": 0,
+                        "maximum": 65535
+                      },
+                      "language_hints": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "instruction": {
+                        "type": "string",
+                        "description": "Qwen-Audio 原生指令；同时传 instructions 时以 instructions 为准。"
+                      },
+                      "enable_aigc_tag": {
+                        "type": "boolean"
+                      },
+                      "aigc_propagator": {
+                        "type": "string"
+                      },
+                      "aigc_propagate_id": {
+                        "type": "string"
+                      },
+                      "hot_fix": {
+                        "type": "object",
+                        "properties": {
+                          "pronunciation": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "properties": {}
+                            }
+                          },
+                          "replace": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "properties": {}
+                            }
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "stream": {
+                        "type": "boolean",
+                        "description": "扩展参数：要求 Qwen 原生流式生成；stream_format 决定对外返回音频还是 SSE。"
+                      }
+                    },
+                    "description": "Qwen-Audio 音频扩展。也兼容直接放在 body 顶层；顶层同名字段优先，仅展开一层。"
+                  },
+                  "sample_rate": {
+                    "type": "integer",
+                    "enum": [
+                      8000,
+                      12000,
+                      16000,
+                      22050,
+                      24000,
+                      44100,
+                      48000
+                    ],
+                    "description": "Qwen-Audio 采样率；opus 不支持 22050、44100。"
+                  },
+                  "volume": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "rate": {
+                    "type": "number",
+                    "minimum": 0.5,
+                    "maximum": 2,
+                    "description": "Qwen-Audio 原生语速；同时传 speed 时以 speed 为准。"
+                  },
+                  "bit_rate": {
+                    "type": "integer",
+                    "minimum": 6,
+                    "maximum": 510
+                  },
+                  "pitch": {
+                    "type": "number",
+                    "minimum": 0.5,
+                    "maximum": 2
+                  },
+                  "enable_ssml": {
+                    "type": "boolean"
+                  },
+                  "word_timestamp_enabled": {
+                    "type": "boolean",
+                    "description": "Qwen-Audio 原生参数；统一语音响应仅返回音频及用量，不暴露原生时间戳事件。"
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "description": "Qwen-Audio 随机种子，范围 0–65535。",
+                    "minimum": 0,
+                    "maximum": 65535
+                  },
+                  "language_hints": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "instruction": {
+                    "type": "string",
+                    "description": "Qwen-Audio 原生指令；同时传 instructions 时以 instructions 为准。"
+                  },
+                  "enable_aigc_tag": {
+                    "type": "boolean"
+                  },
+                  "aigc_propagator": {
+                    "type": "string"
+                  },
+                  "aigc_propagate_id": {
+                    "type": "string"
+                  },
+                  "hot_fix": {
+                    "type": "object",
+                    "properties": {
+                      "pronunciation": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "properties": {}
+                        }
+                      },
+                      "replace": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "properties": {}
+                        }
+                      }
+                    },
+                    "additionalProperties": true
+                  },
+                  "stream": {
+                    "type": "boolean",
+                    "description": "扩展参数：要求 Qwen 原生流式生成；stream_format 决定对外返回音频还是 SSE。"
+                  }
+                },
+                "required": [
+                  "model",
+                  "input",
+                  "voice"
+                ],
+                "additionalProperties": true,
+                "title": "Qwen-Audio 请求体",
+                "examples": [
+                  {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1"
+                  },
+                  {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "response_format": "wav",
+                    "extra_body": {
+                      "sample_rate": 24000,
+                      "volume": 70
+                    }
+                  },
+                  {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "response_format": "pcm",
+                    "speed": 1.1
+                  },
+                  {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "response_format": "opus",
+                    "extra_body": {
+                      "sample_rate": 24000,
+                      "bit_rate": 64
+                    }
+                  },
+                  {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "instructions": "用温暖、自然的语气朗读。",
+                    "response_format": "wav"
+                  },
+                  {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "speed": 1.2,
+                    "response_format": "mp3"
+                  },
+                  {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "volume": 80,
+                    "extra_body": {
+                      "volume": 20,
+                      "sample_rate": 24000
+                    }
+                  },
+                  {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "speed": 1.2,
+                    "extra_body": {
+                      "rate": 0.8
+                    }
+                  },
+                  {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "response_format": "pcm",
+                    "stream_format": "sse"
+                  },
+                  {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "response_format": "pcm",
+                    "stream_format": "audio",
+                    "extra_body": {
+                      "stream": true
+                    }
+                  },
+                  {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "Hello, welcome to the speech synthesis demo.",
+                    "voice": "Emily_v3.1",
+                    "response_format": "wav"
+                  },
+                  {
+                    "model": "bailian/qwen-audio-3.0-tts-plus",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanlingxin",
+                    "response_format": "mp3"
+                  },
+                  {
+                    "model": "bailian/qwen-audio-3.0-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.6",
+                    "response_format": "wav"
+                  },
+                  {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "extra_body": {
+                      "pitch": 1.05,
+                      "seed": 42,
+                      "volume": 65
+                    },
+                    "response_format": "wav"
+                  }
+                ],
+                "description": "用于 Qwen-Audio-TTS 的统一语音请求。使用 model、字符串 input、voice 和标准语音参数；音频扩展可置于 extra_body 或顶层，同名字段顶层优先。"
+              },
+              "examples": {
+                "qwen_audio_minimal": {
+                  "summary": "3.1 Flash：最小请求，默认 MP3",
+                  "value": {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1"
+                  }
+                },
+                "qwen_audio_wav": {
+                  "summary": "WAV：采样率与音量扩展",
+                  "value": {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "response_format": "wav",
+                    "extra_body": {
+                      "sample_rate": 24000,
+                      "volume": 70
+                    }
+                  }
+                },
+                "qwen_audio_pcm": {
+                  "summary": "PCM：直接返回音频数据",
+                  "value": {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "response_format": "pcm",
+                    "speed": 1.1
+                  }
+                },
+                "qwen_audio_opus": {
+                  "summary": "Opus：24 kHz 与码率扩展",
+                  "value": {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "response_format": "opus",
+                    "extra_body": {
+                      "sample_rate": 24000,
+                      "bit_rate": 64
+                    }
+                  }
+                },
+                "qwen_audio_instructions": {
+                  "summary": "风格：使用统一 instructions",
+                  "value": {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "instructions": "用温暖、自然的语气朗读。",
+                    "response_format": "wav"
+                  }
+                },
+                "qwen_audio_speed": {
+                  "summary": "语速：使用统一 speed",
+                  "value": {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "speed": 1.2,
+                    "response_format": "mp3"
+                  }
+                },
+                "qwen_audio_root_wins": {
+                  "summary": "同名扩展：顶层音量优先",
+                  "description": "实际使用顶层 volume=80。",
+                  "value": {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "volume": 80,
+                    "extra_body": {
+                      "volume": 20,
+                      "sample_rate": 24000
+                    }
+                  }
+                },
+                "qwen_audio_standard_speed_wins": {
+                  "summary": "标准字段：speed 优先于 rate",
+                  "description": "发送上游时使用统一 speed=1.2 对应的 rate。",
+                  "value": {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "speed": 1.2,
+                    "extra_body": {
+                      "rate": 0.8
+                    }
+                  }
+                },
+                "qwen_audio_sse": {
+                  "summary": "SSE：PCM 音频分片",
+                  "value": {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "response_format": "pcm",
+                    "stream_format": "sse"
+                  }
+                },
+                "qwen_audio_native_stream": {
+                  "summary": "音频流：原生流式生成",
+                  "description": "原生流式输出由 stream 开启，对外按 stream_format 返回音频字节。",
+                  "value": {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "response_format": "pcm",
+                    "stream_format": "audio",
+                    "extra_body": {
+                      "stream": true
+                    }
+                  }
+                },
+                "qwen_audio_english": {
+                  "summary": "3.1 Flash：英文音色 Emily",
+                  "value": {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "Hello, welcome to the speech synthesis demo.",
+                    "voice": "Emily_v3.1",
+                    "response_format": "wav"
+                  }
+                },
+                "qwen_audio_plus": {
+                  "summary": "3.0 Plus：对应模型系统音色",
+                  "value": {
+                    "model": "bailian/qwen-audio-3.0-tts-plus",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanlingxin",
+                    "response_format": "mp3"
+                  }
+                },
+                "qwen_audio_flash30": {
+                  "summary": "3.0 Flash：保留 v3.6 音色后缀",
+                  "value": {
+                    "model": "bailian/qwen-audio-3.0-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.6",
+                    "response_format": "wav"
+                  }
+                },
+                "qwen_audio_pitch_seed": {
+                  "summary": "音高与随机种子：保留的音频扩展",
+                  "value": {
+                    "model": "bailian/qwen-audio-3.1-tts-flash",
+                    "input": "你好，欢迎使用语音合成。",
+                    "voice": "longanhuan_v3.1",
+                    "extra_body": {
+                      "pitch": 1.05,
+                      "seed": 42,
+                      "volume": 65
+                    },
+                    "response_format": "wav"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "href": "/zh/api-reference/speech/qwen-audio/create",
+          "metadata": {
+            "sidebarTitle": "Qwen Audio - 文转语音"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

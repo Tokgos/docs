@@ -1,0 +1,691 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway Nano Banana Image API",
+    "description": "Tikway 标准图片接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "图片生成"
+    },
+    {
+      "name": "图片生成/Nano Banana"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "图片生成",
+        "deprecated": false,
+        "description": "统一 OpenAI 兼容入口。`size` 表示宽高比，`quality` 映射到 Gemini 的图片分辨率。\n\n| 模型 | 输出分辨率 | 参考图 | 搜索与思考 |\n| --- | --- | --- | --- |\n| `gemini-3.1-flash-image` | 512px、1K、2K、4K；支持 1:4/4:1/1:8/8:1 极端比例 | 最多 14 张（最多 10 个对象 + 4 个角色） | `google_search`、`image_search`、`thinking_level` |\n| `gemini-3-pro-image` | 1K、2K、4K | 最多 14 张（最多 6 个对象 + 5 个角色 + 3 个风格） | `google_search`、`thinking_level`；不支持图片搜索 |\n| `gemini-2.5-flash-image` | 固定 1K | 建议最多 3 张 | 不支持 Google Search、图片搜索和思考 |\n\n此入口不接受原生 `generationConfig`、`aspect_ratio` 或 `image_size`，请使用 `size` 和 `quality`。",
+        "tags": [
+          "图片生成/Nano Banana"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "必填。使用 Get Models 返回的模型 ID 或可用别名。",
+                    "examples": [
+                      "gemini-3.1-flash-image",
+                      "gemini-3-pro-image",
+                      "gemini-2.5-flash-image"
+                    ]
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32000,
+                    "description": "必填。生成图片的提示词。"
+                  },
+                  "images": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 14,
+                    "description": "可选。图生图参考图，最多 14 张；具体数量上限以所选模型为准。省略时为文生图。",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "image_url"
+                          ],
+                          "properties": {
+                            "image_url": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "图片 URL、data URL 或 Base64 字符串。"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "x-apifox-orders": [
+                            "image_url"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "size": {
+                    "type": "string",
+                    "enum": [
+                      "1:1",
+                      "1:4",
+                      "1:8",
+                      "2:3",
+                      "3:2",
+                      "3:4",
+                      "4:1",
+                      "4:3",
+                      "4:5",
+                      "5:4",
+                      "8:1",
+                      "9:16",
+                      "16:9",
+                      "21:9"
+                    ],
+                    "description": "输出宽高比。网关把该字段约分并映射为 Gemini aspectRatio；它不是像素尺寸。极端比例 1:4、4:1、1:8、8:1 仅 gemini-3.1-flash-image 支持。"
+                  },
+                  "quality": {
+                    "type": "string",
+                    "enum": [
+                      "standard",
+                      "hd",
+                      "low",
+                      "medium",
+                      "high",
+                      "auto"
+                    ],
+                    "description": "输出分辨率映射：low→512px、standard→1K、medium→2K、high/hd→4K、auto/省略→不指定。gemini-2.5-flash-image 只支持 1K。"
+                  },
+                  "google_search": {
+                    "type": "boolean",
+                    "description": "Gemini 原生扩展，是否启用 Google Search grounding；仅支持此能力的模型可用。"
+                  },
+                  "image_search": {
+                    "type": "boolean",
+                    "description": "Gemini 原生扩展，是否启用图片搜索 grounding；仅支持此能力的模型可用。"
+                  },
+                  "thinking_level": {
+                    "type": "string",
+                    "enum": [
+                      "Minimal",
+                      "High"
+                    ],
+                    "description": "Gemini 原生扩展，模型思考强度；仅支持此能力的模型可用。"
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "Tikway 图片交付格式，url 返回图片链接，b64_json 返回纯 Base64。默认 url；该字段由网关消费，不作为上游模型参数。",
+                    "default": "url",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
+                  }
+                },
+                "examples": [
+                  {
+                    "model": "gemini-3.1-flash-image",
+                    "prompt": "电影感的上海雨夜街景，霓虹灯倒影，写实摄影",
+                    "size": "16:9",
+                    "quality": "medium"
+                  }
+                ],
+                "x-apifox-orders": [
+                  "model",
+                  "prompt",
+                  "images",
+                  "size",
+                  "quality",
+                  "google_search",
+                  "image_search",
+                  "thinking_level",
+                  "response_format"
+                ],
+                "additionalProperties": false
+              },
+              "examples": {
+                "请求示例": {
+                  "value": {
+                    "model": "gemini-3-pro-image",
+                    "prompt": "Generate a photorealistic red apple on a rustic wooden table.",
+                    "size": "1:1",
+                    "quality": "standard"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "图像创建时的 Unix 时间戳（秒）。"
+                    },
+                    "background": {
+                      "type": "string",
+                      "enum": [
+                        "transparent",
+                        "opaque"
+                      ],
+                      "description": "实际采用的背景设置。"
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "生成结果列表。",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "description": "Base64 编码的图像数据。GPT Image 默认返回；DALL·E 在 response_format=b64_json 时返回。"
+                          },
+                          "revised_prompt": {
+                            "type": "string",
+                            "description": "DALL·E 3 实际使用的修订提示词。"
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "生成图像 URL。仅 DALL·E 且 response_format=url 时返回；有效期为 60 分钟。"
+                          }
+                        }
+                      }
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "webp",
+                        "jpeg"
+                      ],
+                      "description": "实际输出图像格式。"
+                    },
+                    "quality": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "description": "实际生成质量。"
+                    },
+                    "size": {
+                      "type": "string",
+                      "description": "实际生成的图像尺寸。"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "description": "GPT Image 模型的 token 用量。",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "description": "输入（文本和图像）的 token 数。"
+                        },
+                        "input_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "输入图像 token 数。"
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "输入文本 token 数。"
+                            }
+                          }
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "description": "输出 token 数。"
+                        },
+                        "output_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "输出图像 token 数。"
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "输出文本 token 数。"
+                            }
+                          }
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "description": "输入和输出 token 总数。"
+                        }
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "created": 1713833628,
+                      "data": [
+                        {
+                          "b64_json": "..."
+                        }
+                      ],
+                      "usage": {
+                        "total_tokens": 100,
+                        "input_tokens": 50,
+                        "output_tokens": 50,
+                        "input_tokens_details": {
+                          "text_tokens": 10,
+                          "image_tokens": 40
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "created": 1713833628,
+                  "data": [
+                    {
+                      "b64_json": "..."
+                    }
+                  ],
+                  "usage": {
+                    "total_tokens": 100,
+                    "input_tokens": 50,
+                    "output_tokens": 50,
+                    "input_tokens_details": {
+                      "text_tokens": 10,
+                      "image_tokens": 40
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-model-capabilities": {
+          "gemini-3.1-flash-image": [
+            "prompt",
+            "images",
+            "size",
+            "quality",
+            "google_search",
+            "image_search",
+            "thinking_level",
+            "response_format"
+          ],
+          "gemini-3-pro-image": [
+            "prompt",
+            "images",
+            "size",
+            "quality",
+            "google_search",
+            "thinking_level",
+            "response_format"
+          ],
+          "gemini-2.5-flash-image": [
+            "prompt",
+            "images",
+            "size",
+            "quality",
+            "response_format"
+          ]
+        },
+        "x-mint": {
+          "href": "/zh/api-reference/images/nano-banana/generate",
+          "metadata": {
+            "sidebarTitle": "图片生成"
+          }
+        }
+      }
+    },
+    "/v1beta/models/{model}:generateContent": {
+      "post": {
+        "summary": "Gemini协议 - 图片生成",
+        "deprecated": false,
+        "description": "Gemini 原生入口。gemini-2.5-flash-image 仅支持 aspectRatio；Gemini 3 图片模型还支持 imageSize。参考图和搜索/思考能力限制与统一入口的模型表一致。",
+        "tags": [
+          "图片生成/Nano Banana"
+        ],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "contents"
+                ],
+                "properties": {
+                  "contents": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "必填。纯文本为文生图；文本加 inlineData 为图像编辑。",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "parts"
+                      ],
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "model"
+                          ],
+                          "description": "通常为 user 或省略。"
+                        },
+                        "parts": {
+                          "type": "array",
+                          "minItems": 1,
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "description": "生成或编辑图片的提示词。"
+                              },
+                              "inlineData": {
+                                "type": "object",
+                                "description": "编辑时使用的 Base64 参考图。",
+                                "required": [
+                                  "mimeType",
+                                  "data"
+                                ],
+                                "properties": {
+                                  "mimeType": {
+                                    "type": "string",
+                                    "description": "图片 MIME 类型，例如 image/png。"
+                                  },
+                                  "data": {
+                                    "type": "string",
+                                    "description": "不带 data URL 前缀的 Base64 图片内容。"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "generationConfig": {
+                    "type": "object",
+                    "description": "Nano Banana 图像输出配置。",
+                    "properties": {
+                      "responseModalities": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "TEXT",
+                            "IMAGE"
+                          ]
+                        },
+                        "description": "仅返回图片时设为 [\"IMAGE\"]。"
+                      },
+                      "responseFormat": {
+                        "type": "object",
+                        "properties": {
+                          "image": {
+                            "type": "object",
+                            "properties": {
+                              "aspectRatio": {
+                                "type": "string",
+                                "enum": [
+                                  "1:1",
+                                  "1:4",
+                                  "1:8",
+                                  "2:3",
+                                  "3:2",
+                                  "3:4",
+                                  "4:1",
+                                  "4:3",
+                                  "4:5",
+                                  "5:4",
+                                  "8:1",
+                                  "9:16",
+                                  "16:9",
+                                  "21:9"
+                                ],
+                                "description": "目标宽高比；可用范围依模型不同。"
+                              },
+                              "imageSize": {
+                                "type": "string",
+                                "enum": [
+                                  "0.5K",
+                                  "1K",
+                                  "2K",
+                                  "4K"
+                                ],
+                                "description": "目标分辨率；可用范围依模型不同。"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": [
+                  {
+                    "contents": [
+                      {
+                        "parts": [
+                          {
+                            "text": "把这只猫放到星空下的餐厅，保持原有外观。"
+                          },
+                          {
+                            "inlineData": {
+                              "mimeType": "image/png",
+                              "data": "<base64-image-data>"
+                            }
+                          }
+                        ]
+                      }
+                    ],
+                    "generationConfig": {
+                      "responseModalities": [
+                        "IMAGE"
+                      ],
+                      "responseFormat": {
+                        "image": {
+                          "aspectRatio": "16:9",
+                          "imageSize": "2K"
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "contents": [
+                  {
+                    "role": "user",
+                    "parts": [
+                      {
+                        "text": "Generate a photorealistic red apple resting on a rustic wooden table, soft window light, shallow depth of field."
+                      }
+                    ]
+                  }
+                ],
+                "generationConfig": {
+                  "responseModalities": [
+                    "IMAGE"
+                  ],
+                  "responseFormat": {
+                    "image": {
+                      "aspectRatio": "1:1",
+                      "imageSize": "1K"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "candidates"
+                  ],
+                  "properties": {
+                    "candidates": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "content"
+                        ],
+                        "properties": {
+                          "content": {
+                            "type": "object",
+                            "required": [
+                              "parts"
+                            ],
+                            "properties": {
+                              "parts": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "text": {
+                                      "type": "string"
+                                    },
+                                    "inlineData": {
+                                      "type": "object",
+                                      "required": [
+                                        "mimeType",
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "mimeType": {
+                                          "type": "string"
+                                        },
+                                        "data": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "finishReason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "usageMetadata": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  }
+                },
+                "example": {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "inlineData": {
+                              "mimeType": "image/png",
+                              "data": "<生成图片的Base64字符串>"
+                            }
+                          }
+                        ]
+                      },
+                      "finishReason": "STOP"
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-mint": {
+          "href": "/zh/api-reference/images/nano-banana/generate-content",
+          "metadata": {
+            "sidebarTitle": "Gemini协议 - 图片生成"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

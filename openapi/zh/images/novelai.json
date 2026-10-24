@@ -1,0 +1,474 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway Novel AI Image API",
+    "description": "Tikway 标准图片接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "图片生成"
+    },
+    {
+      "name": "图片生成/Novel AI"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "图片生成",
+        "deprecated": false,
+        "description": "`diffusion-4-5-full` 与 `diffusion-4-5-curated` 使用相同参数集：`prompt`、`images`、`negative_prompt`、`n`、`size`、`seed`、`steps`、`scale`、`quality_toggle`、`sampler`、`noise_schedule`、`character_prompts` 和 `response_format`。\n\n`n` 为 1～4。普通图生图源图最多 1 张；`vibe_transfer` 与 `character_reference` 不能同时使用。图生图通过本生成接口的 `images` 传入源图。",
+        "tags": [
+          "图片生成/Novel AI"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$id": "urn:tikway:schema:protocols:openai:images-generations:novelai-request:1",
+                "title": "NovelAIImageGenerationRequest",
+                "description": "NovelAI 图片生成 Request Body。统一参考图使用 images；使用统一 images 传入参考图。",
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "examples": [
+                      "diffusion-4-5-full",
+                      "diffusion-4-5-curated"
+                    ],
+                    "description": "必填。使用 Get Models 返回的模型 ID 或可用别名。"
+                  },
+                  "images": {
+                    "type": "array",
+                    "description": "可选。统一参考图数组。type=image（或省略）为单张图生图源图；type=vibe_transfer 为氛围参考；type=character_reference 为精确角色/风格参考。只能有 1 张普通图生图源图，vibe_transfer 与 character_reference 不能混用。",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "image_url"
+                      ],
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "image",
+                            "vibe_transfer",
+                            "character_reference",
+                            null
+                          ],
+                          "description": "image 或 null 为图生图源图；其余值表示 NovelAI 参考图类型。"
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri"
+                        },
+                        "strength": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1,
+                          "description": "参考强度。图生图最大值为 0.99。"
+                        },
+                        "fidelity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1,
+                          "description": "保真度。图生图会转换为 noise = 1 - fidelity。"
+                        },
+                        "ref_type": {
+                          "type": "string",
+                          "enum": [
+                            "character",
+                            "style",
+                            "character&style"
+                          ],
+                          "default": "character&style",
+                          "description": "仅 character_reference 使用。"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "x-apifox-orders": [
+                        "type",
+                        "image_url",
+                        "strength",
+                        "fidelity",
+                        "ref_type"
+                      ]
+                    },
+                    "maxItems": 16
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32000,
+                    "description": "正向提示词。"
+                  },
+                  "negative_prompt": {
+                    "type": "string",
+                    "description": "负向提示词。"
+                  },
+                  "n": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4,
+                    "default": 1,
+                    "description": "生成图片数量。"
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
+                    "default": "1024x1024",
+                    "description": "输出尺寸，网关转换为 width 和 height。"
+                  },
+                  "seed": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      }
+                    ],
+                    "description": "随机种子。"
+                  },
+                  "steps": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 23,
+                    "description": "采样步数。"
+                  },
+                  "scale": {
+                    "type": "number",
+                    "default": 5,
+                    "description": "提示词引导强度。"
+                  },
+                  "quality_toggle": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "质量开关。"
+                  },
+                  "sampler": {
+                    "type": "string",
+                    "enum": [
+                      "Euler Ancestral",
+                      "Euler",
+                      "DPM++ 2S Ancestral",
+                      "DPM++ 2M SDE",
+                      "DPM++ 2M",
+                      "DPM++ SDE"
+                    ],
+                    "default": "Euler Ancestral"
+                  },
+                  "noise_schedule": {
+                    "type": "string",
+                    "enum": [
+                      "karras",
+                      "exponential",
+                      "polyexponential"
+                    ],
+                    "default": "karras"
+                  },
+                  "character_prompts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "prompt": {
+                          "type": "string"
+                        },
+                        "uc": {
+                          "type": "string"
+                        },
+                        "center": {
+                          "type": "object",
+                          "properties": {
+                            "x": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "y": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 1
+                            }
+                          },
+                          "additionalProperties": false,
+                          "x-apifox-orders": [
+                            "x",
+                            "y"
+                          ]
+                        }
+                      },
+                      "additionalProperties": false,
+                      "x-apifox-orders": [
+                        "prompt",
+                        "uc",
+                        "center"
+                      ]
+                    }
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "Tikway 图片交付格式，url 返回图片链接，b64_json 返回纯 Base64。默认 url；该字段由网关消费，不作为上游模型参数。",
+                    "default": "url",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
+                  }
+                },
+                "additionalProperties": false,
+                "x-apifox-orders": [
+                  "model",
+                  "images",
+                  "prompt",
+                  "negative_prompt",
+                  "n",
+                  "size",
+                  "seed",
+                  "steps",
+                  "scale",
+                  "quality_toggle",
+                  "sampler",
+                  "noise_schedule",
+                  "character_prompts",
+                  "response_format"
+                ]
+              },
+              "examples": {
+                "文生图": {
+                  "value": {
+                    "model": "diffusion-4-5-full",
+                    "prompt": "A serene Japanese garden at dawn, mist above a koi pond, cinematic lighting, highly detailed",
+                    "negative_prompt": "lowres, blurry, text, watermark",
+                    "size": "1024x1536",
+                    "n": 1,
+                    "steps": 28,
+                    "scale": 5,
+                    "sampler": "Euler Ancestral",
+                    "noise_schedule": "karras"
+                  }
+                },
+                "图生图": {
+                  "value": {
+                    "model": "diffusion-4-5-full",
+                    "prompt": "Turn this scene into an evening watercolor painting, warm lantern light, delicate brush strokes",
+                    "negative_prompt": "text, watermark, distorted",
+                    "size": "1024x1024",
+                    "n": 1,
+                    "images": [
+                      {
+                        "type": "image",
+                        "image_url": "https://example.com/source.png",
+                        "strength": 0.65,
+                        "fidelity": 0.8
+                      }
+                    ]
+                  }
+                },
+                "风格参考": {
+                  "value": {
+                    "model": "diffusion-4-5-full",
+                    "prompt": "A futuristic city street in the rain, a lone traveler under an umbrella",
+                    "negative_prompt": "text, watermark, blurry",
+                    "size": "1024x1536",
+                    "n": 1,
+                    "images": [
+                      {
+                        "type": "vibe_transfer",
+                        "image_url": "https://example.com/style-reference.png",
+                        "strength": 0.7
+                      }
+                    ]
+                  }
+                },
+                "角色参考": {
+                  "value": {
+                    "model": "diffusion-4-5-full",
+                    "prompt": "The referenced character reads a book in a quiet library, soft afternoon sunlight",
+                    "negative_prompt": "text, watermark, extra fingers, distorted face",
+                    "size": "1024x1536",
+                    "n": 1,
+                    "images": [
+                      {
+                        "type": "character_reference",
+                        "image_url": "https://example.com/character.png",
+                        "ref_type": "character&style",
+                        "strength": 0.8,
+                        "fidelity": 0.5
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "网关完成图片转换时的 Unix 时间戳（秒）。"
+                    },
+                    "background": {
+                      "type": "string",
+                      "enum": [
+                        "transparent",
+                        "opaque"
+                      ],
+                      "description": "根据统一入站请求推断的背景设置；NovelAI 原始响应通常不回显。"
+                    },
+                    "data": {
+                      "type": "array",
+                      "minItems": 1,
+                      "description": "生成的图片列表。",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "b64_json",
+                          "index"
+                        ],
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "description": "网关下载并转成 Base64 的图片数据。"
+                          },
+                          "index": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "图片在结果列表中的索引。"
+                          }
+                        }
+                      }
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "jpeg",
+                        "webp"
+                      ],
+                      "description": "从下载图片 MIME 类型或请求 output_format 推断出的格式。"
+                    },
+                    "quality": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "description": "统一质量字段；若请求提供 quality，网关会映射后回显。"
+                    },
+                    "size": {
+                      "type": "string",
+                      "description": "原始请求的 size；NovelAI 原始响应通常不回显。"
+                    }
+                  },
+                  "examples": [
+                    {
+                      "created": 1713833628,
+                      "background": "opaque",
+                      "data": [
+                        {
+                          "b64_json": "...",
+                          "index": 0
+                        }
+                      ],
+                      "output_format": "png",
+                      "size": "1024x768"
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-model-capabilities": {
+          "diffusion-4-5-full": [
+            "prompt",
+            "images",
+            "negative_prompt",
+            "n",
+            "size",
+            "seed",
+            "steps",
+            "scale",
+            "quality_toggle",
+            "sampler",
+            "noise_schedule",
+            "character_prompts",
+            "hook_url",
+            "response_format"
+          ],
+          "diffusion-4-5-curated": [
+            "prompt",
+            "images",
+            "negative_prompt",
+            "n",
+            "size",
+            "seed",
+            "steps",
+            "scale",
+            "quality_toggle",
+            "sampler",
+            "noise_schedule",
+            "character_prompts",
+            "hook_url",
+            "response_format"
+          ]
+        },
+        "x-mint": {
+          "href": "/zh/api-reference/images/novelai/generate",
+          "metadata": {
+            "sidebarTitle": "图片生成"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

@@ -1,55 +1,50 @@
-# Mintlify Starter Kit
+# Tikway documentation
 
-Use the starter kit to get your docs deployed and ready to customize.
+Mintlify documentation for Tikway. Navigation and redirects are configured in `docs.json`.
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+## Directory structure
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+```text
+zh/ and en/
+  introduction.mdx
+  quickstart.mdx
+  guides/                 Authentication, errors, and protocol conversion
+  protocols/              Protocol guides and request examples
+  api-reference/          Model overviews, usage guides, and voice lists
+openapi/
+  zh/ and en/
+    chat/                 OpenAI, Anthropic, and Gemini specifications
+    images/               Image specifications; Midjourney has its own folder
+    videos/               Video specifications
+    speech/               Speech generation specifications
+    transcriptions/       Speech recognition specifications
+    embeddings/           Embedding specifications
+    decisions/            Decision specifications
+    utilities/            Balance and conversion specifications
+assets/                   Shared documentation assets
+scripts/                  Documentation maintenance and checks
+style.css                 Site styles and page-specific layouts
+```
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
+## Naming and URLs
 
-## AI-assisted writing
+- Use lowercase English names with hyphens. Keep provider names consistent: `openai`, `happyhorse`, `midjourney`, `gpt-image`, and `novelai`.
+- Page URLs follow their MDX paths, without the extension. For example, `zh/api-reference/images/overview.mdx` is served at `/zh/api-reference/images/overview`.
+- OpenAPI JSON files live under `openapi/<language>/<category>/`. They describe real HTTP endpoints; changing a documentation URL must not change the API request path.
+- Each OpenAPI operation has an explicit `x-mint.href`, such as `/zh/api-reference/videos/seedance/create`. This keeps URLs stable when translated summaries or tags change.
+- Preserve localized navigation labels with `x-mint.metadata.sidebarTitle`.
+- When moving a published page or specification, update internal links, navigation, page-scoped CSS, and references in `../ai-forward-web`. Add its old URL to `docs.json` redirects.
+- Old paths appear only in redirect sources. Existing unlisted pages and combined specifications remain available as source material; they are not automatically added to navigation.
 
-Set up your AI coding tool to work with Mintlify:
+## Preview and validation
 
 ```bash
-npx skills add https://mintlify.com/docs
+mint dev --no-open
+mint validate
+mint broken-links
+node scripts/check-routes.mjs
 ```
 
-This command installs Mintlify's documentation skill for your configured AI tools like Claude Code, Cursor, Windsurf, and others. The skill includes component reference, writing standards, and workflow guidance.
+The route check validates navigation targets, API operation URLs, redirect destinations, and documentation links in the adjacent web project. It also rejects references that still point to a redirect source.
 
-See the [AI tools guides](/ai-tools) for tool-specific setup.
-
-## Development
-
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
-
-```
-npm i -g mint
-```
-
-Run the following command at the root of your documentation, where your `docs.json` is located:
-
-```
-mint dev
-```
-
-View your local preview at `http://localhost:3000`.
-
-## Publishing changes
-
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
-
-## Need help?
-
-### Troubleshooting
-
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
-
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
+After changing web references, run `pnpm build` and `pnpm exec vue-tsc --noEmit` in `../ai-forward-web`. Report unrelated existing type errors separately.

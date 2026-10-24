@@ -1,0 +1,920 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway GPT Image Image API",
+    "description": "Tikway 标准图片接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "图片生成"
+    },
+    {
+      "name": "图片生成/GPT Image"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "图片生成",
+        "deprecated": false,
+        "description": "网关要求显式传入 `model`。不同模型只支持下表中的参数组合。\n\n| 模型 | 尺寸 | 质量 | 模型专属参数 |\n| --- | --- | --- | --- |\n| `gpt-image-2.5-sunburst` / `flare`（含快照） | 任意 `WIDTHxHEIGHT`（16 倍数、1:3～3:1、最高 3840x2160） | `auto/low/medium/high/xhigh/max` | `background`、`moderation`、`output_format`、`output_compression`、`stream`、`partial_images` |\n| `gpt-image-2`（含快照） | 同上 | `auto/low/medium/high` | 同上；透明背景仍为预览能力 |\n| `gpt-image-1` / `1.5` / `1-mini` | `auto`、1024×1024、1536×1024、1024×1536 | `auto/low/medium/high` | `background`、`moderation`、`output_format`、`output_compression`、`stream`、`partial_images` |\n| `dall-e-3` | 1024×1024、1792×1024、1024×1792 | `standard/hd` | `n` 只能为 1；支持 `style`、`response_format` |\n| `dall-e-2` | 256×256、512×512、1024×1024 | `standard` | 支持 `n=1..10`、`response_format` |",
+        "tags": [
+          "图片生成/GPT Image"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32000,
+                    "description": "必填。要生成图像的文本描述；GPT Image 模型最长 32000 字符，dall-e-2 最长 1000 字符，dall-e-3 最长 4000 字符。"
+                  },
+                  "background": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "transparent",
+                      "opaque",
+                      "auto",
+                      null
+                    ],
+                    "description": "背景设置，仅 GPT Image 模型支持。transparent 使用时 output_format 必须为 png 或 webp。"
+                  },
+                  "model": {
+                    "type": "string",
+                    "description": "必填。使用 Get Models 返回的模型 ID 或可用别名。",
+                    "examples": [
+                      "gpt-image-2.5-sunburst",
+                      "gpt-image-2.5-sunburst-2026-09-08",
+                      "gpt-image-2.5-flare",
+                      "gpt-image-2.5-flare-2026-09-08",
+                      "gpt-image-2",
+                      "gpt-image-2-2026-04-21",
+                      "gpt-image-1.5",
+                      "gpt-image-1",
+                      "gpt-image-1-mini",
+                      "dall-e-2",
+                      "dall-e-3"
+                    ],
+                    "minLength": 1
+                  },
+                  "moderation": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "low",
+                      "auto",
+                      null
+                    ],
+                    "description": "内容审核级别，仅 GPT Image 模型支持。auto 为默认值。"
+                  },
+                  "n": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 1,
+                    "maximum": 10,
+                    "description": "生成的图像数量。dall-e-3 仅支持 1。"
+                  },
+                  "output_compression": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 100,
+                    "description": "图像压缩率（0–100），仅 GPT Image 的 webp 或 jpeg 输出支持，默认 100。"
+                  },
+                  "output_format": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "png",
+                      "jpeg",
+                      "webp",
+                      null
+                    ],
+                    "description": "输出图像格式，仅 GPT Image 模型支持。"
+                  },
+                  "partial_images": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 3,
+                    "description": "流式响应中返回的中间图像数量，仅 GPT Image 模型支持。"
+                  },
+                  "quality": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "auto",
+                      "low",
+                      "medium",
+                      "high",
+                      "xhigh",
+                      "max",
+                      "standard",
+                      "hd",
+                      null
+                    ],
+                    "description": "图像质量。GPT Image 支持 auto/low/medium/high；GPT Image 2.5 额外支持 xhigh/max；dall-e-3 支持 standard/hd；dall-e-2 仅支持 standard。"
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "Tikway 图片交付格式，url 返回图片链接，b64_json 返回纯 Base64。默认 url；该字段由网关消费，不作为上游模型参数。",
+                    "default": "url",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
+                    "description": "输出尺寸，使用 auto 或 WIDTHxHEIGHT；具体尺寸范围和约束见所选模型能力。"
+                  },
+                  "stream": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ],
+                    "description": "是否采用 SSE 流式生成，仅 GPT Image 模型支持，默认 false。"
+                  },
+                  "style": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "vivid",
+                      "natural",
+                      null
+                    ],
+                    "description": "生成风格，仅 dall-e-3 支持。"
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "终端用户的唯一标识，用于滥用监控与检测。"
+                  }
+                },
+                "examples": [
+                  {
+                    "model": "gpt-image-1.5",
+                    "prompt": "一只可爱的海獭宝宝，水彩插画风格",
+                    "n": 1,
+                    "size": "1024x1024",
+                    "output_format": "png",
+                    "quality": "medium"
+                  }
+                ],
+                "x-apifox-orders": [
+                  "prompt",
+                  "background",
+                  "model",
+                  "moderation",
+                  "n",
+                  "output_compression",
+                  "output_format",
+                  "partial_images",
+                  "quality",
+                  "response_format",
+                  "size",
+                  "stream",
+                  "style",
+                  "user"
+                ],
+                "additionalProperties": false
+              },
+              "examples": {
+                "默认": {
+                  "value": {
+                    "model": "gpt-image-2",
+                    "prompt": "Generate a photorealistic red apple resting on a rustic wooden table, soft window light, shallow depth of field.",
+                    "size": "1024x1024",
+                    "quality": "high",
+                    "output_format": "png"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "图像创建时的 Unix 时间戳（秒）。"
+                    },
+                    "background": {
+                      "type": "string",
+                      "enum": [
+                        "transparent",
+                        "opaque"
+                      ],
+                      "description": "实际采用的背景设置。"
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "生成结果列表。",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "description": "Base64 编码的图像数据。GPT Image 默认返回；DALL·E 在 response_format=b64_json 时返回。"
+                          },
+                          "revised_prompt": {
+                            "type": "string",
+                            "description": "DALL·E 3 实际使用的修订提示词。"
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "生成图像 URL。仅 DALL·E 且 response_format=url 时返回；有效期为 60 分钟。"
+                          }
+                        }
+                      }
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "webp",
+                        "jpeg"
+                      ],
+                      "description": "实际输出图像格式。"
+                    },
+                    "quality": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "description": "实际生成质量。"
+                    },
+                    "size": {
+                      "type": "string",
+                      "description": "实际生成的图像尺寸。"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "description": "GPT Image 模型的 token 用量。",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "description": "输入（文本和图像）的 token 数。"
+                        },
+                        "input_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "输入图像 token 数。"
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "输入文本 token 数。"
+                            }
+                          }
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "description": "输出 token 数。"
+                        },
+                        "output_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "输出图像 token 数。"
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "输出文本 token 数。"
+                            }
+                          }
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "description": "输入和输出 token 总数。"
+                        }
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "created": 1713833628,
+                      "data": [
+                        {
+                          "b64_json": "..."
+                        }
+                      ],
+                      "usage": {
+                        "total_tokens": 100,
+                        "input_tokens": 50,
+                        "output_tokens": 50,
+                        "input_tokens_details": {
+                          "text_tokens": 10,
+                          "image_tokens": 40
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "created": 1713833628,
+                  "data": [
+                    {
+                      "b64_json": "..."
+                    }
+                  ],
+                  "usage": {
+                    "total_tokens": 100,
+                    "input_tokens": 50,
+                    "output_tokens": 50,
+                    "input_tokens_details": {
+                      "text_tokens": 10,
+                      "image_tokens": 40
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-model-capabilities": {
+          "gpt-image-2.5-*": [
+            "background",
+            "moderation",
+            "n",
+            "output_compression",
+            "output_format",
+            "partial_images",
+            "quality",
+            "size",
+            "stream",
+            "user"
+          ],
+          "gpt-image-2*": [
+            "background",
+            "moderation",
+            "n",
+            "output_compression",
+            "output_format",
+            "partial_images",
+            "quality",
+            "size",
+            "stream",
+            "user"
+          ],
+          "gpt-image-1*": [
+            "background",
+            "moderation",
+            "n",
+            "output_compression",
+            "output_format",
+            "partial_images",
+            "quality",
+            "size",
+            "stream",
+            "user"
+          ],
+          "dall-e-3": [
+            "n",
+            "quality",
+            "response_format",
+            "size",
+            "style",
+            "user"
+          ],
+          "dall-e-2": [
+            "n",
+            "quality",
+            "response_format",
+            "size",
+            "user"
+          ]
+        },
+        "x-mint": {
+          "href": "/zh/api-reference/images/gpt-image/generate",
+          "metadata": {
+            "sidebarTitle": "图片生成"
+          }
+        }
+      }
+    },
+    "/v1/images/edits": {
+      "post": {
+        "summary": "图片编辑",
+        "deprecated": false,
+        "description": "网关要求显式传入 `model`、`images` 和 `prompt`。GPT Image 最多接收 16 张参考图；`dall-e-2` 只接收单张 PNG 输入；`dall-e-3` 不支持编辑。\n\nGPT Image 2/2.5 支持任意合规 `WIDTHxHEIGHT`，其他 GPT Image 使用标准三档尺寸。`input_fidelity`、`background`、`moderation`、`output_format`、`output_compression`、`stream` 和 `partial_images` 仅用于 GPT Image 系列。",
+        "tags": [
+          "图片生成/GPT Image"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt",
+                  "images"
+                ],
+                "properties": {
+                  "images": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 16,
+                    "description": "必填。待编辑的源图列表。GPT Image 模型最多 16 张；每项需提供 file_id 或 image_url 之一。若直接上传文件，使用 multipart 字段 image[]（或你的网关定义的 images）。",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "file_id": {
+                          "type": "string",
+                          "description": "已上传至 Files API 的源图文件 ID。"
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "description": "完整图片 URL，或 Base64 data URL。"
+                        }
+                      },
+                      "x-apifox-orders": [
+                        "file_id",
+                        "image_url"
+                      ]
+                    }
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "必填。期望如何编辑或扩展图像的文字描述。"
+                  },
+                  "background": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "transparent",
+                      "opaque",
+                      "auto",
+                      null
+                    ],
+                    "description": "输出背景，仅 GPT Image 模型支持。transparent 时 output_format 必须为 png 或 webp。"
+                  },
+                  "input_fidelity": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "high",
+                      "low",
+                      null
+                    ],
+                    "description": "与原始输入图像保持一致的程度，仅受支持的 GPT Image 模型适用。"
+                  },
+                  "mask": {
+                    "type": "object",
+                    "description": "用于局部重绘的遮罩。file_id 与 image_url 二选一。",
+                    "properties": {
+                      "file_id": {
+                        "type": "string",
+                        "description": "已上传遮罩文件的 File ID。"
+                      },
+                      "image_url": {
+                        "type": "string",
+                        "description": "遮罩图片 URL 或 Base64 data URL。"
+                      }
+                    },
+                    "x-apifox-orders": [
+                      "file_id",
+                      "image_url"
+                    ]
+                  },
+                  "model": {
+                    "type": "string",
+                    "description": "必填。使用 Get Models 返回的模型 ID 或可用别名。",
+                    "examples": [
+                      "gpt-image-2.5-sunburst",
+                      "gpt-image-2.5-sunburst-2026-09-08",
+                      "gpt-image-2.5-flare",
+                      "gpt-image-2.5-flare-2026-09-08",
+                      "gpt-image-2",
+                      "gpt-image-2-2026-04-21",
+                      "gpt-image-1.5",
+                      "gpt-image-1",
+                      "gpt-image-1-mini",
+                      "chatgpt-image-latest",
+                      "dall-e-2"
+                    ],
+                    "minLength": 1
+                  },
+                  "moderation": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "low",
+                      "auto",
+                      null
+                    ],
+                    "description": "内容审核级别，仅 GPT Image 模型支持。"
+                  },
+                  "n": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 1,
+                    "maximum": 10,
+                    "description": "要生成的编辑后图像数量。"
+                  },
+                  "output_compression": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 100,
+                    "description": "jpeg 或 webp 输出的压缩率（0–100），仅 GPT Image 模型支持。"
+                  },
+                  "output_format": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "png",
+                      "jpeg",
+                      "webp",
+                      null
+                    ],
+                    "description": "输出图片格式，仅 GPT Image 模型支持。"
+                  },
+                  "partial_images": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 3,
+                    "description": "流式响应中生成的中间图数量。"
+                  },
+                  "quality": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high",
+                      "xhigh",
+                      "max",
+                      "auto",
+                      null
+                    ],
+                    "description": "输出质量。GPT Image 支持 low/medium/high/auto；GPT Image 2.5 额外支持 xhigh/max。"
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
+                    "description": "输出尺寸，使用 auto 或 WIDTHxHEIGHT；具体尺寸范围和约束见所选模型能力。"
+                  },
+                  "stream": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ],
+                    "description": "是否以 SSE 事件流返回中间和最终结果。"
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "终端用户唯一标识，用于滥用监控和检测。"
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "description": "Tikway 图片交付格式，url 返回图片链接，b64_json 返回纯 Base64。默认 url；该字段由网关消费，不作为上游模型参数。",
+                    "default": "url",
+                    "enum": [
+                      "b64_json",
+                      "url"
+                    ]
+                  }
+                },
+                "examples": [
+                  {
+                    "images": [
+                      {
+                        "image_url": "https://example.com/source-image.png"
+                      }
+                    ],
+                    "prompt": "为这张图添加水彩效果",
+                    "model": "gpt-image-1.5",
+                    "quality": "high",
+                    "size": "1024x1024"
+                  }
+                ],
+                "x-apifox-orders": [
+                  "images",
+                  "prompt",
+                  "background",
+                  "input_fidelity",
+                  "mask",
+                  "model",
+                  "moderation",
+                  "n",
+                  "output_compression",
+                  "output_format",
+                  "partial_images",
+                  "quality",
+                  "size",
+                  "stream",
+                  "user",
+                  "response_format"
+                ],
+                "additionalProperties": false
+              },
+              "examples": {
+                "请求示例": {
+                  "value": {
+                    "model": "gpt-image-2",
+                    "prompt": "Keep the apple unchanged and replace only its background with a misty enchanted forest under soft cinematic lighting.",
+                    "size": "1024x1024",
+                    "quality": "high",
+                    "output_format": "png",
+                    "images": [
+                      {
+                        "image_url": "https://gd-hbimg.huaban.com/cb36fdfc6ee4707de3ec666d6bc202fb99d9bef326a10d-oQHn3b_fw658"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "编辑结果创建时的 Unix 时间戳（秒）。"
+                    },
+                    "background": {
+                      "type": "string",
+                      "enum": [
+                        "transparent",
+                        "opaque"
+                      ],
+                      "description": "实际采用的输出背景。"
+                    },
+                    "data": {
+                      "type": "array",
+                      "description": "编辑后的图像列表。",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "b64_json": {
+                            "type": "string",
+                            "description": "Base64 编码的图片内容。GPT Image 模型默认返回。"
+                          },
+                          "revised_prompt": {
+                            "type": "string",
+                            "description": "DALL·E 3 的实际修订提示词；本编辑接口通常不返回该字段。"
+                          },
+                          "url": {
+                            "type": "string",
+                            "description": "生成图片 URL。DALL·E 使用 URL 返回格式时提供，通常有效 60 分钟。"
+                          }
+                        }
+                      }
+                    },
+                    "output_format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "webp",
+                        "jpeg"
+                      ],
+                      "description": "实际输出格式。"
+                    },
+                    "quality": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "auto"
+                      ],
+                      "description": "实际使用的输出质量。"
+                    },
+                    "size": {
+                      "type": "string",
+                      "description": "实际生成的图片尺寸。"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "description": "GPT Image 模型的 token 用量。",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "description": "输入文本和图像的 token 数。"
+                        },
+                        "input_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "输入图像 token 数。"
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "输入文本 token 数。"
+                            }
+                          }
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "description": "输出 token 数。"
+                        },
+                        "output_tokens_details": {
+                          "type": "object",
+                          "properties": {
+                            "image_tokens": {
+                              "type": "integer",
+                              "description": "输出图像 token 数。"
+                            },
+                            "text_tokens": {
+                              "type": "integer",
+                              "description": "输出文本 token 数。"
+                            }
+                          }
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "description": "输入和输出 token 总数。"
+                        }
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "created": 1713833628,
+                      "data": [
+                        {
+                          "b64_json": "..."
+                        }
+                      ],
+                      "usage": {
+                        "total_tokens": 100,
+                        "input_tokens": 50,
+                        "output_tokens": 50,
+                        "input_tokens_details": {
+                          "text_tokens": 10,
+                          "image_tokens": 40
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "created": 1713833628,
+                  "data": [
+                    {
+                      "b64_json": "..."
+                    }
+                  ],
+                  "usage": {
+                    "total_tokens": 100,
+                    "input_tokens": 50,
+                    "output_tokens": 50,
+                    "input_tokens_details": {
+                      "text_tokens": 10,
+                      "image_tokens": 40
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-model-capabilities": {
+          "gpt-image-*": [
+            "images",
+            "prompt",
+            "background",
+            "input_fidelity",
+            "mask",
+            "moderation",
+            "n",
+            "output_compression",
+            "output_format",
+            "partial_images",
+            "quality",
+            "size",
+            "stream",
+            "user"
+          ],
+          "dall-e-2": [
+            "images",
+            "prompt",
+            "mask",
+            "n",
+            "response_format",
+            "size",
+            "user"
+          ],
+          "dall-e-3": []
+        },
+        "x-mint": {
+          "href": "/zh/api-reference/images/gpt-image/edit",
+          "metadata": {
+            "sidebarTitle": "图片编辑"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

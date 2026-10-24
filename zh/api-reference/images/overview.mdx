@@ -1,0 +1,462 @@
+---
+title: "图片 API 参数总览"
+sidebarTitle: "参数与模型支持"
+description: "对比图片模型支持的参数、生成数量、参考图上限、尺寸与质量，查看各模型的使用限制和请求示例。"
+icon: "sliders"
+---
+
+图片 API 提供文生图、参考图生成和图像编辑能力。先选择模型，再按下表设置生成数量、参考图和输出规格；同名参数在不同模型下可能有不同含义。
+
+<Note>
+本页按 Tikway 当前接口定义整理。表中的数量均为**单次请求**的限制；“未开放”表示当前接口没有开放该字段，不代表上游模型没有这项能力。模型是否可用，以你的账号可调用模型列表为准。
+</Note>
+
+## 接口选型
+
+| 使用场景 | 请求入口 | 必填内容 |
+| --- | --- | --- |
+| 根据文字生成图片 | `POST /v1/images/generations` | `model`、`prompt` |
+| Nano Banana、Qwen、Seedream、MAI、Novel、Flux、Grok 参考图生成 | `POST /v1/images/generations` | `model`、`prompt`，以及对应格式的 `images` |
+| GPT Image / DALL·E 2 图像编辑 | `POST /v1/images/edits` | `model`、`prompt`、`images` |
+| Nano Banana 原生 Gemini 请求 | `POST /v1beta/models/{model}:generateContent` | 路径中的模型 ID、请求体中的 `contents` |
+| Midjourney 生成、变体与局部重绘 | 生成接口提交任务，再查询任务结果 | 见 [Midjourney 上手与参数指南](/zh/api-reference/images/midjourney/guide) |
+
+## 模型速查
+
+先看数量范围，再展开对应模型查看完整参数。**输出数量与输入参考图数量分别计算。**
+
+| 模型系列 | 输出数量 | 参考图上限 |
+| --- | --- | --- |
+| GPT Image / DALL·E | 1–10；DALL·E 3 仅 1 | GPT 编辑 16 张；DALL·E 2 编辑 1 张 |
+| Nano Banana | 未开放 `n` | Gemini 3 系列 14 张；2.5 建议最多 3 张 |
+| Qwen Image | 不接受 `n` | 3 张 |
+| Seedream | 未开放 `n` | 5.0 Pro 为 10 张；4.5 为 14 张 |
+| MAI Image | 每次 1 张 | 1 张 |
+| Novel | 1–4 | 总计 16 项；普通源图仅 1 张 |
+| Flux | 每次 1 张 | 4 张 |
+| Grok | 1–4 | 5 张 |
+
+Midjourney 使用异步任务和四宫格结果，见 [专门指南](/zh/api-reference/images/midjourney/guide)。
+
+## 按模型查看参数
+
+每组包含生成数量、参考图限制、尺寸、质量和专属参数。
+
+<AccordionGroup>
+
+<Accordion title="GPT Image / DALL·E">
+
+**GPT Image 系列**
+
+| 项目 | 说明 |
+| --- | --- |
+| 输出数量 | `1–10` |
+| 参考图上限 | 编辑接口 `16` 张 |
+| 使用方式 | 生成接口用于文生图；带源图时使用编辑接口 |
+
+**`dall-e-3`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 输出数量 | 仅 `1` |
+| 参考图上限 | 不支持编辑 |
+| 使用方式 | 不传 `images` 或 `mask` |
+
+**`dall-e-2`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 输出数量 | `1–10` |
+| 参考图上限 | 编辑接口 `1` 张 PNG |
+| 使用方式 | 可配合 `mask` 局部重绘 |
+
+### 尺寸与质量
+
+**GPT Image 2 / 2.5**
+
+| 项目 | 说明 |
+| --- | --- |
+| 尺寸 | `WIDTHxHEIGHT`；宽高为 16 的倍数，比例 1:3～3:1，最高规格 3840×2160 |
+| 质量与规格 | `auto / low / medium / high`；2.5 额外支持 `xhigh / max` |
+
+**GPT Image 1 / 1.5 / 1-mini**
+
+| 项目 | 说明 |
+| --- | --- |
+| 尺寸 | `auto`、`1024x1024`、`1536x1024`、`1024x1536` |
+| 质量与规格 | `auto / low / medium / high` |
+
+**DALL·E 3**
+
+| 项目 | 说明 |
+| --- | --- |
+| 尺寸 | `1024x1024`、`1792x1024`、`1024x1792` |
+| 质量与规格 | `standard / hd` |
+
+**DALL·E 2**
+
+| 项目 | 说明 |
+| --- | --- |
+| 尺寸 | `256x256`、`512x512`、`1024x1024` |
+| 质量与规格 | 文生图仅 `standard`；编辑请求省略 `quality` |
+
+### 专属参数
+
+
+| 参数 | 说明 |
+| --- | --- |
+| `background` | `auto / opaque / transparent`。GPT Image；透明背景须配合 `png` 或 `webp`；GPT Image 2 透明背景为预览能力 |
+| `output_format` | `png / jpeg / webp`。GPT Image |
+| `output_compression` | 整数 `0–100`，默认 `100`。仅 GPT Image 的 JPEG / WebP 输出 |
+| `moderation` | `auto / low`。GPT Image，默认 `auto` |
+| `stream` | boolean，默认 `false`。GPT Image，启用 SSE 流式响应 |
+| `partial_images` | 整数 `0–3`。流式中间图数量；不等于最终输出数量 `n` |
+| `input_fidelity` | `high / low`。受支持的 GPT Image 编辑模型，用于控制输入图保真度 |
+| `mask` | `{ "image_url": "…" }` 或 `{ "file_id": "…" }`。编辑接口的局部重绘遮罩，两种来源二选一 |
+| `style` | `vivid / natural`。仅 DALL·E 3 文生图 |
+| `user` | string。终端用户标识，用于滥用监控 |
+
+GPT 编辑的 `images` 使用对象数组，每项填写 `image_url` 或 `file_id` 之一；`image_url` 可以是完整 URL 或 Base64 data URL。DALL·E 3 没有编辑能力。
+
+</Accordion>
+
+<Accordion title="Nano Banana">
+
+**`gemini-3.1-flash-image`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 输出数量 | 未开放 `n` |
+| 参考图上限 | `14` 张 |
+| 使用方式 | 最多 10 个对象参考 + 4 个角色参考 |
+
+**`gemini-3-pro-image`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 输出数量 | 未开放 `n` |
+| 参考图上限 | `14` 张 |
+| 使用方式 | 最多 6 个对象 + 5 个角色 + 3 个风格参考 |
+
+**`gemini-2.5-flash-image`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 输出数量 | 未开放 `n` |
+| 参考图上限 | 建议不超过 `3` 张 |
+| 使用方式 | 固定 1K 输出 |
+
+### 尺寸与质量
+
+**Nano Banana**
+
+| 项目 | 说明 |
+| --- | --- |
+| 尺寸 | 比例字符串，如 `1:1`、`16:9`、`9:16` |
+| 质量与规格 | `low → 512px`、`standard → 1K`、`medium → 2K`、`high / hd → 4K`；`auto` 或省略不指定 |
+
+Nano Banana 的完整比例包括 `1:1`、`2:3`、`3:2`、`3:4`、`4:3`、`4:5`、`5:4`、`9:16`、`16:9`、`21:9`。`1:4`、`4:1`、`1:8`、`8:1` 和 512px 输出仅适用于 `gemini-3.1-flash-image`；`gemini-2.5-flash-image` 仅支持 1K。
+
+### 专属参数
+
+
+| 参数 | 说明 |
+| --- | --- |
+| `google_search` | boolean；Gemini 3.1 Flash Image 与 3 Pro Image 支持，2.5 Flash Image 不支持 |
+| `image_search` | boolean；仅 Gemini 3.1 Flash Image 支持 |
+| `thinking_level` | `Minimal / High`；Gemini 3.1 Flash Image 与 3 Pro Image 支持，2.5 Flash Image 不支持 |
+| `quality` | 3.1 Flash：512px / 1K / 2K / 4K；3 Pro：1K / 2K / 4K；2.5 Flash：仅 1K。使用对应的质量枚举值 |
+
+统一入口使用顶层 `size`、`quality`，不要传 `aspect_ratio`、`image_size` 或 `generationConfig`。原生 Gemini 入口则使用 `contents[].parts` 放文本与 `inlineData`，并按该入口的参数定义填写 `generationConfig`；两套请求结构不能混用。
+
+</Accordion>
+
+<Accordion title="Qwen Image">
+
+**`qwen-image-3.0-pro`**
+
+| 项目 | 说明 |
+| --- | --- |
+| 输出数量 | 不接受 `n` |
+| 参考图上限 | `3` 张 |
+| 使用方式 | 即使只生成一张，也应省略 `n` |
+
+### 尺寸与质量
+
+**Qwen Image 3.0 Pro**
+
+| 项目 | 说明 |
+| --- | --- |
+| 尺寸 | `WIDTHxHEIGHT`；省略或 `auto` 使用 `1024x1024` |
+| 质量与规格 | 不接受 `quality`；像素面积 512×512～2048×2048，比例 1:8～8:1 |
+
+### 专属参数
+
+
+| 参数 | 说明 |
+| --- | --- |
+| `prompt_extend` | boolean，默认 `true`。智能改写提示词 |
+| `prompt_extend_mode` | 默认 `direct`。`direct` 可用于文生图和图生图；当前接口校验未开放 `agent`，使用 `direct` 或省略 |
+| `enable_thinking` | boolean，默认 `true`。仅在开启提示词改写时生效；不要与 `prompt_extend=false` 同时显式开启 |
+| `negative_prompt` | string。描述不希望出现的元素 |
+| `seed` | 整数 `0–2147483647`。随机种子 |
+| `watermark` | boolean，默认 `false`。是否添加模型水印 |
+
+</Accordion>
+
+<Accordion title="Seedream / MAI">
+
+**Seedream 5.0 Pro**
+
+| 项目 | 说明 |
+| --- | --- |
+| 输出数量 | 未开放 `n` |
+| 参考图上限 | `10` 张 |
+| 使用方式 | `images` 可省略 |
+
+**Seedream 4.5**
+
+| 项目 | 说明 |
+| --- | --- |
+| 输出数量 | 未开放 `n` |
+| 参考图上限 | `14` 张 |
+| 使用方式 | 不通过 `n` 请求批量生成 |
+
+**MAI Image 2.5 Pro**
+
+| 项目 | 说明 |
+| --- | --- |
+| 输出数量 | 每次 `1` 张，未开放 `n` |
+| 参考图上限 | `1` 张 |
+| 使用方式 | 输入 JPEG / PNG，输出 PNG |
+
+### 尺寸与质量
+
+**Seedream 5.0 Pro / 4.5**
+
+| 项目 | 说明 |
+| --- | --- |
+| 尺寸 | 推荐显式像素尺寸，如 `2048x2048`；均支持 `2K` |
+| 质量与规格 | 不通过 `quality` 设定分辨率；具体像素范围见下文 |
+
+**MAI Image 2.5 Pro**
+
+| 项目 | 说明 |
+| --- | --- |
+| 尺寸 | 默认 `1024x1024`；宽和高均至少 768，总像素不超过 1,048,576 |
+| 质量与规格 | 未开放 `quality` |
+
+Seedream 的像素尺寸还需满足面积约束：5.0 Pro 为 `2560×1440`～`3072×3072×1.1025`，4.5 为 `2560×1440`～`4096×4096`；两者比例范围均为 1:16～16:1。不要把 `1024x1024` 当作所有模型通用的默认请求。
+
+### 专属参数
+
+
+| 参数 | 说明 |
+| --- | --- |
+| Seedream | `output_format`、`background`。格式 `png / jpeg`，背景 `opaque / transparent`；透明背景必须显式传 `output_format="png"`；4.5 的透明能力取决于上游账号 |
+| Seedream | `watermark`。boolean，默认 `true` |
+| Seedream | `optimize_prompt_options.mode`。`standard` 效果优先；`fast` 速度优先 |
+| MAI Image 2.5 Pro | `model / prompt / size / images / response_format`。当前公开请求字段；不额外传 `n`、`quality` 或 `seed` |
+
+</Accordion>
+
+<Accordion title="Novel">
+
+**Novel 4.5 Full / Curated**
+
+| 项目 | 说明 |
+| --- | --- |
+| 输出数量 | `1–4`，默认 `1` |
+| 参考图上限 | 数组最多 `16` 项；普通源图仅 `1` 张 |
+| 使用方式 | 氛围参考和角色参考不能混用 |
+
+### 尺寸与质量
+
+**Novel 4.5**
+
+| 项目 | 说明 |
+| --- | --- |
+| 尺寸 | `WIDTHxHEIGHT`，默认 `1024x1024` |
+| 质量与规格 | 用 `steps`、`scale`、`quality_toggle` 控制生成过程 |
+
+### 专属参数
+
+
+| 参数 | 说明 |
+| --- | --- |
+| `negative_prompt` | string。负向提示词 |
+| `seed` | integer 或 string。随机种子 |
+| `steps` | 整数，至少 `1`，默认 `23`。采样步数；接口未声明统一最大值 |
+| `scale` | number，默认 `5`。提示词引导强度 |
+| `quality_toggle` | boolean，默认 `true`。质量开关 |
+| `sampler` | 默认 `Euler Ancestral`。还支持 `Euler`、`DPM++ 2S Ancestral`、`DPM++ 2M SDE`、`DPM++ 2M`、`DPM++ SDE` |
+| `noise_schedule` | `karras / exponential / polyexponential`。默认 `karras` |
+| `character_prompts` | array。每项可填 `prompt`、`uc` 和 `center`；`center.x / y` 均为 `0–1` |
+
+Novel 的参考图项包含 `image_url` 和可选的 `type`、`strength`、`fidelity`、`ref_type`：
+
+| 参数 | 说明 |
+| --- | --- |
+| `image` 或省略 | 普通图生图源图。最多 1 张；`strength` 为 `0–0.99` |
+| `vibe_transfer` | 氛围参考。不能与 `character_reference` 混用 |
+| `character_reference` | 精确角色 / 风格参考。`ref_type` 为 `character / style / character&style`，默认 `character&style` |
+
+参考强度 `strength` 和保真度 `fidelity` 均在 `0–1` 内，普通源图的强度另受 `0.99` 上限约束。`images` 数组整体最多 16 项，不表示允许 16 张普通源图。
+
+</Accordion>
+
+<Accordion title="Flux / Grok">
+
+**Flux**
+
+| 项目 | 说明 |
+| --- | --- |
+| 输出数量 | 仅 `1` |
+| 参考图上限 | `4` 张 |
+| 使用方式 | 具体模型须支持参考图能力 |
+
+**Grok Imagine**
+
+| 项目 | 说明 |
+| --- | --- |
+| 输出数量 | `1–4`，默认 `1` |
+| 参考图上限 | `5` 张 |
+| 使用方式 | 不支持独立 `mask` 参数 |
+
+### 尺寸与质量
+
+**Flux**
+
+| 项目 | 说明 |
+| --- | --- |
+| 尺寸 | `WIDTHxHEIGHT` 或 `auto` |
+| 质量与规格 | 尺寸范围取决于所选模型；未开放 `quality` |
+
+**Grok Imagine**
+
+| 项目 | 说明 |
+| --- | --- |
+| 尺寸 | `WIDTHxHEIGHT` 表示比例，如 `1024x1536` 表示 2:3 |
+| 质量与规格 | `standard → 1K`、`hd → 2K`，默认 `standard` |
+
+### 专属参数
+
+
+| 参数 | 说明 |
+| --- | --- |
+| Flux | `seed`。integer 或非空 string |
+| Flux | `output_format`。`jpeg / png` |
+| Flux | `safety_tolerance`。整数或数字字符串；范围随模型变化，不套用视频接口的范围 |
+| Grok | `enable_pro`。boolean，仅支持 Pro 模式的模型可用 |
+| Grok | `quality`。`standard` 为 1K，`hd` 为 2K |
+
+</Accordion>
+
+</AccordionGroup>
+
+## 通用参数
+
+| 参数 | 说明 |
+| --- | --- |
+| `model` | string。必填。填写可调用的模型 ID 或别名，不能只填写厂商名称 |
+| `prompt` | string。必填且非空。描述主体、场景、构图、风格；编辑时写清要修改与保留的部分 |
+| `images` | array。可选参考图；GPT 编辑接口必填。元素结构与数量随模型变化 |
+| `n` | integer。仅在模型支持时填写；范围见上表，不支持时直接省略 |
+| `size` | string。输出像素尺寸或宽高比；不同模型的写法见下一节 |
+| `quality` | string。GPT Image 中控制质量，Nano Banana / Grok 中控制分辨率；不能跨模型照搬取值 |
+| `response_format` | string。`url` 返回图片地址，`b64_json` 返回纯 Base64；默认 `url` |
+| `output_format` | string。图片编码，如 PNG、JPEG、WebP；仅部分模型开放 |
+| `seed` | integer / string。部分模型支持随机种子。类型与范围见模型说明，固定种子不保证结果完全一致 |
+
+`response_format` 决定**如何交付图片**，`output_format` 决定**图片文件格式**。例如 `response_format="url"` 与 `output_format="png"` 可以一起使用，表示返回 PNG 图片的链接。
+
+<AccordionGroup>
+
+<Accordion title="提示词长度与计量单位">
+
+| 模型 | 长度限制或建议 | 单位 |
+| --- | --- | --- |
+| GPT Image 文生图 | 最长 `32,000` | 字符 |
+| DALL·E 3 / DALL·E 2 文生图 | 最长 `4,000` / `1,000` | 字符 |
+| Nano Banana 统一入口、Novel | 最长 `32,000` | 字符 |
+| Qwen Image 3.0 Pro | 建议不超过约 `4,500` | tokens |
+| Seedream | 建议不超过约 `300` 个中文字符或 `600` 个英文单词 | 字符 / 单词 |
+| MAI Image 2.5 Pro | 原生模型上下文上限 `32,000`，不是独立的 prompt 字符限额 | tokens |
+| Flux、Grok | 当前接口未声明统一的最大长度 | 以具体模型为准 |
+
+</Accordion>
+
+</AccordionGroup>
+
+## 请求示例
+
+除原生 Gemini 入口外，以下请求体均使用 `Content-Type: application/json` 与 `Authorization: Bearer YOUR_TIKWAY_API_KEY`。参考图 URL 为占位示例，使用时换成可访问的素材地址。
+
+<Tabs>
+<Tab title="GPT 文生图">
+
+`POST /v1/images/generations`：生成 2 张横图。
+
+```json
+{
+  "model": "gpt-image-1.5",
+  "prompt": "白色陶瓷咖啡杯，浅灰背景，柔和自然光，产品摄影",
+  "n": 2,
+  "size": "1536x1024",
+  "quality": "high",
+  "output_format": "png",
+  "response_format": "url"
+}
+```
+
+</Tab>
+<Tab title="GPT 图片编辑">
+
+`POST /v1/images/edits`：传入源图并描述修改要求。
+
+```json
+{
+  "model": "gpt-image-1.5",
+  "prompt": "将杯子改为深蓝色，保留构图、光线和背景",
+  "images": [{ "image_url": "https://example.com/cup.png" }],
+  "n": 1,
+  "size": "1024x1024",
+  "response_format": "url"
+}
+```
+
+</Tab>
+<Tab title="Nano Banana 参考图">
+
+`POST /v1/images/generations`：用 `size` 设比例，用 `quality` 选择 2K。
+
+```json
+{
+  "model": "gemini-3.1-flash-image",
+  "prompt": "保留参考图中的杯子外观，将它放在木质书桌上",
+  "images": [{ "image_url": "https://example.com/cup.png" }],
+  "size": "16:9",
+  "quality": "medium",
+  "response_format": "url"
+}
+```
+
+</Tab>
+</Tabs>
+
+## 常见参数组合问题
+
+| 现象 / 请求写法 | 原因 | 调整方式 |
+| --- | --- | --- |
+| Qwen 请求带 `n=1` | 当前入口不接受 `n` | 删除 `n` |
+| Nano Banana 传 `size="1024x1024"` | 当前公开字段使用比例枚举 | 改用 `1:1`，分辨率由 `quality` 控制 |
+| Grok 增大 `size`，图片分辨率没有提高 | `size` 用于推导比例 | 用 `quality="hd"` 选择 2K |
+| 透明背景配合 JPEG | JPEG 不支持透明通道 | GPT 选 PNG / WebP；Seedream 选 PNG |
+| 参考图超限或返回字段错误 | 输入数量、格式与所选模型不匹配 | 先查数量表，再查该模型的 `images` 结构 |
+| 所有模型复用同一组可选参数 | 支持字段和枚举各不相同 | 只发送该模型支持的参数 |
+
+## 接口详情
+
+- [GPT Image](/zh/api-reference/images/gpt-image/generate) · [Nano Banana](/zh/api-reference/images/nano-banana/generate) · [Qwen Image](/zh/api-reference/images/qwen/generate)
+- [Seedream](/zh/api-reference/images/seedream/generate) · [MAI Image](/zh/api-reference/images/mai-image/generate) · [Novel](/zh/api-reference/images/novelai/generate)
+- [Flux](/zh/api-reference/images/flux/generate) · [Grok](/zh/api-reference/images/grok/generate) · [Midjourney 指南](/zh/api-reference/images/midjourney/guide)

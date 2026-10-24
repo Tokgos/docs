@@ -1,0 +1,119 @@
+---
+title: "状态码与响应"
+sidebarTitle: "状态码与响应"
+description: "识别 Tikway 网关状态码、不同协议的错误结构，以及限流和重试方式。"
+---
+
+Tikway 用 HTTP 状态码表示请求结果。成功响应遵循所调用端点的协议；网关生成的错误会按 OpenAI、Anthropic 或 Gemini 协议返回。上游模型直接返回的错误可能有不同字段，请同时读取状态码和响应体。
+
+## 常见 HTTP 状态码
+
+| 状态码 | 常见原因 | 建议操作 |
+| --- | --- | --- |
+| `2xx` | 请求已成功处理或异步任务已受理 | 按具体端点读取响应体、任务 ID 或流式事件。 |
+| `400` | 参数无效、缺失或内容被策略拒绝 | 检查请求体及 `error.param`；不要原样重试。 |
+| `401` | API Key 缺失或无效 | 核对[鉴权请求头](/zh/guides/authentication)和密钥状态。 |
+| `403` | 当前密钥无权访问资源 | 核对模型或资源权限。 |
+| `404` | 端点、模型或资源不存在 | 核对 URL、模型标识和资源 ID。 |
+| `409` | 资源状态冲突 | 查询当前状态后再决定是否重新提交。 |
+| `413` | 请求体超过大小限制 | 缩小上传文件或请求体。 |
+| `422` | 请求格式有效，但当前模型不支持该操作 | 检查模型能力和参数组合。 |
+| `429` | 超出密钥的请求额度，或账户余额不足 | 先检查 `error.code`；仅对限流错误等待后重试。 |
+| `500` | 网关内部错误 | 记录 `x-request-id`，稍后重试。 |
+| `503` | 队列、计费服务或上游暂不可用 | 稍后重试；必要时切换模型。 |
+| `504` | 上游响应超时 | 检查任务是否已受理，再决定是否重试。 |
+
+同一个 HTTP 状态码可能对应不同原因。例如 `429` 可表示限流，也可表示余额不足；客户端应优先读取机器可读的 `error.code`，不要根据 `error.message` 文案分支。
+
+## 错误响应结构
+
+以下示例是**网关生成**的错误。`request_id` 仅用于示意；实际值以响应头 `x-request-id` 为准。
+
+### OpenAI 兼容
+
+```json
+{
+  "error": {
+    "message": "Incorrect API key provided.",
+    "type": "authentication_error",
+    "code": "invalid_api_key",
+    "param": null
+  },
+  "request_id": "9b1bbbd5-0d55-4b52-9240-8490c1ab47a6"
+}
+```
+
+`error.type` 是错误大类；`error.code` 是更具体的原因；`error.param` 在参数校验失败时可能包含字段名。
+
+### Anthropic Messages
+
+```json
+{
+  "type": "error",
+  "error": {
+    "message": "Incorrect API key provided.",
+    "type": "authentication_error",
+    "code": "invalid_api_key",
+    "param": null
+  },
+  "request_id": "9b1bbbd5-0d55-4b52-9240-8490c1ab47a6"
+}
+```
+
+### Gemini 原生
+
+```json
+{
+  "error": {
+    "code": 401,
+    "message": "Incorrect API key provided.",
+    "status": "UNAUTHENTICATED",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.RequestInfo",
+        "requestId": "9b1bbbd5-0d55-4b52-9240-8490c1ab47a6"
+      }
+    ]
+  }
+}
+```
+
+Gemini 错误中的 `error.code` 是 HTTP 数字状态码，`error.status` 是规范状态名称。参数错误时，`details` 还可能包含 `google.rpc.BadRequest` 的字段信息。
+
+## 常见网关错误代码
+
+| HTTP | `error.code`（OpenAI / Anthropic） | 说明 |
+| --- | --- | --- |
+| `400` | `invalid_request`、`invalid_parameter`、`content_policy_violation` | 请求或参数错误，或内容被策略拒绝。 |
+| `401` | `invalid_api_key` | API Key 缺失或无法验证。 |
+| `403` | `resource_access_denied` | 资源访问被拒绝。 |
+| `404` | `resource_not_found` | 资源不存在。 |
+| `413` | `request_body_too_large` | 请求体过大。 |
+| `422` | `unsupported_operation` | 模型不支持当前操作。 |
+| `429` | `requests_per_minute_exceeded`、`insufficient_balance` | 请求限额用尽，或账户余额不足。 |
+| `503` | `queue_exhausted`、`billing_service_unavailable`、`upstream_unavailable` | 临时服务不可用。 |
+| `504` | `upstream_timeout` | 上游请求超时。 |
+
+网关也可能返回更具体的参数、计费或供应商错误代码。对上游透传错误，不要假定其 `error.code` 一定属于上表。
+
+## 请求标识与限流头
+
+网关响应头中的 `x-request-id` 可用于排查问题。保留请求时间、端点、模型、HTTP 状态码和该 ID；不要把完整 API Key 记入日志。
+
+网关在完成鉴权并返回请求结果时可附带以下限流头：
+
+| 响应头 | 含义 |
+| --- | --- |
+| `x-ratelimit-limit` | 当前 API Key 的窗口请求上限。 |
+| `x-ratelimit-remaining` | 当前窗口剩余请求数。 |
+| `x-ratelimit-reset` | 距当前限流窗口重置的秒数。 |
+
+限额由密钥配置决定。鉴权或限流阶段直接拒绝的响应不一定包含上述三个头；客户端需要为缺失情况设置自己的退避时间。
+
+## 重试与流式错误
+
+仅对临时错误重试，例如限流类 `429`、`500`、`503` 或 `504`。若 `429` 的 `error.code` 为 `insufficient_balance`，应处理余额问题，而非自动重试。对 `400`、`401`、`403`、`404`、`413` 和 `422`，先修正请求。重试时设置最大次数，并逐次增加等待时间；对可能产生费用的创建任务请求，先查询任务状态，避免重复提交。
+
+流式请求在收到 HTTP `200` 后仍可能中断。此时不能只看最初的状态码，还应读取后续事件：Anthropic 可返回 `event: error`，Responses 可返回 `event: response.failed`，Chat Completions 和 Gemini 流可能在数据帧中返回错误对象。
+
+成功响应的字段结构见对应的 API Reference 或具体端点文档。视频等异步接口应根据任务 ID 查询最终状态。

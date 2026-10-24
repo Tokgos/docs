@@ -68,22 +68,25 @@
             "groups": [
               {
                 "group": "开始使用",
-                "pages": ["zh/introduction", "zh/untitled-page"]
+                "pages": [
+                  "zh/introduction",
+                  "zh/quickstart"
+                ]
               },
               {
                 "group": "开发指南",
                 "pages": [
-                  "zh/develop-guide/gateway-auth",
-                  "zh/develop-guide/status-code-response",
-                  "zh/develop-guide/protocol-convert"
+                  "zh/guides/authentication",
+                  "zh/guides/status-codes",
+                  "zh/guides/protocol-conversion"
                 ]
               },
               {
                 "group": "请求协议",
                 "pages": [
-                  "zh/request-protocol/open-ai",
-                  "zh/request-protocol/anthropic",
-                  "zh/request-protocol/gemini"
+                  "zh/protocols/openai",
+                  "zh/protocols/anthropic",
+                  "zh/protocols/gemini"
                 ]
               }
             ]
@@ -96,28 +99,28 @@
                 "pages": [
                   {
                     "group": "OpenAI 协议",
-                    "openapi": "zh/apis/chat-completions/openai-openapi.json",
+                    "openapi": "openapi/zh/chat/openai.json",
                     "pages": [
                       "POST /v1/chat/completions",
                       "POST /v1/responses",
-                      "zh/apis/chat-completions/openai-openapi-models.json GET /v1/models"
+                      "openapi/zh/chat/openai-models.json GET /v1/models"
                     ]
                   },
                   {
                     "group": "Anthropic 协议",
-                    "openapi": "zh/apis/chat-completions/anthropic-openapi.json",
+                    "openapi": "openapi/zh/chat/anthropic.json",
                     "pages": [
                       "POST /v1/messages",
-                      "zh/apis/chat-completions/anthropic-openapi-models.json GET /anthropic/v1/models"
+                      "openapi/zh/chat/anthropic-models.json GET /anthropic/v1/models"
                     ]
                   },
                   {
                     "group": "Gemini 协议",
-                    "openapi": "zh/apis/chat-completions/gemini-openapi.json",
+                    "openapi": "openapi/zh/chat/gemini.json",
                     "pages": [
                       "POST /v1beta/models/{model}:generateContent",
                       "POST /v1beta/models/{model}:streamGenerateContent",
-                      "zh/apis/chat-completions/gemini-openapi-models.json GET /v1beta/models",
+                      "openapi/zh/chat/gemini-models.json GET /v1beta/models",
                       "POST /v1beta/cachedContents",
                       "GET /v1beta/cachedContents/{id}",
                       "DELETE /v1beta/cachedContents/{id}"
@@ -128,9 +131,10 @@
               {
                 "group": "图片生成",
                 "pages": [
+                  "zh/api-reference/images/overview",
                   {
                     "group": "GPT Image",
-                    "openapi": "zh/apis/images/gpt-openapi.json",
+                    "openapi": "openapi/zh/images/gpt-image.json",
                     "pages": [
                       "POST /v1/images/generations",
                       "POST /v1/images/edits"
@@ -138,7 +142,7 @@
                   },
                   {
                     "group": "Nano Banana",
-                    "openapi": "zh/apis/images/nano-banana-openapi.json",
+                    "openapi": "openapi/zh/images/nano-banana.json",
                     "pages": [
                       "POST /v1/images/generations",
                       "POST /v1beta/models/{model}:generateContent"
@@ -146,131 +150,184 @@
                   },
                   {
                     "group": "Qwen Image",
-                    "openapi": "zh/apis/images/qwen-openapi.json",
-                    "pages": ["POST /v1/images/generations"]
+                    "openapi": "openapi/zh/images/qwen.json",
+                    "pages": [
+                      "POST /v1/images/generations"
+                    ]
                   },
                   {
                     "group": "Seedream",
-                    "openapi": "zh/apis/images/seedream-openapi.json",
-                    "pages": ["POST /v1/images/generations"]
+                    "openapi": "openapi/zh/images/seedream.json",
+                    "pages": [
+                      "POST /v1/images/generations"
+                    ]
                   },
                   {
                     "group": "MAI Image",
-                    "openapi": "zh/apis/images/mai-openapi.json",
-                    "pages": ["POST /v1/images/generations"]
+                    "openapi": "openapi/zh/images/mai-image.json",
+                    "pages": [
+                      "POST /v1/images/generations"
+                    ]
                   },
                   {
                     "group": "Novel",
-                    "openapi": "zh/apis/images/novel-openapi.json",
-                    "pages": ["POST /v1/images/generations"]
+                    "openapi": "openapi/zh/images/novelai.json",
+                    "pages": [
+                      "POST /v1/images/generations"
+                    ]
                   },
                   {
                     "group": "Flux",
-                    "openapi": "zh/apis/images/flux-openapi.json",
-                    "pages": ["POST /v1/images/generations"]
+                    "openapi": "openapi/zh/images/flux.json",
+                    "pages": [
+                      "POST /v1/images/generations"
+                    ]
                   },
                   {
                     "group": "Grok",
-                    "openapi": "zh/apis/images/grok-openapi.json",
-                    "pages": ["POST /v1/images/generations"]
+                    "openapi": "openapi/zh/images/grok.json",
+                    "pages": [
+                      "POST /v1/images/generations"
+                    ]
                   }
                 ]
               },
               {
                 "group": "Midjourney",
                 "pages": [
-                  "zh/apis/images/midjourney-guide",
+                  "zh/api-reference/images/midjourney/guide",
                   {
                     "group": "图片生成",
-                    "openapi": "zh/apis/images/mi-gen-openapi.json",
-                    "pages": ["POST /v1/images/generations"]
+                    "openapi": "openapi/zh/images/midjourney/generate.json",
+                    "pages": [
+                      "POST /v1/images/generations"
+                    ]
                   },
                   {
                     "group": "任务操作",
-                    "openapi": "zh/apis/images/mi-action-openapi.json",
-                    "pages": ["POST /v1/images/generations"]
+                    "openapi": "openapi/zh/images/midjourney/action.json",
+                    "pages": [
+                      "POST /v1/images/generations"
+                    ]
                   },
                   {
                     "group": "局部重绘",
-                    "openapi": "zh/apis/images/mi-vary-region-openapi.json",
-                    "pages": ["POST /v1/images/generations"]
+                    "openapi": "openapi/zh/images/midjourney/vary-region.json",
+                    "pages": [
+                      "POST /v1/images/generations"
+                    ]
                   },
                   {
                     "group": "任务查询",
-                    "openapi": "zh/apis/images/mj-query-openapi.json",
-                    "pages": ["GET /v1/images/{id}"]
+                    "openapi": "openapi/zh/images/midjourney/get-task.json",
+                    "pages": [
+                      "GET /v1/images/{id}"
+                    ]
                   }
                 ]
               },
               {
                 "group": "视频生成",
                 "pages": [
+                  "zh/api-reference/videos/overview",
                   {
                     "group": "Seedance",
-                    "openapi": "zh/apis/videos/seedance-openapi.json",
-                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                    "openapi": "openapi/zh/videos/seedance.json",
+                    "pages": [
+                      "POST /v1/videos",
+                      "GET /v1/videos/{id}"
+                    ]
                   },
                   {
                     "group": "Wan",
-                    "openapi": "zh/apis/videos/wan-openapi.json",
-                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                    "openapi": "openapi/zh/videos/wan.json",
+                    "pages": [
+                      "POST /v1/videos",
+                      "GET /v1/videos/{id}"
+                    ]
                   },
                   {
                     "group": "HappyHorse",
-                    "openapi": "zh/apis/videos/happy-horse-openapi.json",
-                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                    "openapi": "openapi/zh/videos/happyhorse.json",
+                    "pages": [
+                      "POST /v1/videos",
+                      "GET /v1/videos/{id}"
+                    ]
                   },
                   {
                     "group": "MiniMax",
-                    "openapi": "zh/apis/videos/minimax-openapi.json",
-                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                    "openapi": "openapi/zh/videos/minimax.json",
+                    "pages": [
+                      "POST /v1/videos",
+                      "GET /v1/videos/{id}"
+                    ]
                   },
                   {
                     "group": "Veo",
-                    "openapi": "zh/apis/videos/veo-openapi.json",
-                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                    "openapi": "openapi/zh/videos/veo.json",
+                    "pages": [
+                      "POST /v1/videos",
+                      "GET /v1/videos/{id}"
+                    ]
                   },
                   {
                     "group": "Grok",
-                    "openapi": "zh/apis/videos/grok-openapi.json",
-                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                    "openapi": "openapi/zh/videos/grok.json",
+                    "pages": [
+                      "POST /v1/videos",
+                      "GET /v1/videos/{id}"
+                    ]
                   },
                   {
                     "group": "Flux",
-                    "openapi": "zh/apis/videos/flux-openapi.json",
-                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                    "openapi": "openapi/zh/videos/flux.json",
+                    "pages": [
+                      "POST /v1/videos",
+                      "GET /v1/videos/{id}"
+                    ]
                   }
                 ]
               },
               {
                 "group": "向量嵌入",
-                "openapi": "zh/apis/embeddings/openapi.json",
-                "pages": ["POST /v1/embeddings", "POST /v1beta/models/google/{model}:embedContent"]
+                "openapi": "openapi/zh/embeddings/openapi.json",
+                "pages": [
+                  "POST /v1/embeddings",
+                  "POST /v1beta/models/google/{model}:embedContent"
+                ]
               },
               {
                 "group": "语音转写",
-                "openapi": "zh/apis/transcriptions/openapi.json",
-                "pages": ["POST /v1/audio/transcriptions"]
+                "openapi": "openapi/zh/transcriptions/openapi.json",
+                "pages": [
+                  "POST /v1/audio/transcriptions"
+                ]
               },
               {
                 "group": "语音合成",
                 "pages": [
-                  "zh/apis/speech/qwen-voices",
-                  "zh/apis/speech/google-voices",
+                  "zh/api-reference/speech/qwen/voices",
+                  "zh/api-reference/speech/google/voices",
                   {
                     "group": "Qwen3-TTS",
-                    "openapi": "zh/apis/speech/qwen-openapi.json",
-                    "pages": ["POST /v1/audio/speech"]
+                    "openapi": "openapi/zh/speech/qwen.json",
+                    "pages": [
+                      "POST /v1/audio/speech"
+                    ]
                   },
                   {
                     "group": "Google TTS",
-                    "openapi": "zh/apis/speech/google-openapi.json",
-                    "pages": ["POST /v1/audio/speech"]
+                    "openapi": "openapi/zh/speech/google.json",
+                    "pages": [
+                      "POST /v1/audio/speech"
+                    ]
                   },
                   {
                     "group": "Qwen Audio",
-                    "openapi": "zh/apis/speech/qwen-audio-openapi.json",
-                    "pages": ["POST /v1/audio/speech"]
+                    "openapi": "openapi/zh/speech/qwen-audio.json",
+                    "pages": [
+                      "POST /v1/audio/speech"
+                    ]
                   }
                 ]
               },
@@ -279,13 +336,17 @@
                 "pages": [
                   {
                     "group": "OpenAI",
-                    "openapi": "zh/apis/decisions/openai-openapi.json",
-                    "pages": ["POST /v1/decisions"]
+                    "openapi": "openapi/zh/decisions/openai.json",
+                    "pages": [
+                      "POST /v1/decisions"
+                    ]
                   },
                   {
                     "group": "Jev",
-                    "openapi": "zh/apis/decisions/jev-openapi.json",
-                    "pages": ["POST /v1/decisions"]
+                    "openapi": "openapi/zh/decisions/jev.json",
+                    "pages": [
+                      "POST /v1/decisions"
+                    ]
                   }
                 ]
               },
@@ -294,8 +355,10 @@
                 "pages": [
                   {
                     "group": "余额查询",
-                    "openapi": "zh/apis/utilities/balance-openapi.json",
-                    "pages": ["GET /v1/user/balance"]
+                    "openapi": "openapi/zh/utilities/balance.json",
+                    "pages": [
+                      "GET /v1/user/balance"
+                    ]
                   }
                 ]
               }
@@ -311,22 +374,25 @@
             "groups": [
               {
                 "group": "Getting started",
-                "pages": ["en/introduction", "en/quick-starter"]
+                "pages": [
+                  "en/introduction",
+                  "en/quickstart"
+                ]
               },
               {
                 "group": "Developer guides",
                 "pages": [
-                  "en/develop-guide/gateway-auth",
-                  "en/develop-guide/status-code-response",
-                  "en/develop-guide/protocol-convert"
+                  "en/guides/authentication",
+                  "en/guides/status-codes",
+                  "en/guides/protocol-conversion"
                 ]
               },
               {
                 "group": "Request protocols",
                 "pages": [
-                  "en/request-protocol/open-ai",
-                  "en/request-protocol/anthropic",
-                  "en/request-protocol/gemini"
+                  "en/protocols/openai",
+                  "en/protocols/anthropic",
+                  "en/protocols/gemini"
                 ]
               }
             ]
@@ -339,28 +405,28 @@
                 "pages": [
                   {
                     "group": "OpenAI protocol",
-                    "openapi": "en/apis/chat-completions/openai-openapi.json",
+                    "openapi": "openapi/en/chat/openai.json",
                     "pages": [
                       "POST /v1/chat/completions",
                       "POST /v1/responses",
-                      "en/apis/chat-completions/openai-openapi-models.json GET /v1/models"
+                      "openapi/en/chat/openai-models.json GET /v1/models"
                     ]
                   },
                   {
                     "group": "Anthropic protocol",
-                    "openapi": "en/apis/chat-completions/anthropic-openapi.json",
+                    "openapi": "openapi/en/chat/anthropic.json",
                     "pages": [
                       "POST /v1/messages",
-                      "en/apis/chat-completions/anthropic-openapi-models.json GET /anthropic/v1/models"
+                      "openapi/en/chat/anthropic-models.json GET /anthropic/v1/models"
                     ]
                   },
                   {
                     "group": "Gemini protocol",
-                    "openapi": "en/apis/chat-completions/gemini-openapi.json",
+                    "openapi": "openapi/en/chat/gemini.json",
                     "pages": [
                       "POST /v1beta/models/{model}:generateContent",
                       "POST /v1beta/models/{model}:streamGenerateContent",
-                      "en/apis/chat-completions/gemini-openapi-models.json GET /v1beta/models",
+                      "openapi/en/chat/gemini-models.json GET /v1beta/models",
                       "POST /v1beta/cachedContents",
                       "GET /v1beta/cachedContents/{id}",
                       "DELETE /v1beta/cachedContents/{id}"
@@ -373,7 +439,7 @@
                 "pages": [
                   {
                     "group": "GPT Image",
-                    "openapi": "en/apis/images/gpt-openapi.json",
+                    "openapi": "openapi/en/images/gpt-image.json",
                     "pages": [
                       "POST /v1/images/generations",
                       "POST /v1/images/edits"
@@ -381,7 +447,7 @@
                   },
                   {
                     "group": "Nano Banana",
-                    "openapi": "en/apis/images/nano-banana-openapi.json",
+                    "openapi": "openapi/en/images/nano-banana.json",
                     "pages": [
                       "POST /v1/images/generations",
                       "POST /v1beta/models/{model}:generateContent"
@@ -389,33 +455,45 @@
                   },
                   {
                     "group": "Qwen Image",
-                    "openapi": "en/apis/images/qwen-openapi.json",
-                    "pages": ["POST /v1/images/generations"]
+                    "openapi": "openapi/en/images/qwen.json",
+                    "pages": [
+                      "POST /v1/images/generations"
+                    ]
                   },
                   {
                     "group": "Seedream",
-                    "openapi": "en/apis/images/seedream-openapi.json",
-                    "pages": ["POST /v1/images/generations"]
+                    "openapi": "openapi/en/images/seedream.json",
+                    "pages": [
+                      "POST /v1/images/generations"
+                    ]
                   },
                   {
                     "group": "MAI Image",
-                    "openapi": "en/apis/images/mai-openapi.json",
-                    "pages": ["POST /v1/images/generations"]
+                    "openapi": "openapi/en/images/mai-image.json",
+                    "pages": [
+                      "POST /v1/images/generations"
+                    ]
                   },
                   {
                     "group": "Novel",
-                    "openapi": "en/apis/images/novel-openapi.json",
-                    "pages": ["POST /v1/images/generations"]
+                    "openapi": "openapi/en/images/novelai.json",
+                    "pages": [
+                      "POST /v1/images/generations"
+                    ]
                   },
                   {
                     "group": "Flux",
-                    "openapi": "en/apis/images/flux-openapi.json",
-                    "pages": ["POST /v1/images/generations"]
+                    "openapi": "openapi/en/images/flux.json",
+                    "pages": [
+                      "POST /v1/images/generations"
+                    ]
                   },
                   {
                     "group": "Grok",
-                    "openapi": "en/apis/images/grok-openapi.json",
-                    "pages": ["POST /v1/images/generations"]
+                    "openapi": "openapi/en/images/grok.json",
+                    "pages": [
+                      "POST /v1/images/generations"
+                    ]
                   }
                 ]
               },
@@ -424,70 +502,102 @@
                 "pages": [
                   {
                     "group": "Seedance",
-                    "openapi": "en/apis/videos/seedance-openapi.json",
-                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                    "openapi": "openapi/en/videos/seedance.json",
+                    "pages": [
+                      "POST /v1/videos",
+                      "GET /v1/videos/{id}"
+                    ]
                   },
                   {
                     "group": "Wan",
-                    "openapi": "en/apis/videos/wan-openapi.json",
-                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                    "openapi": "openapi/en/videos/wan.json",
+                    "pages": [
+                      "POST /v1/videos",
+                      "GET /v1/videos/{id}"
+                    ]
                   },
                   {
                     "group": "HappyHorse",
-                    "openapi": "en/apis/videos/happy-horse-openapi.json",
-                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                    "openapi": "openapi/en/videos/happyhorse.json",
+                    "pages": [
+                      "POST /v1/videos",
+                      "GET /v1/videos/{id}"
+                    ]
                   },
                   {
                     "group": "MiniMax",
-                    "openapi": "en/apis/videos/minimax-openapi.json",
-                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                    "openapi": "openapi/en/videos/minimax.json",
+                    "pages": [
+                      "POST /v1/videos",
+                      "GET /v1/videos/{id}"
+                    ]
                   },
                   {
                     "group": "Veo",
-                    "openapi": "en/apis/videos/veo-openapi.json",
-                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                    "openapi": "openapi/en/videos/veo.json",
+                    "pages": [
+                      "POST /v1/videos",
+                      "GET /v1/videos/{id}"
+                    ]
                   },
                   {
                     "group": "Grok",
-                    "openapi": "en/apis/videos/grok-openapi.json",
-                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                    "openapi": "openapi/en/videos/grok.json",
+                    "pages": [
+                      "POST /v1/videos",
+                      "GET /v1/videos/{id}"
+                    ]
                   },
                   {
                     "group": "Flux",
-                    "openapi": "en/apis/videos/flux-openapi.json",
-                    "pages": ["POST /v1/videos", "GET /v1/videos/{id}"]
+                    "openapi": "openapi/en/videos/flux.json",
+                    "pages": [
+                      "POST /v1/videos",
+                      "GET /v1/videos/{id}"
+                    ]
                   }
                 ]
               },
               {
                 "group": "Embeddings",
-                "openapi": "en/apis/embeddings/openapi.json",
-                "pages": ["POST /v1/embeddings", "POST /v1beta/models/google/{model}:embedContent"]
+                "openapi": "openapi/en/embeddings/openapi.json",
+                "pages": [
+                  "POST /v1/embeddings",
+                  "POST /v1beta/models/google/{model}:embedContent"
+                ]
               },
               {
                 "group": "Transcriptions",
-                "openapi": "en/apis/transcriptions/openapi.json",
-                "pages": ["POST /v1/audio/transcriptions"]
+                "openapi": "openapi/en/transcriptions/openapi.json",
+                "pages": [
+                  "POST /v1/audio/transcriptions"
+                ]
               },
               {
                 "group": "Speech synthesis",
                 "pages": [
-                  "en/apis/speech/qwen-voices",
-                  "en/apis/speech/google-voices",
+                  "en/api-reference/speech/qwen/voices",
+                  "en/api-reference/speech/google/voices",
                   {
                     "group": "Qwen3-TTS",
-                    "openapi": "en/apis/speech/qwen-openapi.json",
-                    "pages": ["POST /v1/audio/speech"]
+                    "openapi": "openapi/en/speech/qwen.json",
+                    "pages": [
+                      "POST /v1/audio/speech"
+                    ]
                   },
                   {
                     "group": "Google TTS",
-                    "openapi": "en/apis/speech/google-openapi.json",
-                    "pages": ["POST /v1/audio/speech"]
+                    "openapi": "openapi/en/speech/google.json",
+                    "pages": [
+                      "POST /v1/audio/speech"
+                    ]
                   },
                   {
                     "group": "Qwen Audio",
-                    "openapi": "en/apis/speech/qwen-audio-openapi.json",
-                    "pages": ["POST /v1/audio/speech"]
+                    "openapi": "openapi/en/speech/qwen-audio.json",
+                    "pages": [
+                      "POST /v1/audio/speech"
+                    ]
                   }
                 ]
               },
@@ -496,13 +606,17 @@
                 "pages": [
                   {
                     "group": "OpenAI",
-                    "openapi": "en/apis/decisions/openai-openapi.json",
-                    "pages": ["POST /v1/decisions"]
+                    "openapi": "openapi/en/decisions/openai.json",
+                    "pages": [
+                      "POST /v1/decisions"
+                    ]
                   },
                   {
                     "group": "Jev",
-                    "openapi": "en/apis/decisions/jev-openapi.json",
-                    "pages": ["POST /v1/decisions"]
+                    "openapi": "openapi/en/decisions/jev.json",
+                    "pages": [
+                      "POST /v1/decisions"
+                    ]
                   }
                 ]
               },
@@ -511,8 +625,10 @@
                 "pages": [
                   {
                     "group": "Balance",
-                    "openapi": "en/apis/utilities/balance-openapi.json",
-                    "pages": ["GET /v1/user/balance"]
+                    "openapi": "openapi/en/utilities/balance.json",
+                    "pages": [
+                      "GET /v1/user/balance"
+                    ]
                   }
                 ]
               }
@@ -521,5 +637,847 @@
         ]
       }
     ]
-  }
+  },
+  "redirects": [
+    {
+      "source": "/zh/apis/chat-completions/anthropic-openapi-models.json",
+      "destination": "/openapi/zh/chat/anthropic-models.json"
+    },
+    {
+      "source": "/zh/apis/chat-completions/anthropic-openapi.json",
+      "destination": "/openapi/zh/chat/anthropic.json"
+    },
+    {
+      "source": "/zh/apis/chat-completions/gemini-openapi-models.json",
+      "destination": "/openapi/zh/chat/gemini-models.json"
+    },
+    {
+      "source": "/zh/apis/chat-completions/gemini-openapi.json",
+      "destination": "/openapi/zh/chat/gemini.json"
+    },
+    {
+      "source": "/zh/apis/chat-completions/openai-openapi-models.json",
+      "destination": "/openapi/zh/chat/openai-models.json"
+    },
+    {
+      "source": "/zh/apis/chat-completions/openai-openapi.json",
+      "destination": "/openapi/zh/chat/openai.json"
+    },
+    {
+      "source": "/zh/apis/decisions/jev-openapi.json",
+      "destination": "/openapi/zh/decisions/jev.json"
+    },
+    {
+      "source": "/zh/apis/decisions/openai-openapi.json",
+      "destination": "/openapi/zh/decisions/openai.json"
+    },
+    {
+      "source": "/zh/apis/decisions/openapi.json",
+      "destination": "/openapi/zh/decisions/combined.json"
+    },
+    {
+      "source": "/zh/apis/embeddings/openapi.json",
+      "destination": "/openapi/zh/embeddings/openapi.json"
+    },
+    {
+      "source": "/zh/apis/images/flux-openapi.json",
+      "destination": "/openapi/zh/images/flux.json"
+    },
+    {
+      "source": "/zh/apis/images/gpt-openapi.json",
+      "destination": "/openapi/zh/images/gpt-image.json"
+    },
+    {
+      "source": "/zh/apis/images/grok-openapi.json",
+      "destination": "/openapi/zh/images/grok.json"
+    },
+    {
+      "source": "/zh/apis/images/mai-openapi.json",
+      "destination": "/openapi/zh/images/mai-image.json"
+    },
+    {
+      "source": "/zh/apis/images/mi-action-openapi.json",
+      "destination": "/openapi/zh/images/midjourney/action.json"
+    },
+    {
+      "source": "/zh/apis/images/mi-gen-openapi.json",
+      "destination": "/openapi/zh/images/midjourney/generate.json"
+    },
+    {
+      "source": "/zh/apis/images/mi-vary-region-openapi.json",
+      "destination": "/openapi/zh/images/midjourney/vary-region.json"
+    },
+    {
+      "source": "/zh/apis/images/midjourney-guide",
+      "destination": "/zh/api-reference/images/midjourney/guide"
+    },
+    {
+      "source": "/zh/apis/images/mj-query-openapi.json",
+      "destination": "/openapi/zh/images/midjourney/get-task.json"
+    },
+    {
+      "source": "/zh/apis/images/nano-banana-openapi.json",
+      "destination": "/openapi/zh/images/nano-banana.json"
+    },
+    {
+      "source": "/zh/apis/images/novel-openapi.json",
+      "destination": "/openapi/zh/images/novelai.json"
+    },
+    {
+      "source": "/zh/apis/images/parameters",
+      "destination": "/zh/api-reference/images/overview"
+    },
+    {
+      "source": "/zh/apis/images/qwen-openapi.json",
+      "destination": "/openapi/zh/images/qwen.json"
+    },
+    {
+      "source": "/zh/apis/images/seedream-openapi.json",
+      "destination": "/openapi/zh/images/seedream.json"
+    },
+    {
+      "source": "/zh/apis/speech/google-openapi.json",
+      "destination": "/openapi/zh/speech/google.json"
+    },
+    {
+      "source": "/zh/apis/speech/google-voices",
+      "destination": "/zh/api-reference/speech/google/voices"
+    },
+    {
+      "source": "/zh/apis/speech/openapi.json",
+      "destination": "/openapi/zh/speech/combined.json"
+    },
+    {
+      "source": "/zh/apis/speech/qwen-audio-openapi.json",
+      "destination": "/openapi/zh/speech/qwen-audio.json"
+    },
+    {
+      "source": "/zh/apis/speech/qwen-openapi.json",
+      "destination": "/openapi/zh/speech/qwen.json"
+    },
+    {
+      "source": "/zh/apis/speech/qwen-voices",
+      "destination": "/zh/api-reference/speech/qwen/voices"
+    },
+    {
+      "source": "/zh/apis/transcriptions/openapi.json",
+      "destination": "/openapi/zh/transcriptions/openapi.json"
+    },
+    {
+      "source": "/zh/apis/utilities/balance-openapi.json",
+      "destination": "/openapi/zh/utilities/balance.json"
+    },
+    {
+      "source": "/zh/apis/utilities/convert-openapi.json",
+      "destination": "/openapi/zh/utilities/convert.json"
+    },
+    {
+      "source": "/zh/apis/videos/flux-openapi.json",
+      "destination": "/openapi/zh/videos/flux.json"
+    },
+    {
+      "source": "/zh/apis/videos/grok-openapi.json",
+      "destination": "/openapi/zh/videos/grok.json"
+    },
+    {
+      "source": "/zh/apis/videos/happy-horse-openapi.json",
+      "destination": "/openapi/zh/videos/happyhorse.json"
+    },
+    {
+      "source": "/zh/apis/videos/minimax-openapi.json",
+      "destination": "/openapi/zh/videos/minimax.json"
+    },
+    {
+      "source": "/zh/apis/videos/parameters",
+      "destination": "/zh/api-reference/videos/overview"
+    },
+    {
+      "source": "/zh/apis/videos/seedance-openapi.json",
+      "destination": "/openapi/zh/videos/seedance.json"
+    },
+    {
+      "source": "/zh/apis/videos/veo-openapi.json",
+      "destination": "/openapi/zh/videos/veo.json"
+    },
+    {
+      "source": "/zh/apis/videos/wan-openapi.json",
+      "destination": "/openapi/zh/videos/wan.json"
+    },
+    {
+      "source": "/zh/develop-guide/gateway-auth",
+      "destination": "/zh/guides/authentication"
+    },
+    {
+      "source": "/zh/develop-guide/model-parameter-json-schema",
+      "destination": "/zh/guides/model-parameters"
+    },
+    {
+      "source": "/zh/develop-guide/protocol-convert",
+      "destination": "/zh/guides/protocol-conversion"
+    },
+    {
+      "source": "/zh/develop-guide/status-code-response",
+      "destination": "/zh/guides/status-codes"
+    },
+    {
+      "source": "/zh/protocol-adaptation/open-ai-2-2",
+      "destination": "/zh/protocols/adaptation/gemini"
+    },
+    {
+      "source": "/zh/protocol-adaptation/open-ai-2",
+      "destination": "/zh/protocols/adaptation/anthropic"
+    },
+    {
+      "source": "/zh/protocol-adaptation/open-ai",
+      "destination": "/zh/protocols/adaptation/openai"
+    },
+    {
+      "source": "/zh/protocol-adaptation/responses/responses",
+      "destination": "/zh/protocols/adaptation/openai/responses"
+    },
+    {
+      "source": "/zh/request-protocol/anthropic",
+      "destination": "/zh/protocols/anthropic"
+    },
+    {
+      "source": "/zh/request-protocol/gemini",
+      "destination": "/zh/protocols/gemini"
+    },
+    {
+      "source": "/zh/request-protocol/open-ai/chat-completions",
+      "destination": "/zh/protocols/openai/chat-completions"
+    },
+    {
+      "source": "/zh/request-protocol/open-ai/full-request-example",
+      "destination": "/zh/protocols/openai/full-request-example"
+    },
+    {
+      "source": "/zh/request-protocol/open-ai/function-calling",
+      "destination": "/zh/protocols/openai/function-calling"
+    },
+    {
+      "source": "/zh/request-protocol/open-ai/multi-turn",
+      "destination": "/zh/protocols/openai/multi-turn"
+    },
+    {
+      "source": "/zh/request-protocol/open-ai/response-parameters",
+      "destination": "/zh/protocols/openai/response-parameters"
+    },
+    {
+      "source": "/zh/request-protocol/open-ai/responses/full-request-example",
+      "destination": "/zh/protocols/openai/responses/full-request-example"
+    },
+    {
+      "source": "/zh/request-protocol/open-ai/responses/function-calling",
+      "destination": "/zh/protocols/openai/responses/function-calling"
+    },
+    {
+      "source": "/zh/request-protocol/open-ai/responses/multi-turn",
+      "destination": "/zh/protocols/openai/responses/multi-turn"
+    },
+    {
+      "source": "/zh/request-protocol/open-ai/responses/response-parameters",
+      "destination": "/zh/protocols/openai/responses/response-parameters"
+    },
+    {
+      "source": "/zh/request-protocol/open-ai/responses/streaming",
+      "destination": "/zh/protocols/openai/responses/streaming"
+    },
+    {
+      "source": "/zh/request-protocol/open-ai/responses",
+      "destination": "/zh/protocols/openai/responses"
+    },
+    {
+      "source": "/zh/request-protocol/open-ai/streaming",
+      "destination": "/zh/protocols/openai/streaming"
+    },
+    {
+      "source": "/zh/request-protocol/open-ai",
+      "destination": "/zh/protocols/openai"
+    },
+    {
+      "source": "/zh/untitled-page",
+      "destination": "/zh/quickstart"
+    },
+    {
+      "source": "/en/apis/chat-completions/anthropic-openapi-models.json",
+      "destination": "/openapi/en/chat/anthropic-models.json"
+    },
+    {
+      "source": "/en/apis/chat-completions/anthropic-openapi.json",
+      "destination": "/openapi/en/chat/anthropic.json"
+    },
+    {
+      "source": "/en/apis/chat-completions/gemini-openapi-models.json",
+      "destination": "/openapi/en/chat/gemini-models.json"
+    },
+    {
+      "source": "/en/apis/chat-completions/gemini-openapi.json",
+      "destination": "/openapi/en/chat/gemini.json"
+    },
+    {
+      "source": "/en/apis/chat-completions/openai-openapi-models.json",
+      "destination": "/openapi/en/chat/openai-models.json"
+    },
+    {
+      "source": "/en/apis/chat-completions/openai-openapi.json",
+      "destination": "/openapi/en/chat/openai.json"
+    },
+    {
+      "source": "/en/apis/decisions/jev-openapi.json",
+      "destination": "/openapi/en/decisions/jev.json"
+    },
+    {
+      "source": "/en/apis/decisions/openai-openapi.json",
+      "destination": "/openapi/en/decisions/openai.json"
+    },
+    {
+      "source": "/en/apis/decisions/openapi.json",
+      "destination": "/openapi/en/decisions/combined.json"
+    },
+    {
+      "source": "/en/apis/embeddings/openapi.json",
+      "destination": "/openapi/en/embeddings/openapi.json"
+    },
+    {
+      "source": "/en/apis/images/flux-openapi.json",
+      "destination": "/openapi/en/images/flux.json"
+    },
+    {
+      "source": "/en/apis/images/gpt-openapi.json",
+      "destination": "/openapi/en/images/gpt-image.json"
+    },
+    {
+      "source": "/en/apis/images/grok-openapi.json",
+      "destination": "/openapi/en/images/grok.json"
+    },
+    {
+      "source": "/en/apis/images/mai-openapi.json",
+      "destination": "/openapi/en/images/mai-image.json"
+    },
+    {
+      "source": "/en/apis/images/nano-banana-openapi.json",
+      "destination": "/openapi/en/images/nano-banana.json"
+    },
+    {
+      "source": "/en/apis/images/novel-openapi.json",
+      "destination": "/openapi/en/images/novelai.json"
+    },
+    {
+      "source": "/en/apis/images/qwen-openapi.json",
+      "destination": "/openapi/en/images/qwen.json"
+    },
+    {
+      "source": "/en/apis/images/seedream-openapi.json",
+      "destination": "/openapi/en/images/seedream.json"
+    },
+    {
+      "source": "/en/apis/speech/google-openapi.json",
+      "destination": "/openapi/en/speech/google.json"
+    },
+    {
+      "source": "/en/apis/speech/google-voices",
+      "destination": "/en/api-reference/speech/google/voices"
+    },
+    {
+      "source": "/en/apis/speech/openapi.json",
+      "destination": "/openapi/en/speech/combined.json"
+    },
+    {
+      "source": "/en/apis/speech/qwen-audio-openapi.json",
+      "destination": "/openapi/en/speech/qwen-audio.json"
+    },
+    {
+      "source": "/en/apis/speech/qwen-openapi.json",
+      "destination": "/openapi/en/speech/qwen.json"
+    },
+    {
+      "source": "/en/apis/speech/qwen-voices",
+      "destination": "/en/api-reference/speech/qwen/voices"
+    },
+    {
+      "source": "/en/apis/transcriptions/openapi.json",
+      "destination": "/openapi/en/transcriptions/openapi.json"
+    },
+    {
+      "source": "/en/apis/utilities/balance-openapi.json",
+      "destination": "/openapi/en/utilities/balance.json"
+    },
+    {
+      "source": "/en/apis/utilities/convert-openapi.json",
+      "destination": "/openapi/en/utilities/convert.json"
+    },
+    {
+      "source": "/en/apis/videos/flux-openapi.json",
+      "destination": "/openapi/en/videos/flux.json"
+    },
+    {
+      "source": "/en/apis/videos/grok-openapi.json",
+      "destination": "/openapi/en/videos/grok.json"
+    },
+    {
+      "source": "/en/apis/videos/happy-horse-openapi.json",
+      "destination": "/openapi/en/videos/happyhorse.json"
+    },
+    {
+      "source": "/en/apis/videos/minimax-openapi.json",
+      "destination": "/openapi/en/videos/minimax.json"
+    },
+    {
+      "source": "/en/apis/videos/seedance-openapi.json",
+      "destination": "/openapi/en/videos/seedance.json"
+    },
+    {
+      "source": "/en/apis/videos/veo-openapi.json",
+      "destination": "/openapi/en/videos/veo.json"
+    },
+    {
+      "source": "/en/apis/videos/wan-openapi.json",
+      "destination": "/openapi/en/videos/wan.json"
+    },
+    {
+      "source": "/en/develop-guide/gateway-auth",
+      "destination": "/en/guides/authentication"
+    },
+    {
+      "source": "/en/develop-guide/protocol-convert",
+      "destination": "/en/guides/protocol-conversion"
+    },
+    {
+      "source": "/en/develop-guide/status-code-response",
+      "destination": "/en/guides/status-codes"
+    },
+    {
+      "source": "/en/quick-starter",
+      "destination": "/en/quickstart"
+    },
+    {
+      "source": "/en/request-protocol/anthropic",
+      "destination": "/en/protocols/anthropic"
+    },
+    {
+      "source": "/en/request-protocol/gemini",
+      "destination": "/en/protocols/gemini"
+    },
+    {
+      "source": "/en/request-protocol/open-ai/chat-completions",
+      "destination": "/en/protocols/openai/chat-completions"
+    },
+    {
+      "source": "/en/request-protocol/open-ai/full-request-example",
+      "destination": "/en/protocols/openai/full-request-example"
+    },
+    {
+      "source": "/en/request-protocol/open-ai/function-calling",
+      "destination": "/en/protocols/openai/function-calling"
+    },
+    {
+      "source": "/en/request-protocol/open-ai/multi-turn",
+      "destination": "/en/protocols/openai/multi-turn"
+    },
+    {
+      "source": "/en/request-protocol/open-ai/response-parameters",
+      "destination": "/en/protocols/openai/response-parameters"
+    },
+    {
+      "source": "/en/request-protocol/open-ai/responses/full-request-example",
+      "destination": "/en/protocols/openai/responses/full-request-example"
+    },
+    {
+      "source": "/en/request-protocol/open-ai/responses/function-calling",
+      "destination": "/en/protocols/openai/responses/function-calling"
+    },
+    {
+      "source": "/en/request-protocol/open-ai/responses/multi-turn",
+      "destination": "/en/protocols/openai/responses/multi-turn"
+    },
+    {
+      "source": "/en/request-protocol/open-ai/responses/response-parameters",
+      "destination": "/en/protocols/openai/responses/response-parameters"
+    },
+    {
+      "source": "/en/request-protocol/open-ai/responses/streaming",
+      "destination": "/en/protocols/openai/responses/streaming"
+    },
+    {
+      "source": "/en/request-protocol/open-ai/responses",
+      "destination": "/en/protocols/openai/responses"
+    },
+    {
+      "source": "/en/request-protocol/open-ai/streaming",
+      "destination": "/en/protocols/openai/streaming"
+    },
+    {
+      "source": "/en/request-protocol/open-ai",
+      "destination": "/en/protocols/openai"
+    },
+    {
+      "source": "/api-reference/对话补全anthropic协议/get-models",
+      "destination": "/zh/api-reference/chat/anthropic/list-models"
+    },
+    {
+      "source": "/api-reference/对话补全anthropic协议/messages",
+      "destination": "/zh/api-reference/chat/anthropic/messages"
+    },
+    {
+      "source": "/api-reference/对话补全gemini协议/get-models",
+      "destination": "/zh/api-reference/chat/gemini/list-models"
+    },
+    {
+      "source": "/api-reference/对话补全gemini协议/generate-content",
+      "destination": "/zh/api-reference/chat/gemini/generate-content"
+    },
+    {
+      "source": "/api-reference/对话补全gemini协议/stream-generate-content",
+      "destination": "/zh/api-reference/chat/gemini/stream-generate-content"
+    },
+    {
+      "source": "/api-reference/对话补全gemini协议/create-cached-content",
+      "destination": "/zh/api-reference/chat/gemini/create-cache"
+    },
+    {
+      "source": "/api-reference/对话补全gemini协议/get-cached-content",
+      "destination": "/zh/api-reference/chat/gemini/get-cache"
+    },
+    {
+      "source": "/api-reference/对话补全gemini协议/delete-cached-content",
+      "destination": "/zh/api-reference/chat/gemini/delete-cache"
+    },
+    {
+      "source": "/api-reference/对话补全openai-协议/get-models",
+      "destination": "/zh/api-reference/chat/openai/list-models"
+    },
+    {
+      "source": "/api-reference/对话补全openai-协议/chat-completions",
+      "destination": "/zh/api-reference/chat/openai/chat-completions"
+    },
+    {
+      "source": "/api-reference/对话补全openai-协议/responses",
+      "destination": "/zh/api-reference/chat/openai/responses"
+    },
+    {
+      "source": "/api-reference/判断jev/jev--决策评估",
+      "destination": "/zh/api-reference/decisions/jev/create"
+    },
+    {
+      "source": "/api-reference/判断openai/openai--决策评估",
+      "destination": "/zh/api-reference/decisions/openai/create"
+    },
+    {
+      "source": "/api-reference/向量嵌入/gpt--向量",
+      "destination": "/zh/api-reference/embeddings/openai/create"
+    },
+    {
+      "source": "/api-reference/向量嵌入/gemini--向量",
+      "destination": "/zh/api-reference/embeddings/gemini/create"
+    },
+    {
+      "source": "/api-reference/图片生成flux/图片生成",
+      "destination": "/zh/api-reference/images/flux/generate"
+    },
+    {
+      "source": "/api-reference/图片生成gpt-image/图片生成",
+      "destination": "/zh/api-reference/images/gpt-image/generate"
+    },
+    {
+      "source": "/api-reference/图片生成gpt-image/图片编辑",
+      "destination": "/zh/api-reference/images/gpt-image/edit"
+    },
+    {
+      "source": "/api-reference/图片生成grok/图片生成",
+      "destination": "/zh/api-reference/images/grok/generate"
+    },
+    {
+      "source": "/api-reference/图片生成mai-image/生成图片",
+      "destination": "/zh/api-reference/images/mai-image/generate"
+    },
+    {
+      "source": "/api-reference/图片生成midjoruney/提交action",
+      "destination": "/zh/api-reference/images/midjourney/action"
+    },
+    {
+      "source": "/api-reference/图片生成midjoruney/图片生成",
+      "destination": "/zh/api-reference/images/midjourney/generate"
+    },
+    {
+      "source": "/api-reference/midjourney/局部重绘",
+      "destination": "/zh/api-reference/images/midjourney/vary-region"
+    },
+    {
+      "source": "/api-reference/图片生成midjoruney/查询任务",
+      "destination": "/zh/api-reference/images/midjourney/get-task"
+    },
+    {
+      "source": "/api-reference/图片生成nano-banana/图片生成",
+      "destination": "/zh/api-reference/images/nano-banana/generate"
+    },
+    {
+      "source": "/api-reference/图片生成nano-banana/gemini协议--图片生成",
+      "destination": "/zh/api-reference/images/nano-banana/generate-content"
+    },
+    {
+      "source": "/api-reference/图片生成novel-ai/图片生成",
+      "destination": "/zh/api-reference/images/novelai/generate"
+    },
+    {
+      "source": "/api-reference/图片生成qwen/图片生成",
+      "destination": "/zh/api-reference/images/qwen/generate"
+    },
+    {
+      "source": "/api-reference/图片生成seedream/图片生成",
+      "destination": "/zh/api-reference/images/seedream/generate"
+    },
+    {
+      "source": "/api-reference/语音合成google/google--文转语音",
+      "destination": "/zh/api-reference/speech/google/create"
+    },
+    {
+      "source": "/api-reference/语音合成qwen-audio/qwen-audio--文转语音",
+      "destination": "/zh/api-reference/speech/qwen-audio/create"
+    },
+    {
+      "source": "/api-reference/语音合成qwen/qwen--文转语音",
+      "destination": "/zh/api-reference/speech/qwen/create"
+    },
+    {
+      "source": "/api-reference/语音转写/语音转写",
+      "destination": "/zh/api-reference/transcriptions/create"
+    },
+    {
+      "source": "/api-reference/工具/余额查询",
+      "destination": "/zh/api-reference/utilities/balance"
+    },
+    {
+      "source": "/api-reference/视频生成flux-3-video/创建-flux-3-video-视频",
+      "destination": "/zh/api-reference/videos/flux/create"
+    },
+    {
+      "source": "/api-reference/视频生成flux-3-video/查询-flux-3-video-视频任务",
+      "destination": "/zh/api-reference/videos/flux/get-task"
+    },
+    {
+      "source": "/api-reference/视频生成grok-imagine-video/创建-grok-imagine-video-视频",
+      "destination": "/zh/api-reference/videos/grok/create"
+    },
+    {
+      "source": "/api-reference/视频生成grok-imagine-video/查询-grok-imagine-video-视频任务",
+      "destination": "/zh/api-reference/videos/grok/get-task"
+    },
+    {
+      "source": "/api-reference/视频生成happyhorse/创建-happyhorse-视频",
+      "destination": "/zh/api-reference/videos/happyhorse/create"
+    },
+    {
+      "source": "/api-reference/视频生成happyhorse/查询-happyhorse-视频任务",
+      "destination": "/zh/api-reference/videos/happyhorse/get-task"
+    },
+    {
+      "source": "/api-reference/视频生成minimax-h3/创建-minimax-h3-视频",
+      "destination": "/zh/api-reference/videos/minimax/create"
+    },
+    {
+      "source": "/api-reference/视频生成minimax-h3/查询-minimax-h3-视频任务",
+      "destination": "/zh/api-reference/videos/minimax/get-task"
+    },
+    {
+      "source": "/api-reference/视频生成seedance/创建-seedance-视频",
+      "destination": "/zh/api-reference/videos/seedance/create"
+    },
+    {
+      "source": "/api-reference/视频生成seedance/查询-seedance-视频任务",
+      "destination": "/zh/api-reference/videos/seedance/get-task"
+    },
+    {
+      "source": "/api-reference/视频生成veo/创建-veo-视频",
+      "destination": "/zh/api-reference/videos/veo/create"
+    },
+    {
+      "source": "/api-reference/视频生成veo/查询-veo-视频任务",
+      "destination": "/zh/api-reference/videos/veo/get-task"
+    },
+    {
+      "source": "/api-reference/视频生成wan/创建-wan-视频",
+      "destination": "/zh/api-reference/videos/wan/create"
+    },
+    {
+      "source": "/api-reference/视频生成wan/查询-wan-视频任务",
+      "destination": "/zh/api-reference/videos/wan/get-task"
+    },
+    {
+      "source": "/api-reference/chat-completionsanthropic-protocol/get-models",
+      "destination": "/en/api-reference/chat/anthropic/list-models"
+    },
+    {
+      "source": "/api-reference/chat-completionsanthropic-protocol/messages",
+      "destination": "/en/api-reference/chat/anthropic/messages"
+    },
+    {
+      "source": "/api-reference/chat-completionsgemini-protocol/get-models",
+      "destination": "/en/api-reference/chat/gemini/list-models"
+    },
+    {
+      "source": "/api-reference/chat-completionsgemini-protocol/generate-content",
+      "destination": "/en/api-reference/chat/gemini/generate-content"
+    },
+    {
+      "source": "/api-reference/chat-completionsgemini-protocol/stream-generate-content",
+      "destination": "/en/api-reference/chat/gemini/stream-generate-content"
+    },
+    {
+      "source": "/api-reference/chat-completionsgemini-protocol/create-cached-content",
+      "destination": "/en/api-reference/chat/gemini/create-cache"
+    },
+    {
+      "source": "/api-reference/chat-completionsgemini-protocol/get-cached-content",
+      "destination": "/en/api-reference/chat/gemini/get-cache"
+    },
+    {
+      "source": "/api-reference/chat-completionsgemini-protocol/delete-cached-content",
+      "destination": "/en/api-reference/chat/gemini/delete-cache"
+    },
+    {
+      "source": "/api-reference/chat-completionsopenai-protocol/get-models",
+      "destination": "/en/api-reference/chat/openai/list-models"
+    },
+    {
+      "source": "/api-reference/chat-completionsopenai-protocol/chat-completions",
+      "destination": "/en/api-reference/chat/openai/chat-completions"
+    },
+    {
+      "source": "/api-reference/chat-completionsopenai-protocol/responses",
+      "destination": "/en/api-reference/chat/openai/responses"
+    },
+    {
+      "source": "/api-reference/decisionsjev/jev-decision-evaluation",
+      "destination": "/en/api-reference/decisions/jev/create"
+    },
+    {
+      "source": "/api-reference/decisionsopenai/openai-decision-evaluation",
+      "destination": "/en/api-reference/decisions/openai/create"
+    },
+    {
+      "source": "/api-reference/vector-embedding/gpt--vector",
+      "destination": "/en/api-reference/embeddings/openai/create"
+    },
+    {
+      "source": "/api-reference/embeddings/gemini-embedding",
+      "destination": "/en/api-reference/embeddings/gemini/create"
+    },
+    {
+      "source": "/api-reference/image-generationflux/image-generation",
+      "destination": "/en/api-reference/images/flux/generate"
+    },
+    {
+      "source": "/api-reference/image-generationgpt-image/image-generation",
+      "destination": "/en/api-reference/images/gpt-image/generate"
+    },
+    {
+      "source": "/api-reference/image-generationgpt-image/image-editing",
+      "destination": "/en/api-reference/images/gpt-image/edit"
+    },
+    {
+      "source": "/api-reference/image-generationgrok/image-generation",
+      "destination": "/en/api-reference/images/grok/generate"
+    },
+    {
+      "source": "/api-reference/image-generationmai-image/image-generation",
+      "destination": "/en/api-reference/images/mai-image/generate"
+    },
+    {
+      "source": "/api-reference/image-generationnano-banana/image-generation",
+      "destination": "/en/api-reference/images/nano-banana/generate"
+    },
+    {
+      "source": "/api-reference/image-generationnano-banana/gemini-protocol--image-generation",
+      "destination": "/en/api-reference/images/nano-banana/generate-content"
+    },
+    {
+      "source": "/api-reference/image-generationnovel-ai/image-generation",
+      "destination": "/en/api-reference/images/novelai/generate"
+    },
+    {
+      "source": "/api-reference/image-generationqwen/image-generation",
+      "destination": "/en/api-reference/images/qwen/generate"
+    },
+    {
+      "source": "/api-reference/image-generationseedream/image-generation",
+      "destination": "/en/api-reference/images/seedream/generate"
+    },
+    {
+      "source": "/api-reference/speech-synthesisgoogle/google-text-to-speech",
+      "destination": "/en/api-reference/speech/google/create"
+    },
+    {
+      "source": "/api-reference/speech-synthesisqwen-audio/qwen-audio-text-to-speech",
+      "destination": "/en/api-reference/speech/qwen-audio/create"
+    },
+    {
+      "source": "/api-reference/speech-synthesisqwen/qwen-text-to-speech",
+      "destination": "/en/api-reference/speech/qwen/create"
+    },
+    {
+      "source": "/api-reference/speech-transcription/speech-transcription",
+      "destination": "/en/api-reference/transcriptions/create"
+    },
+    {
+      "source": "/api-reference/utilities/get-balance",
+      "destination": "/en/api-reference/utilities/balance"
+    },
+    {
+      "source": "/api-reference/video-generationflux-3-video/create-flux-3-video-videos",
+      "destination": "/en/api-reference/videos/flux/create"
+    },
+    {
+      "source": "/api-reference/video-generationflux-3-video/query-flux-3-video-video-tasks",
+      "destination": "/en/api-reference/videos/flux/get-task"
+    },
+    {
+      "source": "/api-reference/video-generationgrok-imagine-video/create-a-grok-imagine-video-video",
+      "destination": "/en/api-reference/videos/grok/create"
+    },
+    {
+      "source": "/api-reference/video-generationgrok-imagine-video/query-grok-imagine-video-video-tasks",
+      "destination": "/en/api-reference/videos/grok/get-task"
+    },
+    {
+      "source": "/api-reference/video-generationhappyhorse/create-a-happyhorse-video",
+      "destination": "/en/api-reference/videos/happyhorse/create"
+    },
+    {
+      "source": "/api-reference/video-generationhappyhorse/query-happyhorse-video-tasks",
+      "destination": "/en/api-reference/videos/happyhorse/get-task"
+    },
+    {
+      "source": "/api-reference/video-generationminimax-h3/create-minimax-h3-video",
+      "destination": "/en/api-reference/videos/minimax/create"
+    },
+    {
+      "source": "/api-reference/video-generationminimax-h3/query-minimax-h3-video-task",
+      "destination": "/en/api-reference/videos/minimax/get-task"
+    },
+    {
+      "source": "/api-reference/video-generationseedance/create-a-seedance-video",
+      "destination": "/en/api-reference/videos/seedance/create"
+    },
+    {
+      "source": "/api-reference/video-generationseedance/query-seedance-video-tasks",
+      "destination": "/en/api-reference/videos/seedance/get-task"
+    },
+    {
+      "source": "/api-reference/video-generationveo/create-a-veo-video",
+      "destination": "/en/api-reference/videos/veo/create"
+    },
+    {
+      "source": "/api-reference/video-generationveo/query-veo-video-tasks",
+      "destination": "/en/api-reference/videos/veo/get-task"
+    },
+    {
+      "source": "/api-reference/video-generationwan/create-wan-video",
+      "destination": "/en/api-reference/videos/wan/create"
+    },
+    {
+      "source": "/api-reference/video-generationwan/query-wan-video-tasks",
+      "destination": "/en/api-reference/videos/wan/get-task"
+    }
+  ]
 }

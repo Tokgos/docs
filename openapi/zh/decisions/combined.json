@@ -1,0 +1,1804 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "决策评估 API",
+    "description": "OpenAI Decisions 与 TypeSafe System One。",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/v1/decisions": {
+      "post": {
+        "operationId": "createDecision",
+        "summary": "OpenAI 决策评估",
+        "description": "OpenAI Decisions 格式：input + questions 数组；answers 顺序与问题一致，支持 predicate、choice、score 及 refusal。支持通过端点配置调用 TypeSafe Jev。跨协议时问题 name 必须唯一；字符串和布尔选项转换成同一个键时返回参数错误。 使用 TypeSafe 模型时，请求转换为 TypeSafe 协议并调用上游 /v1/systemone，响应再转换回 OpenAI Decisions 格式。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "模型 ID，例如 openai/gpt-6-luna 或 typesafe/jev-latest；是否可调用取决于模型目录及账号配置。"
+                  },
+                  "input": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "role": {
+                                  "enum": [
+                                    "user",
+                                    "developer",
+                                    "system",
+                                    "assistant"
+                                  ]
+                                },
+                                "type": {
+                                  "const": "message"
+                                },
+                                "content": {
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "array",
+                                      "items": {
+                                        "oneOf": [
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "const": "input_text"
+                                              },
+                                              "text": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "text"
+                                            ],
+                                            "additionalProperties": true
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "const": "input_image"
+                                              },
+                                              "image_url": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "image_url"
+                                            ],
+                                            "additionalProperties": true
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "const": "output_text"
+                                              },
+                                              "text": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "text"
+                                            ],
+                                            "additionalProperties": true
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "const": "refusal"
+                                              },
+                                              "refusal": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "refusal"
+                                            ],
+                                            "additionalProperties": true
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "role",
+                                "content"
+                              ],
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "function_call"
+                                },
+                                "call_id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "arguments": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "call_id",
+                                "name",
+                                "arguments"
+                              ],
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "function_call_output"
+                                },
+                                "call_id": {
+                                  "type": "string"
+                                },
+                                "output": {
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "array",
+                                      "items": {
+                                        "oneOf": [
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "const": "input_text"
+                                              },
+                                              "text": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "text"
+                                            ],
+                                            "additionalProperties": true
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "const": "input_image"
+                                              },
+                                              "image_url": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "image_url"
+                                            ],
+                                            "additionalProperties": true
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "const": "output_text"
+                                              },
+                                              "text": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "text"
+                                            ],
+                                            "additionalProperties": true
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "const": "refusal"
+                                              },
+                                              "refusal": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "refusal"
+                                            ],
+                                            "additionalProperties": true
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "call_id",
+                                "output"
+                              ],
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "custom_tool_call"
+                                },
+                                "call_id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "input": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "call_id",
+                                "name",
+                                "input"
+                              ],
+                              "additionalProperties": true
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "const": "custom_tool_call_output"
+                                },
+                                "call_id": {
+                                  "type": "string"
+                                },
+                                "output": {
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "array",
+                                      "items": {
+                                        "oneOf": [
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "const": "input_text"
+                                              },
+                                              "text": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "text"
+                                            ],
+                                            "additionalProperties": true
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "const": "input_image"
+                                              },
+                                              "image_url": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "image_url"
+                                            ],
+                                            "additionalProperties": true
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "const": "output_text"
+                                              },
+                                              "text": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "text"
+                                            ],
+                                            "additionalProperties": true
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "type": {
+                                                "const": "refusal"
+                                              },
+                                              "refusal": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "type",
+                                              "refusal"
+                                            ],
+                                            "additionalProperties": true
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "call_id",
+                                "output"
+                              ],
+                              "additionalProperties": true
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "questions": {
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "const": "predicate"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "instructions": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "instructions"
+                          ],
+                          "additionalProperties": true
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "const": "choice"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "instructions": {
+                              "type": "string"
+                            },
+                            "choices": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "value": {
+                                    "type": [
+                                      "string",
+                                      "boolean"
+                                    ]
+                                  },
+                                  "description": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "value"
+                                ],
+                                "additionalProperties": true
+                              },
+                              "minItems": 2,
+                              "maxItems": 255
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "instructions",
+                            "choices"
+                          ],
+                          "additionalProperties": true
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "const": "score"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "instructions": {
+                              "type": "string"
+                            },
+                            "levels": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "description": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "label"
+                                ],
+                                "additionalProperties": true
+                              },
+                              "minItems": 2,
+                              "maxItems": 10
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "instructions",
+                            "levels"
+                          ],
+                          "additionalProperties": true
+                        }
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 200
+                  },
+                  "prompt_cache_key": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 64
+                  },
+                  "prompt_cache_options": {
+                    "oneOf": [
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "mode": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "implicit",
+                              "explicit",
+                              null
+                            ]
+                          },
+                          "ttl": {
+                            "const": "30m"
+                          }
+                        },
+                        "required": [],
+                        "additionalProperties": true
+                      }
+                    ]
+                  },
+                  "safety_identifier": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "model",
+                  "input",
+                  "questions"
+                ],
+                "additionalProperties": true
+              },
+              "example": {
+                "model": "openai/gpt-6-luna",
+                "input": "I was charged twice and need help today.",
+                "questions": [
+                  {
+                    "type": "predicate",
+                    "name": "urgent",
+                    "instructions": "Does the customer need urgent help?"
+                  },
+                  {
+                    "type": "choice",
+                    "name": "department",
+                    "instructions": "Which department should handle this?",
+                    "choices": [
+                      {
+                        "value": "billing",
+                        "description": "Payments and refunds"
+                      },
+                      {
+                        "value": "technical",
+                        "description": "Product issues"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "score",
+                    "name": "severity",
+                    "instructions": "How severe is the issue?",
+                    "levels": [
+                      {
+                        "label": "Minor"
+                      },
+                      {
+                        "label": "Workaround available"
+                      },
+                      {
+                        "label": "Fully blocked"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "类型化决策答案和用量。未返回输出 Token 的上游可省略 completion_tokens，转换为 TypeSafe 时补 0。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "model": {
+                      "type": "string"
+                    },
+                    "answers": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "predicate"
+                              },
+                              "name": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "probability": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "name",
+                              "probability"
+                            ],
+                            "additionalProperties": true
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "choice"
+                              },
+                              "name": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "choice": {
+                                "type": [
+                                  "string",
+                                  "boolean"
+                                ]
+                              },
+                              "confidence": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
+                              "probabilities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {
+                                      "type": [
+                                        "string",
+                                        "boolean"
+                                      ]
+                                    },
+                                    "probability": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    }
+                                  },
+                                  "required": [
+                                    "value",
+                                    "probability"
+                                  ],
+                                  "additionalProperties": true
+                                }
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "name",
+                              "choice",
+                              "confidence",
+                              "probabilities"
+                            ],
+                            "additionalProperties": true
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "score"
+                              },
+                              "name": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "score": {
+                                "type": "number"
+                              },
+                              "confidence": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
+                              "probabilities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {
+                                      "type": "integer"
+                                    },
+                                    "label": {
+                                      "type": "string"
+                                    },
+                                    "probability": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    }
+                                  },
+                                  "required": [
+                                    "value",
+                                    "label",
+                                    "probability"
+                                  ],
+                                  "additionalProperties": true
+                                }
+                              },
+                              "legend": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "name",
+                              "score",
+                              "confidence",
+                              "probabilities"
+                            ],
+                            "additionalProperties": true
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "refusal"
+                              },
+                              "name": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "name"
+                            ],
+                            "additionalProperties": true
+                          }
+                        ]
+                      }
+                    },
+                    "usage": {
+                      "type": "object",
+                      "properties": {
+                        "prompt_tokens": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "completion_tokens": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "prompt_tokens_details": {
+                          "type": "object"
+                        },
+                        "completion_tokens_details": {
+                          "type": "object"
+                        },
+                        "input_tokens": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "input_tokens_details": {
+                          "type": "object"
+                        },
+                        "output_tokens_details": {
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "total_tokens"
+                      ],
+                      "additionalProperties": true,
+                      "anyOf": [
+                        {
+                          "required": [
+                            "input_tokens",
+                            "output_tokens"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "prompt_tokens"
+                          ]
+                        }
+                      ],
+                      "description": "支持官方 input_tokens/output_tokens，以及兼容上游的 prompt_tokens/completion_tokens；保留上游字段。"
+                    }
+                  },
+                  "required": [
+                    "model",
+                    "answers",
+                    "usage"
+                  ],
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "typesafe_backend": {
+                    "value": {
+                      "model": "typesafe/jev-latest",
+                      "answers": [
+                        {
+                          "name": "urgent",
+                          "probability": 0.82,
+                          "type": "predicate"
+                        },
+                        {
+                          "choice": "billing",
+                          "confidence": 1,
+                          "name": "department",
+                          "probabilities": [
+                            {
+                              "probability": 1,
+                              "value": "billing"
+                            },
+                            {
+                              "probability": 0,
+                              "value": "technical"
+                            }
+                          ],
+                          "type": "choice"
+                        },
+                        {
+                          "confidence": 0.58,
+                          "legend": {
+                            "0": "Minor",
+                            "1": "Workaround available",
+                            "2": "Fully blocked"
+                          },
+                          "name": "severity",
+                          "probabilities": [
+                            {
+                              "label": "Minor",
+                              "probability": 0.74,
+                              "value": 0
+                            },
+                            {
+                              "label": "Workaround available",
+                              "probability": 0.24,
+                              "value": 1
+                            },
+                            {
+                              "label": "Fully blocked",
+                              "probability": 0.02,
+                              "value": 2
+                            }
+                          ],
+                          "score": 0.28,
+                          "type": "score"
+                        }
+                      ],
+                      "usage": {
+                        "completion_tokens": 61,
+                        "prompt_tokens": 375,
+                        "total_tokens": 436
+                      }
+                    }
+                  },
+                  "openai": {
+                    "value": {
+                      "model": "openai/gpt-6-luna",
+                      "answers": [
+                        {
+                          "name": "urgent",
+                          "probability": 0.82,
+                          "type": "predicate"
+                        },
+                        {
+                          "choice": "billing",
+                          "confidence": 1,
+                          "name": "department",
+                          "probabilities": [
+                            {
+                              "probability": 1,
+                              "value": "billing"
+                            },
+                            {
+                              "probability": 0,
+                              "value": "technical"
+                            }
+                          ],
+                          "type": "choice"
+                        },
+                        {
+                          "confidence": 0.58,
+                          "legend": {
+                            "0": "Minor",
+                            "1": "Workaround available",
+                            "2": "Fully blocked"
+                          },
+                          "name": "severity",
+                          "probabilities": [
+                            {
+                              "label": "Minor",
+                              "probability": 0.74,
+                              "value": 0
+                            },
+                            {
+                              "label": "Workaround available",
+                              "probability": 0.24,
+                              "value": 1
+                            },
+                            {
+                              "label": "Fully blocked",
+                              "probability": 0.02,
+                              "value": 2
+                            }
+                          ],
+                          "score": 0.28,
+                          "type": "score"
+                        }
+                      ],
+                      "usage": {
+                        "completion_tokens_details": {},
+                        "prompt_tokens": 383,
+                        "prompt_tokens_details": {
+                          "cache_write_tokens": 0,
+                          "cached_tokens": 0
+                        },
+                        "total_tokens": 383
+                      }
+                    }
+                  },
+                  "openai_native": {
+                    "summary": "OpenAI native token usage",
+                    "value": {
+                      "model": "openai/gpt-6-luna",
+                      "answers": [
+                        {
+                          "name": "urgent",
+                          "probability": 0.82,
+                          "type": "predicate"
+                        },
+                        {
+                          "choice": "billing",
+                          "confidence": 1,
+                          "name": "department",
+                          "probabilities": [
+                            {
+                              "probability": 1,
+                              "value": "billing"
+                            },
+                            {
+                              "probability": 0,
+                              "value": "technical"
+                            }
+                          ],
+                          "type": "choice"
+                        },
+                        {
+                          "confidence": 0.58,
+                          "legend": {
+                            "0": "Minor",
+                            "1": "Workaround available",
+                            "2": "Fully blocked"
+                          },
+                          "name": "severity",
+                          "probabilities": [
+                            {
+                              "label": "Minor",
+                              "probability": 0.74,
+                              "value": 0
+                            },
+                            {
+                              "label": "Workaround available",
+                              "probability": 0.24,
+                              "value": 1
+                            },
+                            {
+                              "label": "Fully blocked",
+                              "probability": 0.02,
+                              "value": 2
+                            }
+                          ],
+                          "score": 0.28,
+                          "type": "score"
+                        }
+                      ],
+                      "usage": {
+                        "input_tokens": 383,
+                        "input_tokens_details": {
+                          "cached_tokens": 0,
+                          "cache_write_tokens": 0
+                        },
+                        "output_tokens": 0,
+                        "output_tokens_details": {
+                          "reasoning_tokens": 0
+                        },
+                        "total_tokens": 383
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "href": "/zh/api-reference/decisions/combined/create",
+          "metadata": {
+            "sidebarTitle": "OpenAI 决策评估"
+          }
+        }
+      }
+    },
+    "/v1/systemone": {
+      "post": {
+        "operationId": "evaluateSystemOne",
+        "summary": "TypeSafe 决策评估",
+        "description": "TypeSafe 原生格式：state + questions 对象；answers 按问题名称索引。noul 对应 OpenAI predicate。支持通过端点配置转换到 OpenAI Decisions。结构化 state/instructions/criteria 转换时保留为 JSON 文本。跨协议调用中 OpenAI refusal 作为 type=refusal 扩展返回。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "模型 ID，例如 openai/gpt-6-luna 或 typesafe/jev-latest；是否可调用取决于模型目录及账号配置。"
+                  },
+                  "state": {
+                    "type": [
+                      "string",
+                      "object",
+                      "array"
+                    ]
+                  },
+                  "questions": {
+                    "type": "object",
+                    "minProperties": 1,
+                    "additionalProperties": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "const": "noul"
+                            },
+                            "instructions": {
+                              "type": [
+                                "string",
+                                "object",
+                                "array"
+                              ]
+                            },
+                            "criteria": {
+                              "type": "object",
+                              "properties": {
+                                "true": {
+                                  "type": [
+                                    "string",
+                                    "object",
+                                    "array"
+                                  ]
+                                },
+                                "false": {
+                                  "type": [
+                                    "string",
+                                    "object",
+                                    "array"
+                                  ]
+                                }
+                              },
+                              "required": [],
+                              "additionalProperties": true
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "instructions"
+                          ],
+                          "additionalProperties": true
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "const": "choice"
+                            },
+                            "instructions": {
+                              "type": [
+                                "string",
+                                "object",
+                                "array"
+                              ]
+                            },
+                            "criteria": {
+                              "type": "object",
+                              "minProperties": 2,
+                              "maxProperties": 255,
+                              "additionalProperties": {
+                                "type": [
+                                  "string",
+                                  "object",
+                                  "array",
+                                  "null"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "instructions",
+                            "criteria"
+                          ],
+                          "additionalProperties": true
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "const": "score"
+                            },
+                            "instructions": {
+                              "type": [
+                                "string",
+                                "object",
+                                "array"
+                              ]
+                            },
+                            "criteria": {
+                              "type": "array",
+                              "items": {
+                                "type": [
+                                  "string",
+                                  "object",
+                                  "array"
+                                ]
+                              },
+                              "minItems": 2,
+                              "maxItems": 10
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "instructions",
+                            "criteria"
+                          ],
+                          "additionalProperties": true
+                        }
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "model",
+                  "state",
+                  "questions"
+                ],
+                "additionalProperties": true
+              },
+              "example": {
+                "model": "typesafe/jev-latest",
+                "state": "I was charged twice and need help today.",
+                "questions": {
+                  "urgent": {
+                    "type": "noul",
+                    "instructions": "Is this urgent?"
+                  },
+                  "department": {
+                    "type": "choice",
+                    "instructions": "Which team?",
+                    "criteria": {
+                      "billing": "Payments",
+                      "technical": "Product issues"
+                    }
+                  },
+                  "severity": {
+                    "type": "score",
+                    "instructions": "How severe?",
+                    "criteria": [
+                      "Minor",
+                      "Workaround available",
+                      "Fully blocked"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "类型化决策答案和用量。未返回输出 Token 的上游可省略 completion_tokens，转换为 TypeSafe 时补 0。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "model": {
+                      "type": "string"
+                    },
+                    "answers": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "noul"
+                              },
+                              "noul": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "noul"
+                            ],
+                            "additionalProperties": true
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "choice"
+                              },
+                              "choice": {
+                                "type": "string"
+                              },
+                              "confidence": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
+                              "probabilities": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                }
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "choice",
+                              "confidence",
+                              "probabilities"
+                            ],
+                            "additionalProperties": true
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "score"
+                              },
+                              "score": {
+                                "type": "number"
+                              },
+                              "confidence": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
+                              "legend": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "probabilities": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "maximum": 1
+                                }
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "score",
+                              "confidence",
+                              "legend",
+                              "probabilities"
+                            ],
+                            "additionalProperties": true
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "const": "refusal"
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ],
+                            "additionalProperties": true
+                          }
+                        ]
+                      }
+                    },
+                    "usage": {
+                      "type": "object",
+                      "properties": {
+                        "input_tokens": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "output_tokens": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "input_tokens",
+                        "output_tokens"
+                      ],
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "model",
+                    "answers",
+                    "usage"
+                  ],
+                  "additionalProperties": true
+                },
+                "examples": {
+                  "typesafe": {
+                    "value": {
+                      "model": "typesafe/jev-latest",
+                      "answers": {
+                        "department": {
+                          "choice": "billing",
+                          "confidence": 1,
+                          "probabilities": {
+                            "billing": 1,
+                            "technical": 0
+                          },
+                          "type": "choice"
+                        },
+                        "severity": {
+                          "confidence": 0.36,
+                          "legend": {
+                            "0": "Minor",
+                            "1": "Workaround available",
+                            "2": "Fully blocked"
+                          },
+                          "probabilities": {
+                            "0": 0.22,
+                            "1": 0.57,
+                            "2": 0.21
+                          },
+                          "score": 0.99,
+                          "type": "score"
+                        },
+                        "urgent": {
+                          "noul": 0.75,
+                          "type": "noul"
+                        }
+                      },
+                      "usage": {
+                        "input_tokens": 392,
+                        "output_tokens": 0
+                      }
+                    }
+                  },
+                  "openai_backend": {
+                    "value": {
+                      "model": "openai/gpt-6-luna",
+                      "answers": {
+                        "department": {
+                          "choice": "billing",
+                          "confidence": 1,
+                          "probabilities": {
+                            "billing": 1,
+                            "technical": 0
+                          },
+                          "type": "choice"
+                        },
+                        "severity": {
+                          "confidence": 0.36,
+                          "legend": {
+                            "0": "Minor",
+                            "1": "Workaround available",
+                            "2": "Fully blocked"
+                          },
+                          "probabilities": {
+                            "0": 0.22,
+                            "1": 0.57,
+                            "2": 0.21
+                          },
+                          "score": 0.99,
+                          "type": "score"
+                        },
+                        "urgent": {
+                          "noul": 0.75,
+                          "type": "noul"
+                        }
+                      },
+                      "usage": {
+                        "input_tokens": 392,
+                        "output_tokens": 0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": [
+                            "string",
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "param": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "href": "/zh/api-reference/decisions/combined/evaluate-system-one",
+          "metadata": {
+            "sidebarTitle": "TypeSafe 决策评估"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {}
+  }
+}

@@ -1,0 +1,591 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mintlify",
+    "description": "Qwen-Image 3.0 Pro 的 OpenAI 兼容图片生成与参考图编辑接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "图片生成"
+    },
+    {
+      "name": "图片生成/Midjoruney"
+    },
+    {
+      "name": "Midjourney"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "提交Action",
+        "deprecated": false,
+        "description": "model 可用模型库 ID 或已支持的别名；模型与 prompt 中的版本参数必须一致。此操作只描述首次生图，不包含同路径的任务动作。",
+        "operationId": "submitMidjourneyImageGeneration",
+        "tags": [
+          "图片生成/Midjoruney",
+          "Midjourney"
+        ],
+        "parameters": [
+          {
+            "name": "x-provider-route",
+            "in": "header",
+            "description": "上游速度cost、stable、fast",
+            "example": "cost",
+            "schema": {
+              "type": "string",
+              "default": "cost"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "title": "MidjourneyActionRequest",
+                "required": [
+                  "parent_task_id",
+                  "action"
+                ],
+                "additionalProperties": true,
+                "description": "父任务必须已完成、属于当前 API Key，且 data.actions 包含待执行动作。默认继承父任务的模型、模式、Prompt 和参数；显式 model/mode 必须与父任务一致。未知字段和不支持的模型参数会被过滤。 提交路径为 POST /v1/images/generations，请求头使用 Authorization: Bearer YOUR_API_KEY 和 Content-Type: application/json。Idempotency-Key 是可选请求头，不放入 JSON 请求体。",
+                "properties": {
+                  "parent_task_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "必填。父任务的 id，使用字符串。父任务须通过同一 API Key 创建且 status=completed。",
+                    "examples": [
+                      "imgtask_parent"
+                    ]
+                  },
+                  "action": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "必填。从父任务查询结果 data.actions 中原样选择，建议使用大写。常见值：U1～U4（选择第 1～4 张）、V1～V4（生成变体）、REROLL（重做）、VARY_SUBTLE/VARY_STRONG（轻微/强烈变体）、VARY_REGION（局部重绘）、PAN_LEFT/PAN_RIGHT/PAN_UP/PAN_DOWN（扩图）、ZOOM_OUT_1_5X/ZOOM_OUT_2X（缩小扩图）、CUSTOM_ZOOM（自定义缩放）、MAKE_SQUARE、UPSCALE_SUBTLE/UPSCALE_CREATIVE、ENHANCE。可用值随父任务及模型变化，不以此示例清单作为固定枚举。图片接口不接受 ANIMATE_*、EXTEND_*、REMASTER 或 DESCRIBE_* 动作。U1～U4 免费，其他动作按现有 MJ 任务价格结算。",
+                    "examples": [
+                      "U1",
+                      "V1",
+                      "REROLL",
+                      "VARY_REGION",
+                      "CUSTOM_ZOOM"
+                    ]
+                  },
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "可省略，继承父任务。显式填写时必须解析为与父任务相同的模型 ID。",
+                    "examples": [
+                      "midjourney/v7"
+                    ]
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "relax",
+                      "fast"
+                    ],
+                    "description": "可省略，继承父任务。显式值必须与父任务一致；Action 不允许切换模式，不支持 turbo。"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "可省略并继承父任务。仅 V1～V4、REROLL、VARY_SUBTLE、VARY_STRONG、VARY_REGION、CUSTOM_ZOOM 和 PAN_* 接受内容覆盖；U1～U4 等动作请省略。按当前 MJ 上游约束使用英文 Prompt。CUSTOM_ZOOM 也可在这里提供 --zoom 1.5；推荐使用 parameters.zoom。",
+                    "examples": [
+                      "a red apple on a wooden table"
+                    ]
+                  },
+                  "parameters": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "仅支持内容覆盖的动作可用。覆盖项按父模型的参数 Schema 校验，其余继承父任务；不能借此更换版本或执行模式。CUSTOM_ZOOM 使用 zoom 指定缩放倍数。",
+                    "properties": {
+                      "zoom": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 2,
+                        "description": "仅 CUSTOM_ZOOM 使用，范围 1～2（包含端点）。未在 prompt 中提供 --zoom 时必须提供；同时提供时以此字段为准。",
+                        "examples": [
+                          1.5
+                        ]
+                      }
+                    },
+                    "examples": [
+                      {
+                        "zoom": 1.5
+                      }
+                    ]
+                  },
+                  "aspect_ratio": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]*:[1-9][0-9]*$",
+                    "description": "仅支持参数覆盖的动作可用。归一化为 parameters.aspect，与显式 parameters.aspect 冲突时返回 400。",
+                    "examples": [
+                      "1:1",
+                      "2:3"
+                    ]
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(auto|[1-9][0-9]*:[1-9][0-9]*)$",
+                    "description": "仅支持参数覆盖的动作可用。兼容字段，接受 auto 或宽高比；推荐使用 aspect_ratio。不接受 1024x1024 等像素尺寸。"
+                  },
+                  "quality": {
+                    "type": "string",
+                    "enum": [
+                      "auto",
+                      "low",
+                      "medium",
+                      "standard",
+                      "high",
+                      "xhigh"
+                    ],
+                    "description": "仅支持参数覆盖的动作可用。实际可用档位由父模型决定；模型不支持的质量字段会被过滤。"
+                  },
+                  "images": {
+                    "type": "array",
+                    "description": "仅支持内容覆盖的动作可用。参考图类型、数量和参数依赖按父模型校验；当前模型不支持的参考图会被过滤。",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "image_url"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "image_reference",
+                            "style_reference",
+                            "character_reference",
+                            "omni_reference"
+                          ]
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "pattern": "^(https?://|data:image/)",
+                          "description": "HTTP(S) 图片地址或带 MIME 类型的 data URL；内联图片解码后最大 10 MiB。"
+                        }
+                      }
+                    }
+                  },
+                  "mask": {
+                    "type": "object",
+                    "required": [
+                      "image_url"
+                    ],
+                    "additionalProperties": false,
+                    "description": "仅 VARY_REGION 可用，且该动作必填。目标图片由父任务确定；蒙版应与该单张原图像素宽高一致。使用不透明的黑白 PNG：白色为要重绘的涂鸦区域，黑色为要保留的未涂鸦区域。",
+                    "properties": {
+                      "image_url": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^(https?://|data:image/|(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$)",
+                        "description": "蒙版的 HTTP(S) URL、完整 data URL（例如 data:image/png;base64,...）或标准纯 Base64 字符串；解码后最大 10 MiB，且必须为可识别的图片。推荐导出为不透明黑底、白色选区的 PNG：涂鸦区域设为纯白，未涂鸦区域设为纯黑，不要依赖透明背景表示选区。画板高亮色仅用于显示选区，不代表生成颜色。",
+                        "examples": [
+                          "https://example.com/mask.png"
+                        ]
+                      }
+                    }
+                  },
+                  "webhook_url": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^https?://[^\\s]+$",
+                    "description": "可选。本次动作的用户回调地址，请为子任务单独传入，不自动继承父任务的回调地址。终态回调通过 POST 发送与查询接口相同的任务对象。",
+                    "examples": [
+                      "https://your-service.example/mj/callback"
+                    ]
+                  },
+                  "notify_progress_image": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "是否向 webhook_url 推送过程图，默认 false。仅控制过程图通知，终态通知始终发送；无 webhook_url 时仍可查询任务。"
+                  }
+                },
+                "allOf": [
+                  {
+                    "if": {
+                      "properties": {
+                        "action": {
+                          "pattern": "^[Vv][Aa][Rr][Yy]_[Rr][Ee][Gg][Ii][Oo][Nn]$"
+                        }
+                      },
+                      "required": [
+                        "action"
+                      ]
+                    },
+                    "then": {
+                      "required": [
+                        "mask"
+                      ]
+                    },
+                    "else": {
+                      "not": {
+                        "required": [
+                          "mask"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "if": {
+                      "properties": {
+                        "action": {
+                          "pattern": "^[Cc][Uu][Ss][Tt][Oo][Mm]_[Zz][Oo][Oo][Mm]$"
+                        }
+                      },
+                      "required": [
+                        "action"
+                      ]
+                    },
+                    "then": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "parameters"
+                          ],
+                          "properties": {
+                            "parameters": {
+                              "required": [
+                                "zoom"
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "required": [
+                            "prompt"
+                          ],
+                          "properties": {
+                            "prompt": {
+                              "pattern": "(^|\\s)--zoom\\s+[0-9.]+(\\s|$)"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "examples": [
+                  {
+                    "parent_task_id": "imgtask_parent",
+                    "action": "U1"
+                  },
+                  {
+                    "parent_task_id": "imgtask_parent",
+                    "action": "V1"
+                  },
+                  {
+                    "parent_task_id": "imgtask_parent",
+                    "action": "REROLL"
+                  },
+                  {
+                    "parent_task_id": "imgtask_single",
+                    "action": "CUSTOM_ZOOM",
+                    "parameters": {
+                      "zoom": 1.5
+                    }
+                  },
+                  {
+                    "parent_task_id": "imgtask_single",
+                    "action": "VARY_REGION",
+                    "prompt": "replace the background with flowers",
+                    "mask": {
+                      "image_url": "https://example.com/mask.png"
+                    }
+                  },
+                  {
+                    "parent_task_id": "imgtask_single",
+                    "action": "PAN_LEFT"
+                  },
+                  {
+                    "parent_task_id": "imgtask_parent",
+                    "action": "V1",
+                    "webhook_url": "https://your-service.example/mj/callback",
+                    "notify_progress_image": true
+                  }
+                ]
+              },
+              "examples": {
+                "v8_2_valid": {
+                  "value": {
+                    "model": "V8.2",
+                    "prompt": "a cute cat",
+                    "parameters": {
+                      "stylize": 1000,
+                      "chaos": 100,
+                      "weird": 1000,
+                      "seed": 1231231,
+                      "sw": 1000,
+                      "iw": 1,
+                      "no": "black cat",
+                      "aspect": "9:16",
+                      "raw": true,
+                      "tile": true
+                    },
+                    "images": [
+                      {
+                        "type": "style_reference",
+                        "image_url": "https://example.com/style.png"
+                      },
+                      {
+                        "type": "image_reference",
+                        "image_url": "https://example.com/reference.png"
+                      }
+                    ],
+                    "mode": "fast"
+                  },
+                  "summary": "V8.2 有效示例"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "任务已接受，使用 polling_url 查询结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "object",
+                    "model",
+                    "status",
+                    "polling_url",
+                    "data",
+                    "error"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "object": {
+                      "const": "image.generation"
+                    },
+                    "model": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "status": {
+                      "enum": [
+                        "pending",
+                        "in_progress",
+                        "completed",
+                        "failed"
+                      ]
+                    },
+                    "polling_url": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "parent_task_id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "prompt",
+                        "effective_prompt",
+                        "mode",
+                        "parameters",
+                        "progress",
+                        "actions"
+                      ],
+                      "properties": {
+                        "prompt": {
+                          "type": "string"
+                        },
+                        "effective_prompt": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "mode": {
+                          "enum": [
+                            "fast",
+                            "relax"
+                          ]
+                        },
+                        "parameters": {
+                          "type": "object",
+                          "properties": {}
+                        },
+                        "progress": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        "native_url": {
+                          "type": "object",
+                          "required": [
+                            "url"
+                          ],
+                          "additionalProperties": false,
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "split_image_urls": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "minItems": 4,
+                              "maxItems": 4
+                            }
+                          }
+                        },
+                        "image_url": {
+                          "type": "object",
+                          "required": [
+                            "url"
+                          ],
+                          "additionalProperties": false,
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "split_image_urls": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "minItems": 4,
+                              "maxItems": 4
+                            }
+                          }
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "error": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "status": {
+                            "const": "completed"
+                          }
+                        }
+                      },
+                      "then": {
+                        "properties": {
+                          "data": {
+                            "properties": {
+                              "progress": {
+                                "const": 100
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {}
+          },
+          "400": {
+            "description": "请求参数或模型能力校验失败。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "param": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-mint": {
+          "href": "/zh/api-reference/images/midjourney/action",
+          "metadata": {
+            "sidebarTitle": "提交Action"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

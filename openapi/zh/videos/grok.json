@@ -1,0 +1,757 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway Grok Imagine Video 视频 API",
+    "description": "xAI Grok Imagine Video 模型的 OpenAI 兼容异步视频生成接口。",
+    "version": "1.1.0"
+  },
+  "tags": [
+    {
+      "name": "视频生成"
+    },
+    {
+      "name": "视频生成/Grok Imagine Video"
+    }
+  ],
+  "paths": {
+    "/v1/videos": {
+      "post": {
+        "summary": "创建 Grok Imagine Video 视频",
+        "deprecated": false,
+        "description": "通过统一的 `POST /v1/videos` 创建 Grok Imagine Video 视频任务。模型能力以当前 Tikway 网关实际可调用范围为准。\n\n| 模型 | 分辨率 | 时长 | 支持模式 | 音频 | 参考限制 |\n| --- | --- | --- | --- | --- | --- |\n| `grok-imagine-video-1.5-fast` | 480p / 720p | 6–30 秒 | 文生、最多 7 图参考、首尾帧 | 上游默认有声；当前统一字段不能关闭 | 非官方高速通道 |\n| `grok-imagine-video-1.5` | 480p / 720p / 1080p | 1–15 秒 | 最多 7 张参考图、4 个关键帧；可带最多 3 个预设音色 | 默认有声；当前统一字段不能关闭 | 支持首尾帧 |\n| `grok-imagine-video` | 480p / 720p | 生成 1–15 秒；延长 1–10 秒 | 文生、多图参考、视频延长 | 上游默认有声；当前统一字段不能关闭 | 不支持尾帧 |\n\n来源：[xAI 视频生成文档](https://docs.x.ai/developers/model-capabilities/video/generation)。官网能力与当前网关未开放能力之间的差异见本次审计报告。",
+        "tags": [
+          "视频生成/Grok Imagine Video"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "Grok Imagine VideoVideoCreateRequest",
+                "description": "创建 Grok Imagine Video 视频任务。参数按当前 Tikway 网关能力收窄；模型之间的差异见 operation 描述与 x-model-capabilities。",
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "enum": [
+                      "grok-imagine-video-1.5",
+                      "grok-imagine-video"
+                    ],
+                    "description": "Grok Imagine Video 模型 ID。"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "视频生成或编辑提示词。"
+                  },
+                  "duration": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 30,
+                    "description": "模型相关：1.5 Fast 为 6–30 秒；1.5 和基础版为 1–15 秒；基础版视频延长为 1–10 秒。"
+                  },
+                  "aspect_ratio": {
+                    "type": "string",
+                    "enum": [
+                      "2:3",
+                      "3:2",
+                      "1:1",
+                      "9:16",
+                      "16:9"
+                    ],
+                    "description": "视频宽高比。图生视频时，部分模型会按输入素材自动决定比例。"
+                  },
+                  "resolution": {
+                    "type": "string",
+                    "enum": [
+                      "480p",
+                      "720p",
+                      "1080p"
+                    ],
+                    "description": "输出分辨率。不同模型或模式的可用值见模型能力表。"
+                  },
+                  "frame_images": {
+                    "type": "array",
+                    "maxItems": 2,
+                    "description": "1.5 Fast 支持首尾帧；1.5 与基础版仅能把一张图作为首帧，不能传 last_frame。",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type",
+                        "image_url"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "first_frame",
+                            "last_frame"
+                          ],
+                          "description": "参考帧位置。"
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "参考图 URL 字符串。"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "input_references": {
+                    "type": "array",
+                    "maxItems": 14,
+                    "description": "普通参考图最多 7 张，转换为 refer_images；1.5 系列关键帧最多 4 张，需指定 keyframe 角色与 seconds，转换为 keyframes。1.5 最多可传 3 个预设音色，仅填写 reference_voice 和 reference_audio 角色，无需 audio_url。视频素材仅供基础版延长。",
+                    "items": {
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "required": [
+                            "image_url"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "video_url"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "role",
+                            "reference_voice"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "reference_audio"
+                            }
+                          },
+                          "not": {
+                            "anyOf": [
+                              {
+                                "required": [
+                                  "image_url"
+                                ]
+                              },
+                              {
+                                "required": [
+                                  "video_url"
+                                ]
+                              },
+                              {
+                                "required": [
+                                  "audio_url"
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "image_url",
+                            "video_url"
+                          ],
+                          "description": "可选。素材类型；若提供，必须与对应 URL 字段一致。"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "reference_image",
+                            "keyframe",
+                            "source_video",
+                            "first_clip",
+                            "reference_audio"
+                          ],
+                          "description": "素材用途。省略时按 URL 字段推断为普通参考素材。"
+                        },
+                        "image_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "图片 URL 字符串。"
+                        },
+                        "video_url": {
+                          "type": "string",
+                          "minLength": 1,
+                          "format": "uri",
+                          "description": "视频 URL 字符串。"
+                        },
+                        "reference_voice": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "预设音色 ID；Grok 1.5 的 reference_audio 可单独使用此字段，无需 audio_url。"
+                        },
+                        "seconds": {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "description": "keyframe 图片在生成视频中的目标时间，单位秒。"
+                        }
+                      },
+                      "allOf": [
+                        {
+                          "if": {
+                            "properties": {
+                              "role": {
+                                "const": "keyframe"
+                              }
+                            },
+                            "required": [
+                              "role"
+                            ]
+                          },
+                          "then": {
+                            "required": [
+                              "image_url",
+                              "seconds"
+                            ]
+                          }
+                        }
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "callback_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "pattern": "^https://",
+                    "description": "用户任务回调地址。由 Tikway 在任务状态变化后调用，不直接传给模型上游。"
+                  },
+                  "extra_body": {
+                    "type": "object",
+                    "description": "Grok 扩展参数。建议优先使用统一字段。",
+                    "properties": {},
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false,
+                "x-model-capabilities": [
+                  {
+                    "model": "grok-imagine-video-1.5-fast",
+                    "resolution": "480p / 720p",
+                    "duration": "6–30 秒",
+                    "modes": "文生、最多 7 图参考、首尾帧",
+                    "audio": "上游默认有声；当前统一字段不能关闭",
+                    "references": "非官方高速通道"
+                  },
+                  {
+                    "model": "grok-imagine-video-1.5",
+                    "resolution": "480p / 720p / 1080p",
+                    "duration": "1–15 秒",
+                    "modes": "最多 7 张参考图、4 个关键帧；可带最多 3 个预设音色",
+                    "audio": "默认有声；当前统一字段不能关闭",
+                    "references": "支持首尾帧"
+                  },
+                  {
+                    "model": "grok-imagine-video",
+                    "resolution": "480p / 720p",
+                    "duration": "生成 1–15 秒；延长 1–10 秒",
+                    "modes": "文生、多图参考、视频延长",
+                    "audio": "上游默认有声；当前统一字段不能关闭",
+                    "references": "不支持尾帧"
+                  }
+                ]
+              },
+              "examples": {
+                "快速文生视频": {
+                  "summary": "快速文生视频",
+                  "value": {
+                    "model": "grok-imagine-video-1.5-fast",
+                    "prompt": "一只金毛寻回犬在日落时分的海滩上奔跑，镜头平稳跟随，画面具有自然细腻的电影质感。",
+                    "duration": 10,
+                    "resolution": "720p",
+                    "aspect_ratio": "16:9"
+                  }
+                },
+                "1080p 首帧生视频": {
+                  "summary": "1080p 首帧生视频",
+                  "value": {
+                    "model": "grok-imagine-video-1.5",
+                    "prompt": "保持首帧中的人物外观与服装一致，让人物自然向前行走，镜头缓慢推进。",
+                    "duration": 10,
+                    "resolution": "1080p",
+                    "aspect_ratio": "16:9",
+                    "frame_images": [
+                      {
+                        "type": "first_frame",
+                        "image_url": "https://example.com/assets/first-frame.jpg"
+                      }
+                    ]
+                  }
+                },
+                "首尾帧生视频": {
+                  "summary": "首尾帧生视频",
+                  "value": {
+                    "model": "grok-imagine-video-1.5-fast",
+                    "prompt": "从首帧自然过渡到尾帧，保持主体、构图与视觉风格连贯。",
+                    "duration": 10,
+                    "resolution": "720p",
+                    "aspect_ratio": "16:9",
+                    "frame_images": [
+                      {
+                        "type": "first_frame",
+                        "image_url": "https://example.com/assets/first-frame.jpg"
+                      },
+                      {
+                        "type": "last_frame",
+                        "image_url": "https://example.com/assets/last-frame.jpg"
+                      }
+                    ]
+                  }
+                },
+                "多图与预设音色": {
+                  "summary": "多图与预设音色",
+                  "value": {
+                    "model": "grok-imagine-video-1.5",
+                    "prompt": "保持人物形象、服装和声音一致。",
+                    "duration": 10,
+                    "resolution": "720p",
+                    "input_references": [
+                      {
+                        "image_url": "https://example.com/assets/person.jpg",
+                        "role": "reference_image"
+                      },
+                      {
+                        "image_url": "https://example.com/assets/outfit.jpg",
+                        "role": "reference_image"
+                      },
+                      {
+                        "reference_voice": "sirius",
+                        "role": "reference_audio"
+                      }
+                    ]
+                  }
+                },
+                "关键帧参考": {
+                  "summary": "关键帧参考",
+                  "value": {
+                    "model": "grok-imagine-video-1.5",
+                    "prompt": "第 5 秒切换到正面镜头。",
+                    "duration": 10,
+                    "input_references": [
+                      {
+                        "image_url": "https://example.com/assets/front.jpg",
+                        "role": "keyframe",
+                        "seconds": 5
+                      }
+                    ]
+                  }
+                },
+                "视频延长": {
+                  "summary": "视频延长",
+                  "value": {
+                    "model": "grok-imagine-video",
+                    "prompt": "延续原视频的镜头运动、主体动作与光线，让场景自然向后发展。",
+                    "duration": 6,
+                    "resolution": "720p",
+                    "input_references": [
+                      {
+                        "video_url": "https://example.com/assets/source.mp4",
+                        "role": "first_clip"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$id": "https://api.example.com/schemas/videos/create-response.json",
+                  "title": "创建视频任务响应",
+                  "description": "POST /v1/videos 创建视频任务成功后的响应参数，接口返回 HTTP 202。",
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "status",
+                    "polling_url"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "视频生成任务的唯一标识，用于后续查询任务状态。",
+                      "examples": [
+                        "9552de3d-171f-4cca-b492-7baa56523239"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "queue"
+                      ],
+                      "description": "任务创建状态。pending 表示任务已创建、等待提交处理；queue 表示任务已进入生成队列。",
+                      "examples": [
+                        "queue"
+                      ]
+                    },
+                    "polling_url": {
+                      "type": "string",
+                      "format": "uri",
+                      "pattern": "^https://",
+                      "description": "视频任务查询地址，客户端可通过 GET 请求轮询任务状态。",
+                      "examples": [
+                        "https://api.example.com/v1/videos/9552de3d-171f-4cca-b492-7baa56523239"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "example": {
+                  "id": "9552de3d-171f-4cca-b492-7baa56523239",
+                  "status": "pending",
+                  "polling_url": "https://api.tikway.ai/v1/videos/9552de3d-171f-4cca-b492-7baa56523239"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-mint": {
+          "href": "/zh/api-reference/videos/grok/create",
+          "metadata": {
+            "sidebarTitle": "创建 Grok Imagine Video 视频"
+          }
+        }
+      }
+    },
+    "/v1/videos/{id}": {
+      "get": {
+        "summary": "查询 Grok Imagine Video 视频任务",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "视频生成/Grok Imagine Video"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "视频生成任务的唯一标识符。",
+            "required": true,
+            "example": "8f7c2e41-5a93-4b16-9d72-3c84e1a6f205",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-debugger-mode",
+            "in": "header",
+            "description": "",
+            "example": "true",
+            "schema": {
+              "type": "string",
+              "default": "true"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "查询视频任务。完成时返回对象形式的 data；其他状态不返回 data。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$id": "https://api.example.com/schemas/videos/retrieve-response.json",
+                  "title": "查询视频任务响应",
+                  "description": "GET /v1/videos/{id} 的响应参数。data 为最终结果对象，仅在 status=completed 时返回；其他状态省略 data。",
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "id",
+                    "model",
+                    "prompt",
+                    "status",
+                    "usage"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "视频任务创建时间，Unix 时间戳，单位为秒。",
+                      "examples": [
+                        1789108566
+                      ]
+                    },
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "视频生成任务的唯一标识。",
+                      "examples": [
+                        "9552de3d-171f-4cca-b492-7baa56523239"
+                      ]
+                    },
+                    "model": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "创建视频任务时使用的模型 ID。",
+                      "examples": [
+                        "bytedance/seedance-2.0-mini"
+                      ]
+                    },
+                    "prompt": {
+                      "type": "string",
+                      "description": "创建视频任务时提交的提示词。",
+                      "examples": [
+                        "一只金毛犬在日落时分的海滩上奔跑，镜头平稳跟随，画面呈现自然细腻的电影质感"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "queue",
+                        "in_progress",
+                        "completed",
+                        "failed",
+                        "cancelled",
+                        "expired"
+                      ],
+                      "description": "任务状态。pending 表示等待处理；queue 表示排队中；in_progress 表示生成或平台处理进行中；completed 表示视频和 OSS 资源均已处理完成；failed 表示失败；cancelled 表示已取消；expired 表示已过期。",
+                      "examples": [
+                        "in_progress"
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "native_url",
+                        "video_url",
+                        "frame"
+                      ],
+                      "properties": {
+                        "native_url": {
+                          "type": "object",
+                          "required": [
+                            "url"
+                          ],
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "供应商原始视频的完整 URL，保留供应商返回的查询参数。"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "description": "供应商原始视频地址对象。"
+                        },
+                        "video_url": {
+                          "type": "object",
+                          "required": [
+                            "url"
+                          ],
+                          "properties": {
+                            "url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "平台存储的视频访问 URL。"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "description": "平台转存后的视频地址对象。"
+                        },
+                        "frame": {
+                          "type": "object",
+                          "required": [
+                            "first_url",
+                            "last_url"
+                          ],
+                          "properties": {
+                            "first_url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "视频首帧图片的访问 URL。"
+                            },
+                            "last_url": {
+                              "type": "string",
+                              "format": "uri",
+                              "minLength": 1,
+                              "description": "视频尾帧图片的访问 URL。"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "description": "视频首尾帧地址对象。"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "description": "最终结果对象，只有 status=completed 时存在。其他状态省略整个 data 字段，不返回数组或 null。"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "description": "视频任务的使用量信息。",
+                      "required": [
+                        "video_seconds"
+                      ],
+                      "properties": {
+                        "video_seconds": {
+                          "description": "生成视频的时长，单位为秒。暂时无法确定时可能为 null。",
+                          "oneOf": [
+                            {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "examples": [
+                            4
+                          ]
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "error": {
+                      "type": "object",
+                      "description": "任务失败信息。通常仅在 status 为 failed 时返回。",
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "properties": {
+                        "code": {
+                          "description": "供应商或平台返回的错误码。",
+                          "examples": [
+                            "video_generation_failed"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "任务失败的具体原因。",
+                          "examples": [
+                            "Video generation failed."
+                          ]
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "allOf": [
+                    {
+                      "if": {
+                        "properties": {
+                          "status": {
+                            "const": "completed"
+                          }
+                        },
+                        "required": [
+                          "status"
+                        ]
+                      },
+                      "then": {
+                        "required": [
+                          "data"
+                        ]
+                      },
+                      "else": {
+                        "not": {
+                          "required": [
+                            "data"
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "additionalProperties": false
+                },
+                "examples": {
+                  "进行中": {
+                    "summary": "进行中",
+                    "value": {
+                      "created": 1789108566,
+                      "id": "9552de3d-171f-4cca-b492-7baa56523239",
+                      "model": "grok-imagine-video-1.5-fast",
+                      "prompt": "一只金毛犬在日落时分的海滩上奔跑，镜头平稳跟随，海风吹动毛发，画面呈现自然细腻的电影质感",
+                      "status": "in_progress",
+                      "usage": {
+                        "video_seconds": 4
+                      }
+                    }
+                  },
+                  "已完成": {
+                    "summary": "已完成",
+                    "value": {
+                      "created": 1789108566,
+                      "id": "9552de3d-171f-4cca-b492-7baa56523239",
+                      "model": "grok-imagine-video-1.5-fast",
+                      "prompt": "一只金毛犬在日落时分的海滩上奔跑，镜头平稳跟随，海风吹动毛发，画面呈现自然细腻的电影质感",
+                      "status": "completed",
+                      "data": {
+                        "video_url": {
+                          "url": "https://oss.example.com/temp/2026/09/11/video.mp4?expires=86400"
+                        },
+                        "native_url": {
+                          "url": "https://provider.example.com/videos/video.mp4?expires=86400"
+                        },
+                        "frame": {
+                          "first_url": "https://oss.example.com/temp/2026/09/11/video.mp4?x-oss-process=video%2Fsnapshot%2Ct_0%2Cf_jpg%2Cw_0%2Ch_0",
+                          "last_url": "https://oss.example.com/temp/2026/09/11/video.mp4?x-oss-process=video%2Fsnapshot%2Ct_3999%2Cf_jpg%2Cw_0%2Ch_0"
+                        }
+                      },
+                      "usage": {
+                        "video_seconds": 4
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-mint": {
+          "href": "/zh/api-reference/videos/grok/get-task",
+          "metadata": {
+            "sidebarTitle": "查询 Grok Imagine Video 视频任务"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "生产环境"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

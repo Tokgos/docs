@@ -1,0 +1,465 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway Embeddings API",
+    "description": "OpenAI- and Gemini-compatible embedding APIs through the Tikway gateway.",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "vector embedding"
+    }
+  ],
+  "paths": {
+    "/v1/embeddings": {
+      "post": {
+        "summary": "GPT - vector",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "vector embedding"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "EmbeddingRequest",
+                "description": "Convert text or token ID to vector representation.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "model",
+                  "input"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Vector model ID.",
+                    "examples": [
+                      "openai/text-embedding-3-small",
+                      "openai/text-embedding-3-large",
+                      "bailian/text-embedding-v4",
+                      "google/gemini-embedding-2-preview"
+                    ]
+                  },
+                  "input": {
+                    "description": "Requires input to generate vectors. Supports a single string, string array, token ID array or token ID two-dimensional array. The Gemini embedding model currently only supports single strings.",
+                    "oneOf": [
+                      {
+                        "title": "single text",
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "title": "bulk text",
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 2048,
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      {
+                        "title": "Single Token array",
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 2048,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      {
+                        "title": "Batch Token array",
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 2048,
+                        "items": {
+                          "type": "array",
+                          "minItems": 1,
+                          "maxItems": 2048,
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        }
+                      }
+                    ],
+                    "examples": [
+                      "Tikway is an LLM Gateway",
+                      [
+                        "first text",
+                        "second text"
+                      ]
+                    ]
+                  },
+                  "encoding_format": {
+                    "type": "string",
+                    "enum": [
+                      "float",
+                      "base64"
+                    ],
+                    "default": "float",
+                    "description": "Vector encoding format. float returns an array of floating point numbers; base64 returns Base64-encoded float32 data."
+                  },
+                  "dimensions": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Output vector dimension, only supported by some models. Gemini embedding models are limited to 128 to 3072 in the current gateway."
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "End user identification, used for upstream abuse monitoring."
+                  }
+                },
+                "examples": [
+                  {
+                    "model": "openai/text-embedding-3-small",
+                    "input": "Tikway is an LLM Gateway",
+                    "encoding_format": "float"
+                  },
+                  {
+                    "model": "bailian/text-embedding-v4",
+                    "input": [
+                      "first text",
+                      "second text"
+                    ],
+                    "dimensions": 1024,
+                    "encoding_format": "float"
+                  }
+                ]
+              },
+              "example": {
+                "model": "openai/text-embedding-3-large",
+                "input": "Hello, world!"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "EmbeddingResponse",
+                  "description": "OpenAI Embeddings compatible responses.",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "object",
+                    "data",
+                    "model",
+                    "usage"
+                  ],
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "const": "list",
+                      "description": "Fixed to list."
+                    },
+                    "data": {
+                      "type": "array",
+                      "minItems": 1,
+                      "description": "Enter the corresponding vector result list.",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "object",
+                          "embedding",
+                          "index"
+                        ],
+                        "properties": {
+                          "object": {
+                            "type": "string",
+                            "const": "embedding"
+                          },
+                          "embedding": {
+                            "description": "vector data. The specific type is determined by encoding_format in the request.",
+                            "oneOf": [
+                              {
+                                "title": "Float vector",
+                                "type": "array",
+                                "minItems": 1,
+                                "items": {
+                                  "type": "number"
+                                }
+                              },
+                              {
+                                "title": "Base64 vector",
+                                "type": "string",
+                                "minLength": 1,
+                                "contentEncoding": "base64",
+                                "description": "A Base64 string encoded in float32 little-endian order."
+                              }
+                            ]
+                          },
+                          "index": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "The index corresponding to the input content."
+                          }
+                        }
+                      }
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "The actual model ID used."
+                    },
+                    "usage": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "prompt_tokens",
+                        "total_tokens"
+                      ],
+                      "properties": {
+                        "prompt_tokens": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "Enter the number of tokens consumed."
+                        },
+                        "total_tokens": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "The total number of tokens in this request."
+                        }
+                      }
+                    }
+                  },
+                  "examples": [
+                    {
+                      "object": "list",
+                      "data": [
+                        {
+                          "object": "embedding",
+                          "index": 0,
+                          "embedding": [
+                            0.0023,
+                            -0.0091,
+                            0.0156
+                          ]
+                        }
+                      ],
+                      "model": "openai/text-embedding-3-small",
+                      "usage": {
+                        "prompt_tokens": 8,
+                        "total_tokens": 8
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "data": [
+                    {
+                      "embedding": [
+                        -0.005828857421875,
+                        -0.0241241455078125,
+                        -0.02203369140625
+                      ],
+                      "index": 0,
+                      "object": "embedding"
+                    }
+                  ],
+                  "model": "openai/text-embedding-3-large",
+                  "object": "list",
+                  "usage": {
+                    "prompt_tokens": 4,
+                    "total_tokens": 4
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-mint": {
+          "href": "/en/api-reference/embeddings/openai/create",
+          "metadata": {
+            "sidebarTitle": "GPT - vector"
+          }
+        }
+      }
+    },
+    "/v1beta/models/google/{model}:embedContent": {
+      "post": {
+        "summary": "Gemini embedding",
+        "deprecated": false,
+        "description": "Create one embedding with Gemini embedContent.",
+        "tags": [
+          "Embeddings"
+        ],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "required": true,
+            "description": "Gemini model name without the google/ prefix.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "example": "gemini-embedding-2-preview"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$id": "urn:tikway:schema:protocols:gemini:embed-content:request:1",
+                "title": "gemini/embed-content 请求",
+                "type": "object",
+                "properties": {
+                  "model": {
+                    "type": "string",
+                    "description": "Model ID."
+                  },
+                  "content": {
+                    "type": "object",
+                    "properties": {
+                      "parts": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "text": {
+                              "type": "string"
+                            },
+                            "inlineData": {
+                              "type": "object",
+                              "properties": {},
+                              "additionalProperties": true
+                            },
+                            "fileData": {
+                              "type": "object",
+                              "properties": {},
+                              "additionalProperties": true
+                            },
+                            "functionCall": {
+                              "type": "object",
+                              "properties": {},
+                              "additionalProperties": true
+                            },
+                            "functionResponse": {
+                              "type": "object",
+                              "properties": {},
+                              "additionalProperties": true
+                            }
+                          },
+                          "additionalProperties": true
+                        }
+                      }
+                    },
+                    "required": [
+                      "parts"
+                    ],
+                    "additionalProperties": true,
+                    "description": "Content to embed."
+                  },
+                  "outputDimensionality": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Output embedding dimension."
+                  },
+                  "taskType": {
+                    "type": "string",
+                    "description": "Embedding task type."
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "Title for retrieval tasks."
+                  }
+                },
+                "required": [
+                  "content"
+                ],
+                "additionalProperties": true
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$id": "urn:tikway:schema:protocols:gemini:embed-content:response:1",
+                  "title": "gemini/embed-content 响应",
+                  "type": "object",
+                  "properties": {
+                    "embedding": {
+                      "type": "object",
+                      "properties": {
+                        "values": {
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          }
+                        }
+                      },
+                      "required": [
+                        "values"
+                      ],
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "embedding"
+                  ],
+                  "additionalProperties": true
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-mint": {
+          "href": "/en/api-reference/embeddings/gemini/create",
+          "metadata": {
+            "sidebarTitle": "Gemini embedding"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai",
+      "description": "production environment"
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}

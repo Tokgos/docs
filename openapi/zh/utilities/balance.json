@@ -1,0 +1,111 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tikway 余额查询 API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.tikway.ai"
+    }
+  ],
+  "tags": [
+    {
+      "name": "工具"
+    }
+  ],
+  "paths": {
+    "/v1/user/balance": {
+      "get": {
+        "summary": "余额查询",
+        "description": "",
+        "operationId": "operation516646140",
+        "tags": [
+          "工具"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "title": "余额查询响应",
+                  "type": "object",
+                  "required": [
+                    "balance",
+                    "currency",
+                    "is_active",
+                    "total",
+                    "used"
+                  ],
+                  "properties": {
+                    "balance": {
+                      "type": "number",
+                      "description": "当前可用余额。"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "description": "金额币种，例如 USD。"
+                    },
+                    "is_active": {
+                      "type": "boolean",
+                      "description": "账户是否处于激活状态。"
+                    },
+                    "total": {
+                      "type": "number",
+                      "description": "账户总额度。"
+                    },
+                    "used": {
+                      "type": "number",
+                      "description": "已使用额度。"
+                    }
+                  },
+                  "examples": [
+                    {
+                      "balance": 94.363442892,
+                      "currency": "USD",
+                      "is_active": true,
+                      "total": 100.01,
+                      "used": 5.646557108
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "none": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "href": "/zh/api-reference/utilities/balance",
+          "metadata": {
+            "sidebarTitle": "余额查询"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

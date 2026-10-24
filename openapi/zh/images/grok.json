@@ -1,0 +1,288 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Tikway Grok 图片 API",
+    "description": "Grok 文生图和参考图生成的统一图片接口。",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "图片生成"
+    },
+    {
+      "name": "图片生成/Grok"
+    }
+  ],
+  "paths": {
+    "/v1/images/generations": {
+      "post": {
+        "summary": "图片生成",
+        "deprecated": false,
+        "description": "Grok 文生图和参考图生成统一使用 `POST /v1/images/generations`。`model`、`prompt` 必填；可选的 `images` 支持 1–5 张参考图。使用 `size` 指定比例、`quality` 指定分辨率，`n` 为 1–4。",
+        "operationId": "createGrokImage",
+        "tags": [
+          "图片生成/Grok"
+        ],
+        "parameters": [
+          {
+            "name": "x-provider-route",
+            "in": "header",
+            "description": "上游速度cost、stable、fast",
+            "example": "cost",
+            "schema": {
+              "type": "string",
+              "default": "cost"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "prompt"
+                ],
+                "properties": {
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "model": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "必填。使用 Get Models 返回的模型 ID 或可用别名。",
+                    "example": "grok-imagine-1.0"
+                  },
+                  "enable_pro": {
+                    "type": "boolean",
+                    "description": "Grok Pro 模式开关，仅支持该参数的模型可用。"
+                  },
+                  "n": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4,
+                    "default": 1,
+                    "description": "生成图片数量，1–4。"
+                  },
+                  "size": {
+                    "type": "string",
+                    "pattern": "^(auto|[1-9][0-9]*x[1-9][0-9]*)$",
+                    "description": "输出宽高比使用 WIDTHxHEIGHT 表示，例如 1024x1536 表示 2:3；auto 使用模型默认比例。分辨率由 quality 控制。"
+                  },
+                  "response_format": {
+                    "type": "string",
+                    "enum": [
+                      "url",
+                      "b64_json"
+                    ],
+                    "default": "url",
+                    "description": "Tikway 图片交付格式，url 返回图片链接，b64_json 返回纯 Base64。默认 url；该字段由网关消费，不作为上游模型参数。"
+                  },
+                  "quality": {
+                    "type": "string",
+                    "enum": [
+                      "standard",
+                      "hd"
+                    ],
+                    "default": "standard",
+                    "description": "standard 输出 1K，hd 输出 2K；可用能力以所选模型为准。"
+                  },
+                  "images": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 5,
+                    "description": "可选参考图，1–5 张。省略时为文生图；提供时根据参考图和提示词生成图片。不支持独立 mask 参数。",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "image_url"
+                          ],
+                          "properties": {
+                            "image_url": {
+                              "type": "string",
+                              "minLength": 1,
+                              "description": "图片 URL、data URL 或 Base64 字符串。"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  }
+                },
+                "additionalProperties": false,
+                "title": "TikwayGrokImageGenerationRequest",
+                "description": "Grok 统一图片生成请求，可选传入参考图。",
+                "example": {
+                  "model": "grok-imagine-1.0",
+                  "prompt": "雨夜的未来城市，写实摄影",
+                  "size": "1024x1024",
+                  "n": 1,
+                  "response_format": "url",
+                  "quality": "standard"
+                }
+              },
+              "examples": {
+                "文生图": {
+                  "value": {
+                    "model": "grok-imagine-1.0",
+                    "prompt": "雨夜的未来城市，写实摄影",
+                    "size": "1024x1024",
+                    "n": 1,
+                    "response_format": "url",
+                    "quality": "standard"
+                  },
+                  "summary": "文生图"
+                },
+                "参考图生成": {
+                  "summary": "参考图生成",
+                  "value": {
+                    "model": "grok-imagine-1.0",
+                    "prompt": "将参考图中的服装改成蓝色，保留人物形象",
+                    "size": "1024x1024",
+                    "n": 1,
+                    "response_format": "url",
+                    "quality": "standard",
+                    "images": [
+                      {
+                        "image_url": "https://example.com/assets/source.png"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "同步返回统一 Images 结果；response_format 决定返回 url 或 b64_json。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "TikwayImageResponse",
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "data"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer",
+                      "description": "Unix 时间戳（秒）。"
+                    },
+                    "model": {
+                      "type": "string",
+                      "description": "返回时为请求使用的模型 ID。"
+                    },
+                    "data": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "object",
+                        "oneOf": [
+                          {
+                            "required": [
+                              "url"
+                            ]
+                          },
+                          {
+                            "required": [
+                              "b64_json"
+                            ]
+                          }
+                        ],
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "response_format=url 时返回的图片地址。"
+                          },
+                          "b64_json": {
+                            "type": "string",
+                            "description": "response_format=b64_json 时返回的纯 Base64 图片内容。"
+                          },
+                          "index": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "revised_prompt": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "size": {
+                      "type": "string"
+                    },
+                    "output_format": {
+                      "type": "string"
+                    },
+                    "quality": {
+                      "type": "string"
+                    },
+                    "background": {
+                      "type": "string"
+                    },
+                    "usage": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "properties": {}
+                    }
+                  },
+                  "additionalProperties": true,
+                  "example": {
+                    "created": 1791878400,
+                    "data": [
+                      {
+                        "url": "https://example.com/generated.png",
+                        "index": 0
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-mint": {
+          "href": "/zh/api-reference/images/grok/generate",
+          "metadata": {
+            "sidebarTitle": "图片生成"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {},
+    "responses": {},
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "servers": [],
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}
